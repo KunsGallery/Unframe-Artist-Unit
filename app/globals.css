@@ -31,6 +31,11 @@ button { cursor: pointer; }
 .nav-links a:hover, .text-link:hover, .underlined-link:hover, .account-link:hover { color: var(--blue); }
 .nav-accent { color: var(--blue); font-weight: 700; }
 .nav-actions { display: flex; align-items: center; gap: 14px; }
+.language-switcher { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.language-switcher svg { color: var(--blue); }
+.language-switcher button { border: 0; background: transparent; padding: 3px 1px; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.language-switcher button:hover, .language-switcher button.is-active { color: var(--blue); font-weight: 700; }
+.language-switcher button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .icon-button, .menu-button { display: grid; place-items: center; border: 0; background: transparent; padding: 6px; }
 .account-link { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 .menu-button { display: none; }
