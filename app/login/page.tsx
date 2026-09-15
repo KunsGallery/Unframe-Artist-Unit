@@ -1,0 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Logo } from "../components";
+
+export default function LoginPage() { return <main className="auth-page"><div className="auth-panel"><Logo /><div className="auth-copy"><span className="auth-kicker">MY U.A.U</span><h1>Come a little<br /><em>closer.</em></h1><p>Save artists, works, and the connections you want to return to.</p></div><form className="auth-form"><label>Email address<input type="email" placeholder="you@example.com" /></label><label>Password<input type="password" placeholder="••••••••" /></label><button className="button button-blue" type="button">Sign in <ArrowRight size={16} /></button><div className="auth-divider"><span>or</span></div><button className="button button-outline" type="button">Continue with Google</button></form><p className="auth-foot">No account yet? <Link href="/join">Join the unit</Link></p></div><div className="auth-aside"><span>u.a.u</span><p>Artists enter through practice,<br /><em>remain through relationship.</em></p></div></main>; }

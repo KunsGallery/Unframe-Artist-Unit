@@ -1,0 +1,33 @@
+import Link from "next/link";
+import { ArrowDownRight, ArrowUpRight, MoveUpRight } from "lucide-react";
+import { ArtImage, BookmarkButton, DemoNotice, MetaLine, SectionHeading, VerifiedMark } from "./components";
+import { annualRecap, artists, artworks, journal } from "./data";
+import { ConnectionMarquee, RotatingWord } from "./motion-components";
+
+export default function Home() {
+  return <main>
+    <DemoNotice />
+    <section className="hero-shell page-wrap">
+      <div className="hero-copy"><p className="hero-kicker">u.a.u / UNFRAME ARTIST UNIT</p><h1>A network<br /><em>that stays</em><br />connected.</h1><p className="hero-lede">전시에서 시작된 관계가<br />그 이후에도 이어집니다.<br /><small>A global artist network built around connection and continuity.</small></p><div className="hero-actions"><Link className="button button-blue" href="/connections">Trace the connections <ArrowUpRight size={16} /></Link><Link className="underlined-link" href="/artists">Meet the artists <ArrowDownRight size={16} /></Link></div></div>
+      <div className="hero-stage"><div className="hero-stage-label"><span>Featured work</span><span>01 / 04</span></div><ArtImage className="hero-art" label="Abstract mixed-media artwork by Seo Yujin" /><div className="hero-caption"><div><strong>The Distance Between</strong><span>Seo Yujin · 2026</span></div><Link href="/works/the-distance-between" aria-label="Open The Distance Between"><ArrowUpRight size={18} /></Link></div><div className="trace-line"><span className="trace-node node-a" /><span className="trace-node node-b" /><span className="trace-node node-c" /><span className="trace-label">connected through<br /><b>UNFRAME Salon 04</b></span></div></div>
+    </section>
+
+    <section className="intro-band page-wrap" id="about"><div className="intro-title"><span>01</span><h2>Artists enter through practice,<br /><em>remain through relationship.</em></h2></div><div className="intro-copy"><p>u.a.u is an artist unit built around relationships formed through UNFRAME — extending beyond exhibitions into ongoing exchange, collaboration and practice.</p><Link className="text-link" href="/connections">How we connect <ArrowUpRight size={14} /></Link></div></section>
+
+    <ConnectionMarquee items={["Seo Yujin · Artist", "UNFRAME Salon 04 · Exhibition", "Glasshouse Gallery · Gallery", "Eunji Park · Director", "Mina Choi · Curator", "Jun Lee · Collector", "Han Mira · Artist", "After the Salon · Project"]} />
+
+    <section className="page-wrap section-space"><SectionHeading title="Current connection" action="View all connections" href="/connections" /><div className="connection-feature"><div className="connection-people"><div className="person-mark tone-blue">SY</div><div className="connection-connector"><span>Exhibited with</span><i /></div><div className="person-mark tone-ink">HM</div><div className="connection-connector"><span>Working alongside</span><i /></div><div className="person-mark tone-clay">YD</div></div><div className="connection-story"><MetaLine>UNFRAME SALON 04 · SEOUL · 2026</MetaLine><h3>What happens<br /><em>after the room empties?</em></h3><p>Three artists keep a conversation open across painting, textile, and sound. Their next meeting is taking shape now.</p><Link className="text-link" href="/projects/after-the-salon">Follow the project <ArrowUpRight size={14} /></Link></div></div></section>
+
+    <section className="recap-banner page-wrap"><div className="recap-copy"><MetaLine>ANNUAL CONNECTION RECAP / 2027</MetaLine><h2>{annualRecap.title}<br /><em>the year in connection.</em></h2><p>{annualRecap.intro}</p><Link className="text-link" href="/recap">Enter the recap <ArrowUpRight size={14} /></Link></div><div className="recap-stats">{annualRecap.stats.map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div></section>
+
+    <section className="blue-panel page-wrap"><div className="panel-copy"><MetaLine>U.A.U SELECT / SEPTEMBER</MetaLine><h2>New forms<br /><em>of being together.</em></h2><p>A monthly selection by the UNFRAME team — artists, works, and the threads we keep noticing.</p><Link className="button button-light" href="/works">Enter the selection <ArrowUpRight size={16} /></Link></div><div className="panel-art"><ArtImage className="select-art" label="Selected sculptural artwork" position="70% center" /><span className="panel-index">SELECT / 09</span></div></section>
+
+    <section className="page-wrap section-space" id="artists"><SectionHeading title="New in the unit" action="All artists" href="/artists" /><div className="artist-list">{artists.slice(0, 4).map((artist, index) => <Link href={`/${artist.slug}`} className="artist-row" key={artist.slug}><span className="artist-index">0{index + 1}</span><span className={`artist-avatar ${artist.tone}`}>{artist.initials}</span><span className="artist-name">{artist.name} {artist.verified && <VerifiedMark compact />}<small>{artist.discipline}</small></span><span className="artist-place">{artist.city}, {artist.country}</span><span className="artist-tags">{artist.tags.slice(0, 2).map(tag => <span key={tag}>{tag}</span>)}</span><ArrowUpRight className="row-arrow" size={17} /></Link>)}</div></section>
+
+    <section className="page-wrap section-space works-section"><SectionHeading title="Works to spend time with" action="Discover all works" href="/works" /><div className="works-grid">{artworks.slice(0, 3).map(work => <Link href={`/works/${work.id}`} className="work-card" key={work.id}><ArtImage className={`work-art ${work.accent}`} position={work.imagePosition} label={work.title} /><div className="work-info"><div><strong>{work.title}</strong><span>{work.artist} · {work.year}</span></div><BookmarkButton label="" /></div><MetaLine>{work.medium}</MetaLine></Link>)}</div></section>
+
+    <section className="journal-section page-wrap" id="journal"><SectionHeading title="Journal / After the exhibition" action="Read the archive" href="#journal" /><div className="journal-grid">{journal.map((entry, index) => <Link href="#journal" className={index === 0 ? "journal-entry journal-featured" : "journal-entry"} key={entry.title}><span className="journal-category">{entry.category}</span><h3>{entry.title}</h3><div><span>{entry.author}</span><span>{entry.date}</span><ArrowUpRight size={15} /></div></Link>)}</div></section>
+
+    <section className="join-band page-wrap"><div><MetaLine>OPEN TO / ARTISTS · CURATORS · COLLECTORS</MetaLine><h2>There is room for<br /><RotatingWord words={["your practice.", "your next project.", "a new connection.", "what comes next."]} /></h2></div><Link className="button button-blue" href="/join">Find your way in <MoveUpRight size={16} /></Link></section>
+  </main>;
+}
