@@ -99,9 +99,14 @@ export default function AboutPage() {
           </div>
           <div className="story-card-bottomline">
             <span>04 / 04</span>
-            <Link href="/works">
-              {tx(locale, "Browse the works", "작품 둘러보기")} <ArrowUpRight size={16} />
-            </Link>
+            <div className="story-footer-actions">
+              <Link href="/works">
+                {tx(locale, "Browse the works", "작품 둘러보기")} <ArrowUpRight size={16} />
+              </Link>
+              <Link className="story-home-button" href="/">
+                {tx(locale, "Back to the main page", "메인 페이지로 돌아가기")} <ArrowUpRight size={17} />
+              </Link>
+            </div>
           </div>
         </FlowSection>
       </FlowArt>
