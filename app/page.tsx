@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight, MoveUpRight } from "lucide-react";
 import { ArtImage, BookmarkButton, DemoNotice, MetaLine, SectionHeading, VerifiedMark } from "./components";
 import { annualRecap, artists, artworks, events, journal, opportunities } from "./data";
 import { ConnectionMarquee, RotatingWord } from "./motion-components";
+import { HomeFaq } from "./components/home-faq";
 import { getServerLocale } from "./server-locale";
 import { artistText, artworkText, cityText, countryText, tx } from "./i18n-shared";
 
@@ -37,6 +38,8 @@ export default function Home() {
     <section className="page-wrap section-space works-section"><SectionHeading title={tx(locale, "Works to spend time with", "천천히 머물러 볼 작품")} action={tx(locale, "Discover all works", "모든 작품 보기")} href="/works" /><div className="works-grid">{artworks.slice(0, 3).map(work => { const copy = artworkText(locale, work.id)!; return <Link href={`/works/${work.id}`} className="work-card" key={work.id}><ArtImage className={`work-art ${work.accent}`} position={work.imagePosition} label={work.title} /><div className="work-info"><div><strong>{work.title}</strong><span>{work.artist} · {work.year}</span></div><BookmarkButton label="" /></div><MetaLine>{copy.medium}</MetaLine></Link>})}</div></section>
 
     <section className="journal-section page-wrap" id="journal"><SectionHeading title={tx(locale, "Journal / After the exhibition", "저널 / 전시 이후")} action={tx(locale, "Read the archive", "아카이브 읽기")} href="#journal" /><div className="journal-grid">{journal.map((entry, index) => <Link href="#journal" className={index === 0 ? "journal-entry journal-featured" : "journal-entry"} key={entry.title}><span className="journal-category">{journalCopy[index][0]}</span><h3>{journalCopy[index][1]}</h3><div><span>{journalCopy[index][2]}</span><span>{entry.date}</span><ArrowUpRight size={15} /></div></Link>)}</div></section>
+
+    <HomeFaq locale={locale} />
 
     <section className="join-band page-wrap"><div><MetaLine>{tx(locale, "OPEN TO / ARTISTS · CURATORS · COLLECTORS", "열려 있는 대상 / 아티스트 · 큐레이터 · 컬렉터")}</MetaLine><h2>{tx(locale, "There is room for", "여기에는 자리가 있습니다")}<br /><RotatingWord words={locale === "ko" ? ["당신의 실천.", "다음 프로젝트.", "새로운 연결.", "그 다음에 올 것."] : ["your practice.", "your next project.", "a new connection.", "what comes next."]} /></h2></div><Link className="button button-blue" href="/join">{tx(locale, "Find your way in", "당신의 방식으로 들어오기")} <MoveUpRight size={16} /></Link></section>
   </main>;

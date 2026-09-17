@@ -26,27 +26,38 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
   return (
     <aside className="dashboard-nav">
       <span className="dash-label">{tx(locale, "My u.a.u", "My u.a.u")}</span>
-      <Link className={active === "overview" ? "active" : ""} href="/dashboard">
-        <FolderKanban size={16} /> {tx(locale, "Overview", "개요")}
-      </Link>
-      <Link className={active === "profile" ? "active" : ""} href="/dashboard/profile">
-        <UserRound size={16} /> {tx(locale, "Profile", "프로필")}
-      </Link>
-      <Link href="/works">
-        <Bookmark size={16} /> {tx(locale, "Saved works", "저장한 작품")}
-      </Link>
-      <Link className={active === "threads" ? "active" : ""} href="/dashboard/threads">
-        <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
-      </Link>
-      <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
-        <WandSparkles size={16} /> {tx(locale, "Your space", "나의 공간")}
-      </Link>
-      <Link href="/projects">
-        <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}
-      </Link>
-      <Link className={active === "notifications" ? "active" : ""} href="/dashboard/notifications">
-        <Bell size={16} /> {tx(locale, "Notifications", "알림")} {unreadCount > 0 && <b>{unreadCount}</b>}
-      </Link>
+      <nav className="dashboard-nav-links" aria-label={tx(locale, "Dashboard navigation", "대시보드 메뉴")}>
+        <div className="dashboard-nav-group">
+          <span className="dashboard-nav-group-label">{tx(locale, "Your unit", "내 유닛")}</span>
+          <Link className={active === "overview" ? "active" : ""} href="/dashboard">
+            <FolderKanban size={16} /> {tx(locale, "Overview", "개요")}
+          </Link>
+          <Link className={active === "profile" ? "active" : ""} href="/dashboard/profile">
+            <UserRound size={16} /> {tx(locale, "Profile", "프로필")}
+          </Link>
+          <Link className={active === "notifications" ? "active" : ""} href="/dashboard/notifications">
+            <Bell size={16} /> {tx(locale, "Notifications", "알림")} {unreadCount > 0 && <b>{unreadCount}</b>}
+          </Link>
+        </div>
+        <div className="dashboard-nav-group">
+          <span className="dashboard-nav-group-label">{tx(locale, "Make", "만들기")}</span>
+          <Link className={active === "threads" ? "active" : ""} href="/dashboard/threads">
+            <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
+          </Link>
+          <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
+            <WandSparkles size={16} /> {tx(locale, "Your space", "나의 공간")}
+          </Link>
+        </div>
+        <div className="dashboard-nav-group">
+          <span className="dashboard-nav-group-label">{tx(locale, "Discover", "탐색")}</span>
+          <Link href="/works">
+            <Bookmark size={16} /> {tx(locale, "Saved works", "저장한 작품")}
+          </Link>
+          <Link href="/projects">
+            <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}
+          </Link>
+        </div>
+      </nav>
       <div className="dash-bottom">
         <span>{displayName}</span>
         {user?.email && <small>{user.email}</small>}

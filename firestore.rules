@@ -52,6 +52,15 @@ service cloud.firestore {
           'basedInCity',
           'bio',
           'practice',
+          'artistName',
+          'websiteUrl',
+          'onboardingCompleted',
+          'publicSlug',
+          'siteTemplate',
+          'sitePublished',
+          'showExhibitions',
+          'showCV',
+          'showAbout',
           'createdAt',
           'updatedAt'
         ]);
@@ -70,10 +79,57 @@ service cloud.firestore {
             'basedInCity',
             'bio',
             'practice',
+            'artistName',
+            'websiteUrl',
+            'onboardingCompleted',
+            'publicSlug',
+            'siteTemplate',
+            'sitePublished',
+            'showExhibitions',
+            'showCV',
+            'showAbout',
             'updatedAt'
           ]));
 
       allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Public artist sites contain only the fields the owner chose to publish.
+    match /public_profiles/{slug} {
+      allow read: if isAdmin()
+        || resource.data.published == true
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.slug == slug;
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.slug == resource.data.slug
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'slug',
+            'ownerUid',
+            'displayName',
+            'artistName',
+            'accountType',
+            'country',
+            'basedInCity',
+            'practice',
+            'bio',
+            'websiteUrl',
+            'siteTemplate',
+            'showExhibitions',
+            'showCV',
+            'showAbout',
+            'published',
+            'updatedAt'
+          ]));
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
     match /artists/{artistId} {

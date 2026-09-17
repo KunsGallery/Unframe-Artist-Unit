@@ -5,6 +5,7 @@ import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where, typ
 import { db } from "./firebase-client";
 
 export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
+export type ArtistSiteTemplate = "gallery" | "editorial" | "archive";
 
 export type UauUserProfile = {
   uid: string;
@@ -18,6 +19,12 @@ export type UauUserProfile = {
   practice?: string;
   websiteUrl?: string;
   onboardingCompleted?: boolean;
+  publicSlug?: string;
+  siteTemplate?: ArtistSiteTemplate;
+  sitePublished?: boolean;
+  showExhibitions?: boolean;
+  showCV?: boolean;
+  showAbout?: boolean;
   language?: "en" | "ko";
   currency?: string;
   timezone?: string;
@@ -37,6 +44,24 @@ export type UauMembership = {
   active?: boolean;
   status?: "active" | "paused" | "cancelled";
   plan?: string;
+};
+
+export type PublicProfile = {
+  slug: string;
+  ownerUid: string;
+  displayName: string;
+  artistName?: string;
+  accountType?: UauAccountType;
+  country?: string;
+  basedInCity?: string;
+  practice?: string;
+  bio?: string;
+  websiteUrl?: string;
+  siteTemplate: ArtistSiteTemplate;
+  showExhibitions: boolean;
+  showCV: boolean;
+  showAbout: boolean;
+  published: boolean;
 };
 
 export const accountTypes: Array<{ value: UauAccountType; en: string; ko: string }> = [
@@ -130,4 +155,13 @@ export function useMembership(uid?: string | null) {
 export async function saveUserProfile(uid: string, values: Partial<Omit<UauUserProfile, "uid">>) {
   if (!db) throw new Error("Firebase is not configured.");
   await setDoc(doc(db, "users", uid), { ...values, updatedAt: serverTimestamp() }, { merge: true });
+}
+
+export async function savePublicProfile(uid: string, slug: string, values: Omit<PublicProfile, "slug" | "ownerUid">) {
+  if (!db) throw new Error("Firebase is not configured.");
+  await setDoc(
+    doc(db, "public_profiles", slug),
+    { ...values, slug, ownerUid: uid, updatedAt: serverTimestamp() },
+    { merge: true },
+  );
 }
