@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  getAdditionalUserInfo,
   getRedirectResult,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  type User,
 } from "firebase/auth";
-import { firebaseConfigured, auth } from "../firebase-client";
+import { doc, getDoc } from "firebase/firestore";
+import { firebaseConfigured, auth, db } from "../firebase-client";
 import { tx, type Locale } from "../i18n-shared";
 
 const providers = [
@@ -23,12 +26,29 @@ export function SocialLoginButtons({ locale }: { locale: Locale }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function routeAfterAuth(user: User, isNewUser = false) {
+    if (isNewUser) {
+      router.replace("/onboarding");
+      return;
+    }
+    if (!db) {
+      router.replace("/dashboard");
+      return;
+    }
+    try {
+      const profile = await getDoc(doc(db, "users", user.uid));
+      router.replace(profile.data()?.onboardingCompleted === true ? "/dashboard" : "/onboarding");
+    } catch {
+      router.replace("/dashboard");
+    }
+  }
+
   useEffect(() => {
     if (!auth || !firebaseConfigured) return;
 
     getRedirectResult(auth)
       .then((result) => {
-        if (result) router.replace("/dashboard");
+        if (result) return routeAfterAuth(result.user, getAdditionalUserInfo(result)?.isNewUser === true);
       })
       .catch(() => {
         setError(
@@ -54,8 +74,8 @@ export function SocialLoginButtons({ locale }: { locale: Locale }) {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       try {
-        await signInWithPopup(auth, provider);
-        router.push("/dashboard");
+        const credential = await signInWithPopup(auth, provider);
+        await routeAfterAuth(credential.user, getAdditionalUserInfo(credential)?.isNewUser === true);
       } catch (caughtError) {
         const code = caughtError instanceof Error ? caughtError.message : "";
         if (code.includes("popup-blocked") || code.includes("operation-not-supported-in-this-environment")) {

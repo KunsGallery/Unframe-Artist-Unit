@@ -297,3 +297,66 @@ h1 em, h2 em, h3 em { font-style: italic; }
 @media (prefers-reduced-motion: reduce) {
   .nav-mega, .nav-mega-link { transition: none; }
 }
+
+/* First-entry onboarding */
+.onboarding-page { min-height: calc(100vh - 77px); padding: 62px 0 110px; }
+.onboarding-wrap { width: min(1030px, calc(100% - 72px)); margin-inline: auto; }
+.onboarding-topline { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.onboarding-progress { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; height: 3px; margin-top: 14px; background: var(--paper-deep); }
+.onboarding-progress i { display: block; background: transparent; transition: background .25s ease; }
+.onboarding-progress i.is-active, .onboarding-progress i.is-complete { background: var(--blue); }
+.onboarding-step { display: grid; grid-template-columns: minmax(270px, .83fr) minmax(360px, 1.17fr); gap: clamp(52px, 9vw, 140px); padding-top: 100px; }
+.onboarding-heading h1 { margin: 0 0 28px; font-family: var(--serif); font-size: clamp(61px, 7.5vw, 108px); font-weight: 400; line-height: .82; letter-spacing: -.06em; }
+.onboarding-heading > p { max-width: 350px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.onboarding-role-list { align-self: start; border-top: 1px solid var(--ink); }
+.onboarding-role { display: grid; grid-template-columns: 28px 1fr 18px; align-items: center; gap: 15px; width: 100%; min-height: 77px; padding: 13px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; transition: color .2s ease, background .2s ease; }
+.onboarding-role:hover, .onboarding-role.is-selected { background: var(--blue-soft); color: var(--blue); }
+.onboarding-role-mark { display: grid; place-items: center; width: 21px; height: 21px; border: 1px solid currentColor; color: var(--blue); }
+.onboarding-role-copy { display: grid; gap: 4px; transition: transform .2s ease; }
+.onboarding-role:hover .onboarding-role-copy, .onboarding-role.is-selected .onboarding-role-copy { transform: translateX(6px); }
+.onboarding-role-copy strong { font-family: var(--serif); font-size: 21px; font-weight: 400; letter-spacing: -.025em; }
+.onboarding-role-copy small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+.onboarding-role > svg { color: var(--blue); transition: transform .2s ease; }
+.onboarding-role:hover > svg, .onboarding-role.is-selected > svg { transform: translate(3px, -3px); }
+.onboarding-next { grid-column: 2; justify-self: start; margin-top: -26px; }
+.onboarding-error { grid-column: 2; margin: -27px 0 0; color: var(--clay); font-size: 11px; }
+.onboarding-heading-details { position: relative; }
+.onboarding-back { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 28px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 11px; }
+.onboarding-back:hover { color: var(--blue); }
+.onboarding-selected-role { display: inline-block; margin: -9px 0 27px; color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.onboarding-form { display: grid; align-content: start; gap: 22px; padding-top: 4px; }
+.onboarding-form label { display: grid; gap: 8px; color: var(--muted); font-size: 10px; }
+.onboarding-form input { width: 100%; border: 0; border-bottom: 1px solid var(--ink); outline: 0; background: transparent; padding: 8px 0 11px; font-size: 16px; }
+.onboarding-form input:focus { border-color: var(--blue); }
+.onboarding-form input::placeholder { color: #99958b; }
+.onboarding-two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+.onboarding-submit-row { display: grid; gap: 12px; justify-items: start; padding-top: 15px; border-top: 1px solid var(--ink); }
+.onboarding-submit-row > span { color: var(--muted); font-size: 10px; }
+.onboarding-loading { display: grid; min-height: 65vh; place-items: center; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 860px) {
+  .onboarding-page { padding: 48px 0 80px; }
+  .onboarding-wrap { width: min(680px, calc(100% - 40px)); }
+  .onboarding-step { grid-template-columns: 1fr; gap: 45px; padding-top: 70px; }
+  .onboarding-heading h1 { font-size: clamp(57px, 14vw, 92px); }
+  .onboarding-role-list, .onboarding-form { grid-column: 1; }
+  .onboarding-next { grid-column: 1; margin-top: -18px; }
+  .onboarding-error { grid-column: 1; margin: -18px 0 0; }
+}
+
+@media (max-width: 500px) {
+  .onboarding-page { padding-top: 35px; }
+  .onboarding-wrap { width: min(100% - 32px, 520px); }
+  .onboarding-step { padding-top: 57px; gap: 36px; }
+  .onboarding-heading h1 { font-size: 61px; }
+  .onboarding-heading > p { font-size: 14px; }
+  .onboarding-role { min-height: 70px; gap: 11px; }
+  .onboarding-role-copy strong { font-size: 19px; }
+  .onboarding-role-copy small { font-size: 9px; }
+  .onboarding-two-up { gap: 15px; }
+  .onboarding-submit-row .button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-progress i, .onboarding-role, .onboarding-role > svg { transition: none; }
+}

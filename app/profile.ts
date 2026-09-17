@@ -4,17 +4,20 @@ import { useEffect, useState } from "react";
 import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
 import { db } from "./firebase-client";
 
-export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "institution";
+export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
 
 export type UauUserProfile = {
   uid: string;
   email?: string;
   displayName?: string;
+  artistName?: string;
   accountType?: UauAccountType;
   country?: string;
   basedInCity?: string;
   bio?: string;
   practice?: string;
+  websiteUrl?: string;
+  onboardingCompleted?: boolean;
   language?: "en" | "ko";
   currency?: string;
   timezone?: string;
@@ -41,6 +44,7 @@ export const accountTypes: Array<{ value: UauAccountType; en: string; ko: string
   { value: "curator", en: "Curator", ko: "큐레이터" },
   { value: "gallery", en: "Gallery / project space", ko: "갤러리 / 프로젝트 스페이스" },
   { value: "collector", en: "Collector", ko: "컬렉터" },
+  { value: "director", en: "Director / producer", ko: "디렉터 / 프로듀서" },
   { value: "institution", en: "Institution", ko: "기관" },
 ];
 
