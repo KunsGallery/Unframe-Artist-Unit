@@ -31,7 +31,8 @@ function useAdminData(uid?: string | null) {
 
     const firestore = db;
     const unsubscribeAccess = onSnapshot(doc(firestore, "admins", uid), (snapshot) => {
-      setAccess(snapshot.exists() && snapshot.data().active === true ? "allowed" : "denied");
+      const data = snapshot.data();
+      setAccess(snapshot.exists() && data?.active === true && roles.includes(data.role as AdminRole) ? "allowed" : "denied");
     }, () => {
       setError("Admin access could not be verified.");
       setAccess("denied");

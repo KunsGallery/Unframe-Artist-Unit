@@ -333,7 +333,10 @@ service cloud.firestore {
     }
 
     match /admins/{uid} {
-      allow read: if isAdmin();
+      // An administrator must be able to read their own access document first.
+      // isAdmin() itself uses this document, so restricting this read to isAdmin()
+      // can create a circular permission check for the initial access lookup.
+      allow read: if isOwner(uid) || isAdmin();
       allow write: if isAdmin();
     }
 
