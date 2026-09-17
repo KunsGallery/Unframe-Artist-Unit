@@ -5,6 +5,7 @@ import { ArrowUpRight, Bookmark, Check, ChevronRight, CircleUserRound, Globe2, M
 import { useState } from "react";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
+import { useAuth } from "./auth-provider";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
@@ -12,6 +13,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
 
 export function Nav() {
   const { locale, setLocale } = useLanguage();
+  const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const items = [[tx(locale, "Artists", "아티스트"), "/artists"], [tx(locale, "Works", "작품"), "/works"], [tx(locale, "Projects", "프로젝트"), "/projects"], [tx(locale, "Journal", "저널"), "/#journal"], [tx(locale, "Connections", "연결"), "/connections"]];
   const changeLocale = (nextLocale: "en" | "ko") => {
@@ -19,7 +21,8 @@ export function Nav() {
     document.cookie = `uau-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     window.location.reload();
   };
-  return <header className="site-header"><div className="nav-shell"><Logo /><nav className={open ? "nav-links nav-open" : "nav-links"} aria-label={tx(locale, "Main navigation", "주 메뉴")}>{items.map(([label, href]) => <Link key={label} href={href} onClick={() => setOpen(false)}>{label}</Link>)}<Link className="nav-accent" href="/join" onClick={() => setOpen(false)}>{tx(locale, "Join u.a.u", "u.a.u 함께하기")} <ArrowUpRight size={14} /></Link></nav><div className="nav-actions"><div className="language-switcher" aria-label={tx(locale, "Language", "언어") }><Globe2 size={15} aria-hidden="true" /><button type="button" className={locale === "en" ? "is-active" : ""} aria-pressed={locale === "en"} onClick={() => changeLocale("en")}>EN</button><span>/</span><button type="button" className={locale === "ko" ? "is-active" : ""} aria-pressed={locale === "ko"} onClick={() => changeLocale("ko")}>KR</button></div><Link className="icon-button" href="/works" aria-label={tx(locale, "Search works", "작품 검색")}><Search size={17} /></Link><Link className="account-link" href="/login"><CircleUserRound size={17} /><span>{tx(locale, "Sign in", "로그인")}</span></Link><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? tx(locale, "Close menu", "메뉴 닫기") : tx(locale, "Open menu", "메뉴 열기")}>{open ? <X size={20} /> : <Menu size={20} />}</button></div></div></header>;
+  const accountLabel = user?.displayName || user?.email?.split("@")[0] || tx(locale, "My u.a.u", "My u.a.u");
+  return <header className="site-header"><div className="nav-shell"><Logo /><nav className={open ? "nav-links nav-open" : "nav-links"} aria-label={tx(locale, "Main navigation", "주 메뉴")}>{items.map(([label, href]) => <Link key={label} href={href} onClick={() => setOpen(false)}>{label}</Link>)}<Link className="nav-accent" href="/join" onClick={() => setOpen(false)}>{tx(locale, "Join u.a.u", "u.a.u 함께하기")} <ArrowUpRight size={14} /></Link></nav><div className="nav-actions"><div className="language-switcher" aria-label={tx(locale, "Language", "언어") }><Globe2 size={15} aria-hidden="true" /><button type="button" className={locale === "en" ? "is-active" : ""} aria-pressed={locale === "en"} onClick={() => changeLocale("en")}>EN</button><span>/</span><button type="button" className={locale === "ko" ? "is-active" : ""} aria-pressed={locale === "ko"} onClick={() => changeLocale("ko")}>KR</button></div><Link className="icon-button" href="/works" aria-label={tx(locale, "Search works", "작품 검색")}><Search size={17} /></Link><Link className="account-link" href={user ? "/dashboard" : "/login"} aria-label={user ? tx(locale, "Open your dashboard", "대시보드 열기") : tx(locale, "Sign in", "로그인")}><CircleUserRound size={17} /><span>{loading ? tx(locale, "Checking", "확인 중") : user ? accountLabel : tx(locale, "Sign in", "로그인")}</span></Link><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? tx(locale, "Close menu", "메뉴 닫기") : tx(locale, "Open menu", "메뉴 열기")}>{open ? <X size={20} /> : <Menu size={20} />}</button></div></div></header>;
 }
 
 export function Footer() {

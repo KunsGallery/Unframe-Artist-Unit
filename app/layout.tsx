@@ -3,6 +3,7 @@ import "./globals.css";
 import { Nav, Footer } from "./components";
 import { I18nProvider } from "./i18n-provider";
 import { getServerLocale } from "./server-locale";
+import { AuthProvider } from "./auth-provider";
 
 export const metadata: Metadata = {
   title: "u.a.u — UNFRAME ARTIST UNIT",
@@ -13,6 +14,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const locale = getServerLocale();
   return <html lang={locale}><body>
     {/* THESIS: Make the relationship itself the first interface, refusing the generic portfolio grid. OWN-WORLD: ivory paper, near-black ink, cobalt blue, thin rules, editorial type, and image-led compositions. STORY: the visitor sees a practice, follows its connections, and enters an ongoing project. FIRST VIEWPORT: proposition on the left, a single artwork and connection path on the right, with one clear trace action. FORM: editorial relationship archive, assigned direction 7, degraded seed b8b0ce36. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md */}
-    <I18nProvider initialLocale={locale}><Nav />{children}<Footer /></I18nProvider>
+    <AuthProvider><I18nProvider initialLocale={locale}><Nav />{children}<Footer /></I18nProvider></AuthProvider>
   </body></html>;
 }
