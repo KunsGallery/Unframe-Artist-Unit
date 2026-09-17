@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bell, Bookmark, FolderKanban, LogOut, Plus, UserRound } from "lucide-react";
+import { ArrowUpRight, Bell, Bookmark, Boxes, FolderKanban, LogOut, Plus, UserRound, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../i18n-provider";
 import { useAuth } from "../auth-provider";
 import { tx } from "../i18n-shared";
 import { useNotifications } from "../notifications";
 
-type DashboardSection = "overview" | "notifications";
+type DashboardSection = "overview" | "profile" | "threads" | "space" | "notifications";
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
   const { locale } = useLanguage();
@@ -29,11 +29,17 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
       <Link className={active === "overview" ? "active" : ""} href="/dashboard">
         <FolderKanban size={16} /> {tx(locale, "Overview", "개요")}
       </Link>
-      <Link href="/artists">
+      <Link className={active === "profile" ? "active" : ""} href="/dashboard/profile">
         <UserRound size={16} /> {tx(locale, "Profile", "프로필")}
       </Link>
       <Link href="/works">
         <Bookmark size={16} /> {tx(locale, "Saved works", "저장한 작품")}
+      </Link>
+      <Link className={active === "threads" ? "active" : ""} href="/dashboard/threads">
+        <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
+      </Link>
+      <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
+        <WandSparkles size={16} /> {tx(locale, "Your space", "나의 공간")}
       </Link>
       <Link href="/projects">
         <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}

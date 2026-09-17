@@ -49,6 +49,9 @@ service cloud.firestore {
           'language',
           'currency',
           'timezone',
+          'basedInCity',
+          'bio',
+          'practice',
           'createdAt',
           'updatedAt'
         ]);
@@ -64,6 +67,9 @@ service cloud.firestore {
             'language',
             'currency',
             'timezone',
+            'basedInCity',
+            'bio',
+            'practice',
             'updatedAt'
           ]));
 
@@ -155,6 +161,37 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /events/{eventId} {
+      allow read: if isAdmin() || resource.data.published == true;
+      allow write: if isAdmin();
+    }
+
+    match /threads/{threadId} {
+      allow read: if isAdmin()
+        || resource.data.visibility == 'open'
+        || (signedIn() && request.auth.uid in resource.data.members);
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.auth.uid in request.resource.data.members;
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /thread_blocks/{blockId} {
+      allow read: if isAdmin()
+        || (signedIn()
+          && exists(/databases/$(database)/documents/threads/$(resource.data.threadId))
+          && request.auth.uid in get(/databases/$(database)/documents/threads/$(resource.data.threadId)).data.members);
+      allow write: if isAdmin();
+    }
+
     match /applications/{applicationId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.applicantUid == request.auth.uid);
@@ -241,6 +278,29 @@ service cloud.firestore {
           && request.resource.data.ownerUid == resource.data.ownerUid);
 
       allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /engagement_events/{eventId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.actorUid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.action in ['view', 'like', 'save', 'follow', 'share'];
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.actorUid == request.auth.uid
+          && request.resource.data.actorUid == resource.data.actorUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    match /virtual_galleries/{galleryId} {
+      allow read: if isAdmin()
+        || resource.data.visibility == 'public'
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isAdmin()
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 

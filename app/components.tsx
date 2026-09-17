@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
+import { setSavedEngagement } from "./engagements";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
@@ -15,7 +16,7 @@ export function Nav() {
   const { locale, setLocale } = useLanguage();
   const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
-  const items = [[tx(locale, "Artists", "아티스트"), "/artists"], [tx(locale, "Works", "작품"), "/works"], [tx(locale, "Projects", "프로젝트"), "/projects"], [tx(locale, "Journal", "저널"), "/#journal"], [tx(locale, "Connections", "연결"), "/connections"]];
+  const items = [[tx(locale, "Artists", "아티스트"), "/artists"], [tx(locale, "Works", "작품"), "/works"], [tx(locale, "Projects", "프로젝트"), "/projects"], [tx(locale, "Radar", "Radar"), "/radar"], [tx(locale, "Connections", "연결"), "/connections"]];
   const changeLocale = (nextLocale: "en" | "ko") => {
     setLocale(nextLocale);
     document.cookie = `uau-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
@@ -34,11 +35,17 @@ export function SectionHeading({ title, action, href = "#" }: { title: string; a
   return <div className="section-heading"><h2>{title}</h2>{action && <Link href={href} className="text-link">{action} <ArrowUpRight size={14} /></Link>}</div>;
 }
 
-export function BookmarkButton({ label = "Save" }: { label?: string }) {
+export function BookmarkButton({ label = "Save", targetType, targetId }: { label?: string; targetType?: "artist" | "work" | "project" | "event" | "opportunity" | "thread"; targetId?: string }) {
   const { locale } = useLanguage();
+  const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const saveText = label === "" ? "" : locale === "ko" ? (label === "Save" ? "저장" : label) : label;
-  return <button className={saved ? "save-button saved" : "save-button"} onClick={() => setSaved(!saved)} aria-pressed={saved} aria-label={saved ? tx(locale, "Remove from saved", "저장 목록에서 제거") : saveText}><Bookmark size={15} fill={saved ? "currentColor" : "none"} />{saved ? tx(locale, "Saved", "저장됨") : label === "" ? "" : saveText}</button>;
+  async function toggleSaved() {
+    const next = !saved;
+    setSaved(next);
+    if (user && targetType && targetId) await setSavedEngagement({ actorUid: user.uid, targetType, targetId, active: next }).catch(() => setSaved(!next));
+  }
+  return <button className={saved ? "save-button saved" : "save-button"} onClick={() => void toggleSaved()} aria-pressed={saved} aria-label={saved ? tx(locale, "Remove from saved", "저장 목록에서 제거") : saveText}><Bookmark size={15} fill={saved ? "currentColor" : "none"} />{saved ? tx(locale, "Saved", "저장됨") : label === "" ? "" : saveText}</button>;
 }
 
 export function ArtImage({ className = "", position = "center", label = "Artwork image" }: { className?: string; position?: string; label?: string }) {

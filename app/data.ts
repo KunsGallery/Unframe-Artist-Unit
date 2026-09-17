@@ -72,3 +72,135 @@ export const annualRecap = {
     ["Crossing Borders", "Seoul → Berlin → Busan", "Distance became part of the practice."],
   ],
 };
+
+export type UauOpportunity = {
+  slug: string;
+  title: string;
+  organiser: string;
+  kind: "Open call" | "Residency" | "Collaboration";
+  location: string;
+  deadline: string;
+  description: string;
+  tags: string[];
+};
+
+export type UauEvent = {
+  slug: string;
+  title: string;
+  kind: "Exhibition" | "Salon" | "Talk";
+  venue: string;
+  city: string;
+  date: string;
+  status: "Open" | "Opening soon" | "Closing soon";
+  description: string;
+  participants: string[];
+};
+
+export type UauThread = {
+  id: string;
+  title: string;
+  type: "Project room" | "Research room" | "Studio note";
+  updated: string;
+  members: string[];
+  description: string;
+  visibility: "Private" | "By invite" | "Open";
+};
+
+export const opportunities: UauOpportunity[] = [
+  {
+    slug: "unframe-residency-2027",
+    title: "UNFRAME Residency 2027",
+    organiser: "UNFRAME Artist Unit",
+    kind: "Residency",
+    location: "Seoul · hybrid",
+    deadline: "12.04.2026",
+    description: "A quiet period for a practice to change direction, with room for exchange after the stay.",
+    tags: ["All practices", "Exchange", "4 weeks"],
+  },
+  {
+    slug: "material-afterlife",
+    title: "Material Afterlife",
+    organiser: "Glasshouse Gallery",
+    kind: "Open call",
+    location: "Berlin",
+    deadline: "10.18.2026",
+    description: "Seeking artists working with the memory, reuse, and future life of materials.",
+    tags: ["Material", "Group exhibition", "EU based"],
+  },
+  {
+    slug: "sound-in-the-room",
+    title: "Sound in the Room",
+    organiser: "After the Salon unit",
+    kind: "Collaboration",
+    location: "Busan · online",
+    deadline: "Rolling",
+    description: "A developing collaboration between sound, moving image, and artists who work with space.",
+    tags: ["Sound", "Moving image", "Collaboration"],
+  },
+];
+
+export const events: UauEvent[] = [
+  {
+    slug: "unframe-salon-05",
+    title: "UNFRAME Salon 05",
+    kind: "Salon",
+    venue: "Seongsu Practice Room",
+    city: "Seoul",
+    date: "09.26.2026",
+    status: "Opening soon",
+    description: "A room for unfinished work, new questions, and the people who stay after the first conversation.",
+    participants: ["Seo Yujin", "Han Mira", "Mina Choi"],
+  },
+  {
+    slug: "soft-violence-opening",
+    title: "Soft Violence",
+    kind: "Exhibition",
+    venue: "Kunstverein Mitte",
+    city: "Berlin",
+    date: "10.11.2026",
+    status: "Open",
+    description: "Three practices looking at how a surface can hold both care and resistance.",
+    participants: ["Han Mira", "Maria Novak"],
+  },
+  {
+    slug: "what-comes-after",
+    title: "What Comes After?",
+    kind: "Talk",
+    venue: "u.a.u online room",
+    city: "Online",
+    date: "10.28.2026",
+    status: "Open",
+    description: "Artists, curators, and collectors talk about what an exhibition leaves behind.",
+    participants: ["Yoon Doyun", "Eunji Park", "Jun Lee"],
+  },
+];
+
+export const threads: UauThread[] = [
+  {
+    id: "after-the-salon-room",
+    title: "After the Salon / working room",
+    type: "Project room",
+    updated: "2 hours ago",
+    members: ["SY", "HM", "YD"],
+    description: "Notes, sound fragments, and the next meeting after UNFRAME Salon 04.",
+    visibility: "By invite",
+  },
+  {
+    id: "body-as-archive",
+    title: "Body as archive",
+    type: "Research room",
+    updated: "Yesterday",
+    members: ["SY", "MC", "EP"],
+    description: "References and questions around the body as a soft, shared record.",
+    visibility: "Private",
+  },
+  {
+    id: "small-weather-notes",
+    title: "Small weather / studio notes",
+    type: "Studio note",
+    updated: "Sep 12",
+    members: ["LE", "KA"],
+    description: "A slow exchange of clay tests, city weather, and images that keep returning.",
+    visibility: "Open",
+  },
+];
