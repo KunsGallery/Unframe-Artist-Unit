@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowUpRight, Check, Eye, ExternalLink, LayoutTemplate, RefreshCw } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, Eye, ExternalLink, LayoutTemplate, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DemoNotice, MetaLine } from "../../components";
 import { useAuth } from "../../auth-provider";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
-import { accountTypes, savePublicProfile, saveUserProfile, useArtistMembership, useMembership, useUserProfile, type ArtistSiteTemplate, type UauAccountType } from "../../profile";
+import { accountTypes, savePublicProfile, saveUserProfile, useArtistMembership, useMembership, useUserProfile, type ArtistSiteAccent, type ArtistSiteSection, type ArtistSiteTemplate, type UauAccountType } from "../../profile";
+import { artistSiteAccentLabels, artistSiteSectionLabels, defaultArtistSiteSections, normalizeArtistSiteSections } from "../../artist/site-config";
 import { DashboardSidebar } from "../dashboard-sidebar";
 
 type ProfileForm = {
@@ -22,6 +23,8 @@ type ProfileForm = {
   websiteUrl: string;
   publicSlug: string;
   siteTemplate: ArtistSiteTemplate;
+  siteSections: ArtistSiteSection[];
+  siteAccent: ArtistSiteAccent;
   sitePublished: boolean;
   showExhibitions: boolean;
   showCV: boolean;
@@ -39,6 +42,8 @@ const emptyForm: ProfileForm = {
   websiteUrl: "",
   publicSlug: "",
   siteTemplate: "editorial",
+  siteSections: [...defaultArtistSiteSections],
+  siteAccent: "blue",
   sitePublished: false,
   showExhibitions: true,
   showCV: true,
@@ -96,6 +101,8 @@ export default function DashboardProfilePage() {
       websiteUrl: profile?.websiteUrl || "",
       publicSlug: profile?.publicSlug || getPublicSlug(profile?.displayName || user?.displayName || "", user?.uid || "artist"),
       siteTemplate: profile?.siteTemplate || "editorial",
+      siteSections: normalizeArtistSiteSections(profile?.siteSections),
+      siteAccent: profile?.siteAccent || "blue",
       sitePublished: profile?.sitePublished === true,
       showExhibitions: profile?.showExhibitions !== false,
       showCV: profile?.showCV !== false,
@@ -112,6 +119,22 @@ export default function DashboardProfilePage() {
     setError(null);
   }
 
+  function moveSection(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= form.siteSections.length) return;
+    const nextSections = [...form.siteSections];
+    [nextSections[index], nextSections[nextIndex]] = [nextSections[nextIndex], nextSections[index]];
+    setField("siteSections", nextSections);
+  }
+
+  function toggleSection(section: ArtistSiteSection) {
+    if (section === "works") return;
+    const nextSections = form.siteSections.includes(section)
+      ? form.siteSections.filter((item) => item !== section)
+      : [...form.siteSections, section];
+    setField("siteSections", nextSections);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
@@ -121,7 +144,13 @@ export default function DashboardProfilePage() {
     try {
       if (!form.displayName.trim()) throw new Error(tx(locale, "Add a display name before publishing your site.", "페이지를 공개하기 전에 표시 이름을 입력해 주세요."));
       const slug = getPublicSlug(form.publicSlug || form.displayName, user.uid);
-      const profileValues = { ...form, publicSlug: slug };
+      const profileValues = {
+        ...form,
+        publicSlug: slug,
+        showExhibitions: form.siteSections.includes("exhibitions"),
+        showCV: form.siteSections.includes("cv"),
+        showAbout: form.siteSections.includes("about"),
+      };
       await saveUserProfile(user.uid, profileValues);
       await savePublicProfile(user.uid, slug, {
         displayName: form.displayName.trim(),
@@ -133,9 +162,11 @@ export default function DashboardProfilePage() {
         bio: form.bio.trim(),
         websiteUrl: form.websiteUrl.trim(),
         siteTemplate: form.siteTemplate,
-        showExhibitions: form.showExhibitions,
-        showCV: form.showCV,
-        showAbout: form.showAbout,
+        siteSections: form.siteSections,
+        siteAccent: form.siteAccent,
+        showExhibitions: form.siteSections.includes("exhibitions"),
+        showCV: form.siteSections.includes("cv"),
+        showAbout: form.siteSections.includes("about"),
         published: form.sitePublished,
       });
       setForm((current) => ({ ...current, publicSlug: slug }));
@@ -166,7 +197,8 @@ export default function DashboardProfilePage() {
 
     <section className="profile-builder" aria-labelledby="builder-title"><div className="profile-builder-heading"><div><MetaLine>{tx(locale, "PUBLIC SITE BUILDER", "공개 페이지 빌더")}</MetaLine><h2 id="builder-title">{tx(locale, <>Give your practice<br /><em>a room of its own.</em></>, <>당신의 작업에<br /><em>자기만의 방을 주세요.</em></>)}</h2></div><LayoutTemplate size={22} aria-hidden="true" /></div><p className="profile-builder-intro">{tx(locale, "Choose a starting structure, then keep changing it as the work changes. Your public page stays connected to your u.a.u profile.", "작업의 변화에 맞춰 계속 바꿀 수 있는 시작 구조를 선택하세요. 공개 페이지는 u.a.u 프로필과 연결되어 있습니다.")}</p>
       <div className="builder-template-list">{templateChoices.map((template) => <button key={template.value} type="button" className={form.siteTemplate === template.value ? "builder-template is-selected" : "builder-template"} onClick={() => setField("siteTemplate", template.value)} aria-pressed={form.siteTemplate === template.value}><div className={`builder-preview builder-preview-${template.value}`}><span>{template.value === "gallery" ? "IMAGE / 01" : template.value === "editorial" ? "ABOUT / WORK" : "INDEX / 2026"}</span><strong>{form.displayName || "Your name"}</strong><i /><small>{template.value === "gallery" ? "a work stays in the room" : template.value === "editorial" ? "a practice in motion" : "selected works / archive"}</small></div><div className="builder-template-copy"><strong>{tx(locale, template.en, template.ko)}</strong><span>{tx(locale, template.noteEn, template.noteKo)}</span>{form.siteTemplate === template.value && <Check size={15} />}</div></button>)}</div>
-      <div className="builder-settings"><div><MetaLine>{tx(locale, "SITE ADDRESS", "페이지 주소")}</MetaLine><label className="builder-slug-field"><span>uau.unframe.kr/artist/</span><input value={form.publicSlug} onChange={(event) => setField("publicSlug", event.target.value)} placeholder="your-name" aria-label={tx(locale, "Public page address", "공개 페이지 주소")} /></label><label>{tx(locale, "Website / portfolio link", "웹사이트 / 포트폴리오 링크")}<input type="url" value={form.websiteUrl} onChange={(event) => setField("websiteUrl", event.target.value)} placeholder="https://" /></label></div><div className="builder-controls"><MetaLine>{tx(locale, "PUBLISH SETTINGS", "공개 설정")}</MetaLine><label className="builder-check"><input type="checkbox" checked={form.sitePublished} onChange={(event) => setField("sitePublished", event.target.checked)} /><span><strong>{tx(locale, "Publish my page", "내 페이지 공개하기")}</strong><small>{tx(locale, "Anyone with the link can visit it.", "링크를 가진 누구나 방문할 수 있습니다.")}</small></span></label><div className="builder-sections"><span>{tx(locale, "Show on page", "페이지에 표시할 섹션")}</span>{([["showExhibitions", "Exhibitions", "전시"], ["showCV", "CV", "CV"], ["showAbout", "About", "소개"]] as const).map(([field, en, ko]) => <label key={field}><input type="checkbox" checked={form[field]} onChange={(event) => setField(field, event.target.checked)} /> {tx(locale, en, ko)}</label>)}</div></div></div>
+      <div className="builder-settings"><div><MetaLine>{tx(locale, "SITE ADDRESS", "페이지 주소")}</MetaLine><label className="builder-slug-field"><span>uau.unframe.kr/artist/</span><input value={form.publicSlug} onChange={(event) => setField("publicSlug", event.target.value)} placeholder="your-name" aria-label={tx(locale, "Public page address", "공개 페이지 주소")} /></label><label>{tx(locale, "Website / portfolio link", "웹사이트 / 포트폴리오 링크")}<input type="url" value={form.websiteUrl} onChange={(event) => setField("websiteUrl", event.target.value)} placeholder="https://" /></label></div><div className="builder-controls"><MetaLine>{tx(locale, "PUBLISH SETTINGS", "공개 설정")}</MetaLine><label className="builder-check"><input type="checkbox" checked={form.sitePublished} onChange={(event) => setField("sitePublished", event.target.checked)} /><span><strong>{tx(locale, "Publish my page", "내 페이지 공개하기")}</strong><small>{tx(locale, "Anyone with the link can visit it.", "링크를 가진 누구나 방문할 수 있습니다.")}</small></span></label><div className="builder-sections"><span>{tx(locale, "Show on page", "페이지에 표시할 섹션")}</span>{(["exhibitions", "cv", "about"] as ArtistSiteSection[]).map((section) => <label key={section}><input type="checkbox" checked={form.siteSections.includes(section)} onChange={() => toggleSection(section)} /> {tx(locale, artistSiteSectionLabels[section].en, artistSiteSectionLabels[section].ko)}</label>)}</div></div></div>
+      <div className="builder-system-settings"><div className="builder-section-order"><MetaLine>{tx(locale, "PAGE ORDER", "페이지 순서")}</MetaLine><p>{tx(locale, "Arrange the sections in the order your practice wants to be read.", "작업이 읽히길 바라는 순서대로 섹션을 배치하세요.")}</p><div className="builder-order-list">{form.siteSections.map((section, index) => <div className="builder-order-row" key={section}><span>0{index + 1}</span><strong>{tx(locale, artistSiteSectionLabels[section].en, artistSiteSectionLabels[section].ko)}</strong><div><button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} aria-label={tx(locale, `Move ${artistSiteSectionLabels[section].en} up`, `${artistSiteSectionLabels[section].ko} 위로 이동`)}><ArrowUp size={14} /></button><button type="button" onClick={() => moveSection(index, 1)} disabled={index === form.siteSections.length - 1} aria-label={tx(locale, `Move ${artistSiteSectionLabels[section].en} down`, `${artistSiteSectionLabels[section].ko} 아래로 이동`)}><ArrowDown size={14} /></button></div></div>)}</div></div><div className="builder-accent-control"><MetaLine>{tx(locale, "ACCENT", "강조색")}</MetaLine><p>{tx(locale, "Choose a restrained accent for your public room.", "공개 페이지에 사용할 절제된 강조색을 고르세요.")}</p><label><span className="sr-only">{tx(locale, "Artist page accent", "아티스트 페이지 강조색")}</span><select value={form.siteAccent} onChange={(event) => setField("siteAccent", event.target.value as ArtistSiteAccent)}>{(["blue", "ink", "clay"] as ArtistSiteAccent[]).map((accent) => <option value={accent} key={accent}>{tx(locale, artistSiteAccentLabels[accent].en, artistSiteAccentLabels[accent].ko)}</option>)}</select></label></div></div>
       <div className="builder-footer"><span>{tx(locale, "Your page is saved with your profile. Publish when it feels ready.", "페이지는 프로필과 함께 저장됩니다. 준비가 되었을 때 공개하세요.")}</span>{publicUrl && <a className="text-link" href={publicUrl} target="_blank" rel="noreferrer"><Eye size={14} /> {tx(locale, "Preview page", "페이지 미리보기")} <ExternalLink size={13} /></a>}</div>
     </section>
   </section></div></main>;

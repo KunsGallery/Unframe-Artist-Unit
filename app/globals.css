@@ -719,3 +719,65 @@ h1 em, h2 em, h3 em { font-style: italic; }
   .home-faq-question { min-height: 62px; font-size: 11px; }
   .home-faq-answer { padding-right: 20px; }
 }
+
+/* Artist site builder system controls and restrained theme tokens. */
+.builder-system-settings {
+  display: grid;
+  grid-template-columns: 1.35fr .65fr;
+  gap: 65px;
+  padding: 40px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+.builder-section-order, .builder-accent-control {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+.builder-section-order > p, .builder-accent-control > p {
+  max-width: 360px;
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.builder-order-list { border-top: 1px solid var(--ink); }
+.builder-order-row {
+  display: grid;
+  grid-template-columns: 35px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--line);
+}
+.builder-order-row > span { color: var(--blue); font-size: 10px; font-weight: 700; }
+.builder-order-row > strong { font-family: var(--serif); font-size: 19px; font-weight: 400; }
+.builder-order-row > div { display: flex; gap: 4px; }
+.builder-order-row button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--blue);
+  cursor: pointer;
+}
+.builder-order-row button:hover:not(:disabled) { border-color: var(--blue); background: var(--blue-soft); }
+.builder-order-row button:disabled { color: var(--line); cursor: not-allowed; }
+.builder-accent-control label { display: block; }
+.builder-accent-control select { width: 100%; }
+.public-artist-shell { --artist-accent: var(--blue); }
+.public-artist-shell[data-site-accent="ink"] { --artist-accent: var(--ink); }
+.public-artist-shell[data-site-accent="clay"] { --artist-accent: #b56852; }
+.public-artist-shell .public-artist-mark,
+.public-artist-shell .public-gallery-hero { background: var(--artist-accent); }
+.public-artist-shell .public-artist-identity > div:last-child > span,
+.public-artist-shell .public-gallery-hero-copy > span,
+.public-artist-shell .public-section-label,
+.public-artist-shell .public-artist-footer a { color: var(--artist-accent); }
+.public-artist-shell .public-site-header nav a:hover,
+.public-artist-shell .public-artist-links a:hover { color: var(--artist-accent); }
+
+@media (max-width: 860px) {
+  .builder-system-settings { grid-template-columns: 1fr; gap: 42px; }
+}

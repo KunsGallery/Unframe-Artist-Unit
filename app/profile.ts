@@ -6,6 +6,8 @@ import { db } from "./firebase-client";
 
 export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
 export type ArtistSiteTemplate = "gallery" | "editorial" | "archive";
+export type ArtistSiteSection = "works" | "exhibitions" | "cv" | "about";
+export type ArtistSiteAccent = "blue" | "ink" | "clay";
 
 export type UauUserProfile = {
   uid: string;
@@ -21,6 +23,8 @@ export type UauUserProfile = {
   onboardingCompleted?: boolean;
   publicSlug?: string;
   siteTemplate?: ArtistSiteTemplate;
+  siteSections?: ArtistSiteSection[];
+  siteAccent?: ArtistSiteAccent;
   sitePublished?: boolean;
   showExhibitions?: boolean;
   showCV?: boolean;
@@ -58,6 +62,8 @@ export type PublicProfile = {
   bio?: string;
   websiteUrl?: string;
   siteTemplate: ArtistSiteTemplate;
+  siteSections?: ArtistSiteSection[];
+  siteAccent?: ArtistSiteAccent;
   showExhibitions: boolean;
   showCV: boolean;
   showAbout: boolean;
