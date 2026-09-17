@@ -27,7 +27,7 @@ export default function AboutPage() {
           </div>
           <div className="story-card-bottomline">
             <span>u.a.u / UNFRAME ARTIST UNIT</span>
-            <Link data-cursor="next" href="/artists">
+              <Link href="/artists">
               {tx(locale, "Explore artist pages", "아티스트 페이지 둘러보기")} <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -51,7 +51,7 @@ export default function AboutPage() {
           </div>
           <div className="story-card-bottomline">
             <span>02 / 04</span>
-            <Link data-cursor="next" href="/connections">
+              <Link href="/connections">
               {tx(locale, "See the connections", "연결 보기")} <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -75,7 +75,7 @@ export default function AboutPage() {
           </div>
           <div className="story-card-bottomline">
             <span>03 / 04</span>
-            <Link data-cursor="next" href="/projects">
+              <Link href="/projects">
               {tx(locale, "View projects", "프로젝트 보기")} <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -100,10 +100,10 @@ export default function AboutPage() {
           <div className="story-card-bottomline">
             <span>04 / 04</span>
             <div className="story-footer-actions">
-              <Link data-cursor="next" href="/works">
+              <Link href="/works">
                 {tx(locale, "Browse the works", "작품 둘러보기")} <ArrowUpRight size={16} />
               </Link>
-              <Link className="story-home-button" data-cursor="next" href="/">
+              <Link className="story-home-button" href="/">
                 {tx(locale, "Back to the main page", "메인 페이지로 돌아가기")} <ArrowUpRight size={17} />
               </Link>
             </div>

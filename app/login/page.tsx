@@ -3,13 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Logo } from "../components";
 import { getServerLocale } from "../server-locale";
 import { tx } from "../i18n-shared";
-
-const providers = [
-  { id: "google", name: "Google" },
-  { id: "apple", name: "Apple" },
-  { id: "naver", name: "Naver" },
-  { id: "facebook", name: "Facebook" },
-] as const;
+import { SocialLoginButtons } from "./social-login-buttons";
 
 export default function LoginPage() {
   const locale = getServerLocale();
@@ -47,27 +41,7 @@ export default function LoginPage() {
             {tx(locale, "Sign in", "로그인")} <ArrowRight size={16} />
           </button>
           <div className="auth-divider"><span>{tx(locale, "or", "또는")}</span></div>
-          <div
-            className="auth-providers"
-            aria-label={tx(locale, "Social login options", "소셜 로그인 선택")}
-          >
-            {providers.map((provider) => (
-              <button
-                className="button button-outline auth-provider"
-                data-auth-provider={provider.id}
-                type="button"
-                key={provider.id}
-              >
-                <span
-                  className={`auth-provider-mark auth-provider-mark-${provider.id}`}
-                  aria-hidden="true"
-                >
-                  {provider.name.slice(0, 1)}
-                </span>
-                {tx(locale, `Continue with ${provider.name}`, `${provider.name}로 계속하기`)}
-              </button>
-            ))}
-          </div>
+          <SocialLoginButtons locale={locale} />
         </form>
         <p className="auth-foot">
           {tx(locale, "No account yet?", "아직 계정이 없나요?")} <Link href="/join">{tx(locale, "Join the unit", "유닛에 함께하기")}</Link>

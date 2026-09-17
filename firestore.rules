@@ -1,0 +1,279 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Admin access is controlled by a server-created admins/{uid} document.
+    // Never grant admin access by comparing an email in client-side code.
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'editor', 'curator', 'support', 'finance', 'moderator'];
+    }
+
+    function ownsArtist(artistId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/artists/$(artistId)).data.ownerUid == request.auth.uid;
+    }
+
+    function ownsProposalArtist(artistId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/artists/$(artistId)).data.ownerUid == request.auth.uid;
+    }
+
+    function canReadProposal(data) {
+      return isAdmin()
+        || isOwner(data.senderUid)
+        || ownsProposalArtist(data.recipientArtistId);
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      allow create: if isOwner(uid)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'displayName',
+          'accountType',
+          'country',
+          'language',
+          'currency',
+          'timezone',
+          'createdAt',
+          'updatedAt'
+        ]);
+
+      allow update: if isAdmin()
+        || (isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'displayName',
+            'accountType',
+            'country',
+            'language',
+            'currency',
+            'timezone',
+            'updatedAt'
+          ]));
+
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    match /artists/{artistId} {
+      allow read: if isAdmin()
+        || resource.data.published == true
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (signedIn()
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.verified == false
+          && request.resource.data.applicationStatus == 'pending'
+          && request.resource.data.published == false);
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.verified == resource.data.verified
+          && request.resource.data.applicationStatus == resource.data.applicationStatus
+          && request.resource.data.published == resource.data.published
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'slug',
+            'name',
+            'artistName',
+            'profileImage',
+            'nationality',
+            'basedInCountry',
+            'basedInCity',
+            'bioKo',
+            'bioEn',
+            'statementKo',
+            'statementEn',
+            'mediums',
+            'practiceTags',
+            'visualTags',
+            'availableFor',
+            'careerStage',
+            'updatedAt'
+          ]));
+
+      allow delete: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && resource.data.applicationStatus == 'pending');
+    }
+
+    match /artworks/{artworkId} {
+      allow read: if isAdmin()
+        || resource.data.visibility == 'public'
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (signedIn()
+          && request.resource.data.ownerUid == request.auth.uid
+          && ownsArtist(request.resource.data.artistId));
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.artistId == resource.data.artistId);
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAdmin() || resource.data.public == true;
+      allow write: if isAdmin();
+    }
+
+    match /connections/{connectionId} {
+      allow read: if isAdmin() || resource.data.public == true;
+      allow write: if isAdmin();
+    }
+
+    match /units/{unitId} {
+      allow read: if isAdmin() || resource.data.public == true;
+      allow write: if isAdmin();
+    }
+
+    match /opportunities/{opportunityId} {
+      allow read: if isAdmin() || resource.data.published == true;
+      allow write: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.applicantUid == request.auth.uid);
+
+      allow create: if signedIn()
+        && request.resource.data.applicantUid == request.auth.uid;
+
+      allow update, delete: if isAdmin();
+    }
+
+    match /shortlists/{shortlistId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || resource.data.visibility == 'public'
+        || (signedIn() && request.auth.uid in resource.data.sharedWith);
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /proposals/{proposalId} {
+      allow read: if canReadProposal(resource.data);
+
+      allow create: if signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && ownsProposalArtist(request.resource.data.recipientArtistId);
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && (isOwner(resource.data.senderUid)
+            || ownsProposalArtist(resource.data.recipientArtistId))
+          && request.resource.data.senderUid == resource.data.senderUid
+          && request.resource.data.recipientArtistId == resource.data.recipientArtistId);
+
+      allow delete: if isAdmin() || isOwner(resource.data.senderUid);
+    }
+
+    match /memberships/{membershipId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /favorites/{favoriteId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (signedIn() && request.resource.data.ownerUid == request.auth.uid);
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /follows/{followId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (signedIn() && request.resource.data.ownerUid == request.auth.uid);
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid);
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.recipientUid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /journal/{journalId} {
+      allow read: if isAdmin() || resource.data.published == true;
+      allow write: if isAdmin();
+    }
+
+    match /galleries/{galleryId} {
+      allow read: if isAdmin() || resource.data.published == true;
+      allow write: if isAdmin();
+    }
+
+    match /collector_profiles/{collectorUid} {
+      allow read, write: if isAdmin() || isOwner(collectorUid);
+    }
+
+    match /admins/{uid} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Every collection not explicitly listed above is denied by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
