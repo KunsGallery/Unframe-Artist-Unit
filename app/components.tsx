@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bookmark, Check, ChevronRight, CircleUserRound, Globe2, Menu, Search, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowUpRight, Bookmark, Check, ChevronDown, ChevronRight, ChevronUp, CircleUserRound, Globe2, Menu, Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
@@ -12,18 +12,118 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
 }
 
+function NavMenu({
+  id,
+  label,
+  open,
+  onToggle,
+  onNavigate,
+  children,
+}: {
+  id: string;
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+  children: React.ReactNode;
+}) {
+  return <div className={open ? "nav-menu is-open" : "nav-menu"}>
+    <button type="button" className="nav-menu-trigger" aria-expanded={open} aria-controls={id} onClick={onToggle}>
+      <span>{label}</span>
+      {open ? <ChevronUp size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}
+    </button>
+    <div id={id} className="nav-mega" aria-hidden={!open}>
+      <div className="nav-mega-inner" onClick={onNavigate}>{children}</div>
+    </div>
+  </div>;
+}
+
+function MegaColumn({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
+  return <div className="nav-mega-column">
+    <p className="nav-mega-eyebrow">{eyebrow}</p>
+    <h2>{title}</h2>
+    <div className="nav-mega-links">{children}</div>
+  </div>;
+}
+
+function MegaLink({ href, label, detail, soon = false }: { href: string; label: string; detail?: string; soon?: boolean }) {
+  return <Link href={href} className={soon ? "nav-mega-link is-soon" : "nav-mega-link"}>
+    <span>{label}{detail && <small>{detail}</small>}</span>
+    {soon ? <em>Soon</em> : <ArrowUpRight size={13} aria-hidden="true" />}
+  </Link>;
+}
+
 export function Nav() {
   const { locale, setLocale } = useLanguage();
   const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
-  const items = [[tx(locale, "Artists", "아티스트"), "/artists"], [tx(locale, "Works", "작품"), "/works"], [tx(locale, "Projects", "프로젝트"), "/projects"], [tx(locale, "Radar", "Radar"), "/radar"], [tx(locale, "Connections", "연결"), "/connections"]];
+  const [openMenu, setOpenMenu] = useState<"explore" | "participate" | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const closeMenus = () => {
+    setOpen(false);
+    setOpenMenu(null);
+  };
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMenus();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) setOpenMenu(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  });
   const changeLocale = (nextLocale: "en" | "ko") => {
     setLocale(nextLocale);
     document.cookie = `uau-locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     window.location.reload();
   };
   const accountLabel = user?.displayName || user?.email?.split("@")[0] || tx(locale, "My u.a.u", "My u.a.u");
-  return <header className="site-header"><div className="nav-shell"><Logo /><nav className={open ? "nav-links nav-open" : "nav-links"} aria-label={tx(locale, "Main navigation", "주 메뉴")}>{items.map(([label, href]) => <Link key={label} href={href} onClick={() => setOpen(false)}>{label}</Link>)}<Link className="nav-accent" href="/join" onClick={() => setOpen(false)}>{tx(locale, "Join u.a.u", "u.a.u 함께하기")} <ArrowUpRight size={14} /></Link></nav><div className="nav-actions"><div className="language-switcher" aria-label={tx(locale, "Language", "언어") }><Globe2 size={15} aria-hidden="true" /><button type="button" className={locale === "en" ? "is-active" : ""} aria-pressed={locale === "en"} onClick={() => changeLocale("en")}>EN</button><span>/</span><button type="button" className={locale === "ko" ? "is-active" : ""} aria-pressed={locale === "ko"} onClick={() => changeLocale("ko")}>KR</button></div><Link className="icon-button" href="/works" aria-label={tx(locale, "Search works", "작품 검색")}><Search size={17} /></Link><Link className="account-link" href={user ? "/dashboard" : "/login"} aria-label={user ? tx(locale, "Open your dashboard", "대시보드 열기") : tx(locale, "Sign in", "로그인")}><CircleUserRound size={17} /><span>{loading ? tx(locale, "Checking", "확인 중") : user ? accountLabel : tx(locale, "Sign in", "로그인")}</span></Link><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? tx(locale, "Close menu", "메뉴 닫기") : tx(locale, "Open menu", "메뉴 열기")}>{open ? <X size={20} /> : <Menu size={20} />}</button></div></div></header>;
+  const toggleMenu = (menu: "explore" | "participate") => setOpenMenu((current) => current === menu ? null : menu);
+  return <header ref={headerRef} className="site-header"><div className="nav-shell"><Logo /><nav className={open ? "nav-links nav-open" : "nav-links"} aria-label={tx(locale, "Main navigation", "주 메뉴")}>
+    <NavMenu id="nav-explore" label={tx(locale, "Explore", "둘러보기")} open={openMenu === "explore"} onToggle={() => toggleMenu("explore")} onNavigate={closeMenus}>
+      <MegaColumn eyebrow={tx(locale, "People & works", "사람과 작품")} title={tx(locale, "Follow the work.", "작품을 따라가세요.")}>
+        <MegaLink href="/artists" label={tx(locale, "Artists", "아티스트")} detail={tx(locale, "The people behind the practice", "작업을 만드는 사람들")} />
+        <MegaLink href="/works" label={tx(locale, "Works", "작품")} detail={tx(locale, "A living archive of practice", "계속 움직이는 작업의 아카이브")} />
+        <MegaLink href="/projects" label={tx(locale, "Projects", "프로젝트")} detail={tx(locale, "Where separate practices meet", "서로 다른 실천이 만나는 곳")} />
+      </MegaColumn>
+      <MegaColumn eyebrow={tx(locale, "Signals & context", "신호와 맥락")} title={tx(locale, "Stay with the thread.", "실마리를 놓치지 마세요.")}>
+        <MegaLink href="/radar" label={tx(locale, "Radar", "Radar")} detail={tx(locale, "Open calls, salons, and next moves", "공모, 살롱, 다음 움직임")} />
+        <MegaLink href="/connections" label={tx(locale, "Connections", "연결")} detail={tx(locale, "See what gathers around a work", "작품을 중심으로 모이는 관계")} />
+        <MegaLink href="/recap" label={tx(locale, "Annual recap", "연간 리캡")} detail={tx(locale, "A record of what moved us", "우리를 움직인 장면의 기록")} />
+      </MegaColumn>
+      <aside className="nav-mega-aside">
+        <span>{tx(locale, "01 / archive", "01 / 아카이브")}</span>
+        <p>{tx(locale, <>The archive grows through what happens <em>after</em> the exhibition.</>, <>아카이브는 전시 <em>이후</em>에 일어나는 일로 자랍니다.</>)}</p>
+        <Link href="/connections" onClick={closeMenus}>{tx(locale, "Follow the thread", "실마리 따라가기")} <ArrowUpRight size={14} /></Link>
+      </aside>
+    </NavMenu>
+    <Link href="/artists" onClick={closeMenus}>{tx(locale, "Artists", "아티스트")}</Link>
+    <Link href="/works" onClick={closeMenus}>{tx(locale, "Works", "작품")}</Link>
+    <Link href="/projects" onClick={closeMenus}>{tx(locale, "Projects", "프로젝트")}</Link>
+    <NavMenu id="nav-participate" label={tx(locale, "Make room", "함께 만들기")} open={openMenu === "participate"} onToggle={() => toggleMenu("participate")} onNavigate={closeMenus}>
+      <MegaColumn eyebrow={tx(locale, "For artists", "아티스트를 위한 것")} title={tx(locale, "Make your practice visible.", "당신의 작업을 드러내세요.")}>
+        <MegaLink href="/dashboard/profile" label={tx(locale, "Artist profile", "아티스트 프로필")} detail={tx(locale, "Build a page that sounds like you", "당신의 언어로 만드는 페이지")} />
+        <MegaLink href="/dashboard/virtual-gallery" label={tx(locale, "AI spatial preview", "AI 공간 프리뷰")} detail={tx(locale, "Place a work and imagine the room", "작품을 공간에 놓고 상상하기")} />
+        <MegaLink href="/join" label={tx(locale, "Artist membership", "아티스트 멤버십")} detail={tx(locale, "More room for a deeper practice", "더 깊은 실천을 위한 더 넓은 공간")} />
+      </MegaColumn>
+      <MegaColumn eyebrow={tx(locale, "For collaborators", "함께 만드는 사람들을 위한 것")} title={tx(locale, "Find the people around it.", "작품 주변의 사람을 만나세요.")}>
+        <MegaLink href="/dashboard/threads" label={tx(locale, "Thread rooms", "스레드 룸")} detail={tx(locale, "Keep a conversation in motion", "대화를 계속 움직이기")} />
+        <MegaLink href="/radar#opportunities" label={tx(locale, "Opportunities", "기회")} detail={tx(locale, "Calls, commissions, and invitations", "공모, 커미션, 초대")} />
+        <MegaLink href="/radar#events" label={tx(locale, "Events & salons", "전시와 살롱")} detail={tx(locale, "Show up, meet, continue", "만나고, 이어지고, 다시 시작하기")} />
+      </MegaColumn>
+      <aside className="nav-mega-aside nav-mega-aside-ink">
+        <span>{tx(locale, "02 / participation", "02 / 참여")}</span>
+        <p>{tx(locale, "There is more than one way to enter the unit.", "유닛에 들어오는 방법은 하나가 아닙니다.")}</p>
+        <Link href="/join" onClick={closeMenus}>{tx(locale, "See how to join", "함께하는 방법 보기")} <ArrowUpRight size={14} /></Link>
+      </aside>
+    </NavMenu>
+    <Link className="nav-accent" href="/join" onClick={closeMenus}>{tx(locale, "Join u.a.u", "u.a.u 함께하기")} <ArrowUpRight size={14} /></Link>
+  </nav><div className="nav-actions"><div className="language-switcher" aria-label={tx(locale, "Language", "언어") }><Globe2 size={15} aria-hidden="true" /><button type="button" className={locale === "en" ? "is-active" : ""} aria-pressed={locale === "en"} onClick={() => changeLocale("en")}>EN</button><span>/</span><button type="button" className={locale === "ko" ? "is-active" : ""} aria-pressed={locale === "ko"} onClick={() => changeLocale("ko")}>KR</button></div><Link className="icon-button" href="/works" aria-label={tx(locale, "Search works", "작품 검색")}><Search size={17} /></Link><Link className="account-link" href={user ? "/dashboard" : "/login"} aria-label={user ? tx(locale, "Open your dashboard", "대시보드 열기") : tx(locale, "Sign in", "로그인")}><CircleUserRound size={17} /><span>{loading ? tx(locale, "Checking", "확인 중") : user ? accountLabel : tx(locale, "Sign in", "로그인")}</span></Link><button className="menu-button" onClick={() => setOpen(!open)} aria-label={open ? tx(locale, "Close menu", "메뉴 닫기") : tx(locale, "Open menu", "메뉴 열기")}>{open ? <X size={20} /> : <Menu size={20} />}</button></div></div></header>;
 }
 
 export function Footer() {
