@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Logo } from "../components";
 import { getServerLocale } from "../server-locale";
 import { tx } from "../i18n-shared";
 import { SocialLoginButtons } from "./social-login-buttons";
@@ -10,7 +9,6 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <div className="auth-panel">
-        <Logo />
         <div className="auth-copy">
           <span className="auth-kicker">{tx(locale, "MY U.A.U", "MY U.A.U")}</span>
           <h1>

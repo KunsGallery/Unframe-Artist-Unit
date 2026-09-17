@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { ArrowUpRight, Bell, Bookmark, FolderKanban, LogOut, Plus, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Logo } from "../components";
 import { useLanguage } from "../i18n-provider";
 import { useAuth } from "../auth-provider";
 import { tx } from "../i18n-shared";
+import { useNotifications } from "../notifications";
 
 type DashboardSection = "overview" | "notifications";
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
   const { locale } = useLanguage();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications(user?.uid);
   const router = useRouter();
 
   async function handleLogout() {
@@ -24,7 +25,6 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
 
   return (
     <aside className="dashboard-nav">
-      <Logo compact />
       <span className="dash-label">{tx(locale, "My u.a.u", "My u.a.u")}</span>
       <Link className={active === "overview" ? "active" : ""} href="/dashboard">
         <FolderKanban size={16} /> {tx(locale, "Overview", "개요")}
@@ -39,7 +39,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
         <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}
       </Link>
       <Link className={active === "notifications" ? "active" : ""} href="/dashboard/notifications">
-        <Bell size={16} /> {tx(locale, "Notifications", "알림")} <b>2</b>
+        <Bell size={16} /> {tx(locale, "Notifications", "알림")} {unreadCount > 0 && <b>{unreadCount}</b>}
       </Link>
       <div className="dash-bottom">
         <span>{displayName}</span>

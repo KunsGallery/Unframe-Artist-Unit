@@ -55,7 +55,9 @@ service cloud.firestore {
 
       allow update: if isAdmin()
         || (isOwner(uid)
+          && request.resource.data.email == request.auth.token.email
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'email',
             'displayName',
             'accountType',
             'country',
@@ -245,7 +247,15 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.recipientUid == request.auth.uid);
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.recipientUid == request.auth.uid
+          && request.resource.data.recipientUid == resource.data.recipientUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'read',
+            'readAt'
+          ]));
     }
 
     match /journal/{journalId} {

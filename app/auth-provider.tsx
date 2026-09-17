@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { auth } from "./firebase-client";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db } from "./firebase-client";
 
 type AuthContextValue = {
   user: User | null;
@@ -25,6 +26,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);
+      if (nextUser && db) {
+        void setDoc(
+          doc(db, "users", nextUser.uid),
+          {
+            email: nextUser.email ?? "",
+            displayName: nextUser.displayName ?? "",
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        ).catch(() => undefined);
+      }
     });
   }, []);
 
