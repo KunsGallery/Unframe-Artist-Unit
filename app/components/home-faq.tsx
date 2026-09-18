@@ -116,7 +116,7 @@ export function HomeFaq({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section className="home-faq page-wrap" aria-labelledby="home-faq-title">
+    <section className="home-faq page-wrap" id="faq" aria-labelledby="home-faq-title">
       <div className="home-faq-heading">
         <span className="home-faq-kicker">{copy.kicker}</span>
         <h2 id="home-faq-title">{copy.title}</h2>
