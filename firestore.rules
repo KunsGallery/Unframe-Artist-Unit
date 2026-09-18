@@ -471,6 +471,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /site_content/{contentId} {
+      allow read: if contentId == 'home';
+      allow write: if isAdmin();
+    }
+
     match /admins/{uid} {
       // An administrator must be able to read their own access document first.
       // isAdmin() itself uses this document, so restricting this read to isAdmin()

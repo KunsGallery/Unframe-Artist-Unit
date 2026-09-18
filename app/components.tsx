@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { ArrowUpRight, Bookmark, Check, ChevronDown, ChevronRight, ChevronUp, CircleUserRound, Globe2, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
 import { setSavedEngagement } from "./engagements";
+import { RadarNetwork } from "./radar/radar-network";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
@@ -155,5 +157,5 @@ export function ArtImage({ className = "", position = "center", label = "Artwork
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }
 export function StatusDot({ children }: { children: React.ReactNode }) { return <span className="status-dot"><i />{children}</span>; }
 export function Breadcrumb({ current }: { current: string }) { return <div className="breadcrumb"><Link href="/">u.a.u</Link><ChevronRight size={14} /><span>{current}</span></div>; }
-export function DemoNotice() { const { locale } = useLanguage(); return <div className="demo-notice"><span><i /> {tx(locale, "Demonstration archive", "데모 아카이브")}</span><span>{tx(locale, "Sample content · production data will connect here", "샘플 콘텐츠 · 운영 데이터가 연결될 예정입니다")}</span></div>; }
+export function DemoNotice() { const { locale } = useLanguage(); const pathname = usePathname(); return <><div className="demo-notice"><span><i /> {tx(locale, "Demonstration archive", "데모 아카이브")}</span><span>{tx(locale, "Sample content · production data will connect here", "샘플 콘텐츠 · 운영 데이터가 연결될 예정입니다")}</span></div>{pathname === "/radar" && <RadarNetwork />}</>; }
 export function VerifiedMark({ compact = false }: { compact?: boolean }) { const { locale } = useLanguage(); return <span className={compact ? "verified-mark verified-compact" : "verified-mark"} title={tx(locale, "Verified u.a.u Artist", "u.a.u 인증 아티스트")}><Check size={compact ? 12 : 13} aria-hidden="true" />{!compact && <small>{tx(locale, "verified", "인증")}</small>}</span>; }

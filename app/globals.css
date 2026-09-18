@@ -385,6 +385,53 @@ h1 em, h2 em, h3 em { font-style: italic; }
 .admin-editor-preview-bar i { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
 .admin-editor-preview-bar small { font-size: 9px; }
 .admin-editor-preview iframe { display: block; width: 100%; height: 800px; border: 0; }
+.site-copy-preline { white-space: pre-line; }
+.editor-subhead { display: grid; gap: 5px; margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); }
+.editor-subhead > span { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.editor-copy-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 14px; }
+.editor-copy-row > span { grid-column: 1 / -1; color: var(--muted); font-size: 10px; }
+.editor-copy-row input, .editor-copy-field textarea { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); padding: 9px 10px; font: inherit; font-size: 11px; }
+.editor-copy-field { display: grid; gap: 7px; margin-top: 14px; color: var(--muted); font-size: 10px; }
+.editor-copy-field textarea { min-height: 58px; resize: vertical; line-height: 1.45; }
+.editor-copy-row input:focus, .editor-copy-field textarea:focus { outline: 1px solid var(--blue); border-color: var(--blue); }
+.editor-toggle-list { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 12px; margin-top: 14px; }
+.editor-toggle-list label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; }
+.editor-toggle-list input { accent-color: var(--blue); }
+
+[data-hide-home-radar] .radar-home, [data-hide-home-connection] .connection-feature, [data-hide-home-recap] .recap-banner, [data-hide-home-selection] .blue-panel, [data-hide-home-artists] #artists, [data-hide-home-works] .works-section, [data-hide-home-journal] .journal-section, [data-hide-home-faq] .home-faq, [data-hide-home-join] .join-band { display: none; }
+
+.radar-network-shell { width: min(1440px, calc(100% - 72px)); margin: 0 auto; padding: 78px 0 30px; }
+.radar-network-head { display: grid; grid-template-columns: 1.05fr .95fr; gap: 60px; align-items: end; padding-bottom: 35px; border-bottom: 1px solid var(--ink); }
+.radar-network-kicker { color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.radar-network-head h2 { margin: 18px 0 0; font-family: var(--serif); font-size: clamp(67px, 9vw, 142px); font-weight: 400; letter-spacing: -.075em; line-height: .76; }
+.radar-network-head p { max-width: 390px; margin: 0 0 4px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.radar-network-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.radar-network-search { display: flex; align-items: center; gap: 8px; width: 235px; padding: 8px 0; border-bottom: 1px solid var(--ink); color: var(--blue); }
+.radar-network-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 11px; }
+.radar-network-tabs { display: flex; gap: 5px; margin-left: auto; flex-wrap: wrap; }
+.radar-network-tabs button, .radar-network-pulse { border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 8px 10px; font: inherit; font-size: 10px; cursor: pointer; }
+.radar-network-tabs button.active, .radar-network-tabs button:hover, .radar-network-pulse:hover { border-color: var(--blue); color: var(--blue); }
+.radar-network-pulse { display: inline-flex; align-items: center; gap: 6px; }
+.radar-network-stage { display: grid; grid-template-columns: minmax(0, 1fr) 290px; min-height: 580px; border-bottom: 1px solid var(--ink); }
+.radar-network-canvas-wrap { position: relative; min-height: 580px; overflow: hidden; border-right: 1px solid var(--line); touch-action: none; }
+.radar-network-canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.radar-network-canvas:active { cursor: grabbing; }
+.radar-network-controls { position: absolute; right: 15px; bottom: 15px; display: flex; gap: 4px; }
+.radar-network-controls button { display: grid; width: 31px; height: 31px; place-items: center; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.radar-network-controls button:hover { border-color: var(--blue); color: var(--blue); }
+.radar-network-inspector { position: relative; align-self: stretch; padding: 28px 23px; background: var(--paper); }
+.radar-network-close { position: absolute; top: 21px; right: 20px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.radar-network-type { display: inline-block; margin-bottom: 45px; color: var(--blue); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.radar-network-inspector h3 { max-width: 220px; margin: 0; font-family: var(--serif); font-size: 39px; font-weight: 400; letter-spacing: -.06em; line-height: .9; }
+.radar-network-sub { margin: 10px 0 25px; color: var(--blue); font-size: 10px; }
+.radar-network-inspector > p:not(.radar-network-sub) { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.radar-network-connections { display: grid; gap: 0; margin-top: 42px; border-top: 1px solid var(--ink); }
+.radar-network-connections > span { padding: 13px 0 7px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.radar-network-connections button { display: flex; justify-content: space-between; padding: 10px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; font-size: 11px; cursor: pointer; }
+.radar-network-connections button:hover { color: var(--blue); }
+.radar-network-mobile-list { display: none; }
+@media (max-width: 860px) { .radar-network-shell { width: min(100% - 40px, 680px); padding-top: 58px; }.radar-network-head { grid-template-columns: 1fr; gap: 25px; }.radar-network-head h2 { font-size: 80px; }.radar-network-head p { max-width: 500px; }.radar-network-toolbar { align-items: stretch; flex-direction: column; }.radar-network-search { width: 100%; }.radar-network-tabs { margin-left: 0; }.radar-network-stage { grid-template-columns: 1fr; min-height: 0; }.radar-network-canvas-wrap { min-height: 490px; border-right: 0; border-bottom: 1px solid var(--line); }.radar-network-inspector { min-height: 300px; }.radar-network-mobile-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }.radar-network-mobile-list button { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; font: inherit; font-size: 11px; }.radar-network-mobile-list small { color: var(--muted); font-size: 9px; } }
+@media (max-width: 500px) { .radar-network-shell { width: 100%; padding-top: 50px; }.radar-network-head, .radar-network-toolbar, .radar-network-mobile-list { padding-inline: 20px; }.radar-network-head h2 { font-size: 62px; }.radar-network-canvas-wrap { min-height: 420px; }.radar-network-inspector { padding-inline: 20px; }.radar-network-tabs { gap: 4px; }.radar-network-tabs button { flex: 1; padding-inline: 6px; }.editor-copy-row { grid-template-columns: 1fr; }.editor-copy-row > span { grid-column: auto; } }
 @media (max-width: 860px) { .admin-editor-shell { width: min(100% - 40px, 680px); }.admin-editor-top { align-items: flex-start; flex-direction: column; gap: 35px; }.admin-editor-layout { grid-template-columns: 1fr; }.admin-editor-controls { position: static; }.admin-editor-preview iframe { height: 700px; } }
 @media (max-width: 500px) { .admin-editor-top { padding-top: 55px; }.admin-editor-top h1 { font-size: 60px; }.admin-editor-actions { align-items: stretch; flex-direction: column; width: 100%; }.admin-editor-actions .button { width: 100%; }.admin-editor-controls { padding: 24px 0; border-top: 0; }.admin-editor-preview-bar { align-items: flex-start; flex-direction: column; gap: 6px; }.admin-editor-preview iframe { height: 620px; } }
 .admin-access-page { padding-top: 90px; padding-bottom: 120px; }

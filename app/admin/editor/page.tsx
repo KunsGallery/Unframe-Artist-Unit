@@ -9,6 +9,7 @@ import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
 import { defaultSiteSettings, useSiteSettings, type SiteSettings } from "../../site-settings";
+import { defaultSiteContent, useSiteContent, type SiteContentRecord } from "../../site-content";
 
 const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
 
@@ -16,8 +17,10 @@ export default function AdminEditorPage() {
   const { locale } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const { settings, loading: settingsLoading } = useSiteSettings();
+  const { content, loading: contentLoading } = useSiteContent();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [draft, setDraft] = useState<SiteSettings>(defaultSiteSettings);
+  const [contentDraft, setContentDraft] = useState<SiteContentRecord>(defaultSiteContent);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +42,25 @@ export default function AdminEditorPage() {
   }, [settings, settingsLoading]);
 
   useEffect(() => {
+    if (!contentLoading) setContentDraft(content);
+  }, [content, contentLoading]);
+
+  useEffect(() => {
     previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft }, window.location.origin);
   }, [draft]);
+
+  useEffect(() => {
+    previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-content", content: contentDraft }, window.location.origin);
+  }, [contentDraft]);
 
   function updateSetting<Key extends keyof SiteSettings>(key: Key, value: SiteSettings[Key]) {
     setSaved(false);
     setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateContent(key: string, value: string | boolean) {
+    setSaved(false);
+    setContentDraft((current) => ({ ...current, [key]: value }));
   }
 
   async function saveSettings() {
@@ -53,7 +69,10 @@ export default function AdminEditorPage() {
     setSaved(false);
     setError(null);
     try {
-      await setDoc(doc(db, "site_settings", "public"), { ...draft, updatedAt: serverTimestamp() }, { merge: true });
+      await Promise.all([
+        setDoc(doc(db, "site_settings", "public"), { ...draft, updatedAt: serverTimestamp() }, { merge: true }),
+        setDoc(doc(db, "site_content", "home"), { ...contentDraft, updatedAt: serverTimestamp() }, { merge: true }),
+      ]);
       setSaved(true);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : tx(locale, "The site settings could not be saved.", "사이트 설정을 저장하지 못했습니다."));
@@ -66,6 +85,7 @@ export default function AdminEditorPage() {
     setSaved(false);
     setError(null);
     setDraft(settings);
+    setContentDraft(content);
   }
 
   if (authLoading || allowed === null) return <main className="admin-page"><DemoNotice /><div className="auth-guard">{tx(locale, "Checking admin access…", "관리자 권한을 확인하고 있습니다…")}</div></main>;
@@ -79,9 +99,17 @@ export default function AdminEditorPage() {
       <label className="editor-range"><span>{tx(locale, "Content width", "콘텐츠 폭")}<output>{draft.contentWidth}px</output></span><input type="range" min="960" max="1440" step="10" value={draft.contentWidth} onChange={(event) => updateSetting("contentWidth", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Section rhythm", "섹션 간격")}<output>{Math.round(draft.sectionSpace * 100)}%</output></span><input type="range" min="0.7" max="1.35" step="0.01" value={draft.sectionSpace} onChange={(event) => updateSetting("sectionSpace", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Heading line break", "제목 줄 간격")}<output>{draft.headingLeading.toFixed(2)}</output></span><input type="range" min="0.7" max="1.05" step="0.01" value={draft.headingLeading} onChange={(event) => updateSetting("headingLeading", Number(event.target.value))} /></label>
+      <div className="editor-subhead"><MetaLine>{tx(locale, "HOMEPAGE COPY", "홈페이지 문구")}</MetaLine><span>{tx(locale, "Edit the key lines in both languages.", "주요 문구를 두 언어로 편집하세요.")}</span></div>
+      {["line1", "emphasis", "line3"].map((part) => <div className="editor-copy-row" key={part}><span>{part === "line1" ? tx(locale, "Hero line 1", "히어로 1행") : part === "emphasis" ? tx(locale, "Hero emphasis", "히어로 강조") : tx(locale, "Hero line 3", "히어로 3행")}</span><input value={String(contentDraft[`home.hero.${part}.en`])} onChange={(event) => updateContent(`home.hero.${part}.en`, event.target.value)} placeholder="English" /><input value={String(contentDraft[`home.hero.${part}.ko`])} onChange={(event) => updateContent(`home.hero.${part}.ko`, event.target.value)} placeholder="한국어" /></div>)}
+      <label className="editor-copy-field"><span>{tx(locale, "Hero lede", "히어로 설명")}</span><textarea value={String(contentDraft[`home.hero.lede.${locale}`])} onChange={(event) => updateContent(`home.hero.lede.${locale}`, event.target.value)} /></label>
+      <label className="editor-copy-field"><span>{tx(locale, "Intro title", "소개 제목")}</span><textarea value={String(contentDraft[`home.intro.title.${locale}`])} onChange={(event) => updateContent(`home.intro.title.${locale}`, event.target.value)} /></label>
+      <label className="editor-copy-field"><span>{tx(locale, "Intro body", "소개 본문")}</span><textarea value={String(contentDraft[`home.intro.body.${locale}`])} onChange={(event) => updateContent(`home.intro.body.${locale}`, event.target.value)} /></label>
+      <label className="editor-copy-field"><span>{tx(locale, "Join title", "참여 제목")}</span><textarea value={String(contentDraft[`home.join.title.${locale}`])} onChange={(event) => updateContent(`home.join.title.${locale}`, event.target.value)} /></label>
+      <div className="editor-subhead"><MetaLine>{tx(locale, "SECTION VISIBILITY", "섹션 노출")}</MetaLine><span>{tx(locale, "Hide a section without changing its content.", "내용을 지우지 않고 섹션을 숨길 수 있습니다.")}</span></div>
+      <div className="editor-toggle-list">{[["radar", "Radar"], ["connection", "Current connection"], ["recap", "Annual recap"], ["selection", "Selection"], ["artists", "Artists"], ["works", "Works"], ["journal", "Journal"], ["faq", "FAQ"], ["join", "Join"]].map(([key, label]) => { const contentKey = `home.section.${key}`; return <label key={key}><input type="checkbox" checked={contentDraft[contentKey] !== false} onChange={(event) => updateContent(contentKey, event.target.checked)} /><span>{label}</span></label>; })}</div>
       <button className="editor-reset" type="button" onClick={resetDraft}><RotateCcw size={13} /> {tx(locale, "Discard unsaved changes", "저장하지 않은 변경사항 버리기")}</button>
       {error && <p className="admin-editor-error" role="alert">{error}</p>}
-      <div className="admin-editor-note"><strong>{tx(locale, "Next edit layer", "다음 편집 레이어")}</strong><span>{tx(locale, "Copy, images, and section visibility can be added here without changing the public layout.", "공개 레이아웃을 건드리지 않고 문구, 이미지, 섹션 노출도 이곳에서 추가로 편집할 수 있습니다.")}</span></div>
-    </aside><section className="admin-editor-preview"><div className="admin-editor-preview-bar"><span><i /> {tx(locale, "Live preview", "실시간 미리보기")}</span><small>{tx(locale, "Changes are local until published", "발행 전까지는 미리보기에만 적용")}</small></div><iframe ref={previewRef} title={tx(locale, "u.a.u public site live preview", "u.a.u 공개 사이트 실시간 미리보기")} src="/?uauSitePreview=1" onLoad={() => previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft }, window.location.origin)} /></section></div>
+      <div className="admin-editor-note"><strong>{tx(locale, "Structured editing", "구조화된 편집")}</strong><span>{tx(locale, "This first layer keeps the editorial layout intact while giving you live control over rhythm, copy, and visibility.", "첫 편집 레이어는 에디토리얼 레이아웃을 지키면서 리듬, 문구, 섹션 노출을 실시간으로 제어합니다.")}</span></div>
+    </aside><section className="admin-editor-preview"><div className="admin-editor-preview-bar"><span><i /> {tx(locale, "Live preview", "실시간 미리보기")}</span><small>{tx(locale, "Changes are local until published", "발행 전까지는 미리보기에만 적용")}</small></div><iframe ref={previewRef} title={tx(locale, "u.a.u public site live preview", "u.a.u 공개 사이트 실시간 미리보기")} src="/?uauSitePreview=1" onLoad={() => { previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft }, window.location.origin); previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-content", content: contentDraft }, window.location.origin); }} /></section></div>
   </div></main>;
 }
