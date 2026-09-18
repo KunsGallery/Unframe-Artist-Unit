@@ -14,6 +14,38 @@ import { sitePageById, sitePages, type SitePageId } from "../../site-pages";
 import { getDefaultSitePageContent, normalizeSitePageContent, type SitePageContent } from "../../site-page-content";
 
 const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
+const sectionLabels: Record<string, { en: string; ko: string }> = {
+  radar: { en: "Radar", ko: "Radar" },
+  connection: { en: "Current connection", ko: "현재 연결" },
+  recap: { en: "Annual recap", ko: "연간 리캡" },
+  selection: { en: "Selection", ko: "셀렉션" },
+  artists: { en: "Artists", ko: "아티스트" },
+  works: { en: "Works", ko: "작품" },
+  journal: { en: "Journal", ko: "저널" },
+  faq: { en: "FAQ", ko: "FAQ" },
+  join: { en: "Join", ko: "함께하기" },
+  directory: { en: "Artist directory", ko: "아티스트 디렉터리" },
+  filters: { en: "Filters", ko: "필터" },
+  archive: { en: "Archive", ko: "아카이브" },
+  list: { en: "Project list", ko: "프로젝트 목록" },
+  manifesto: { en: "Manifesto", ko: "매니페스토" },
+  map: { en: "Connection map", ko: "연결 지도" },
+  call: { en: "Open call", ko: "오픈 콜" },
+  calendar: { en: "Calendar", ko: "캘린더" },
+  opportunities: { en: "Opportunities", ko: "기회" },
+  note: { en: "Editorial note", ko: "에디토리얼 노트" },
+  story: { en: "Story", ko: "스토리" },
+  options: { en: "Entry options", ko: "참여 방법" },
+  context: { en: "Context", ko: "맥락" },
+  participants: { en: "Participants", ko: "참여자" },
+  timeline: { en: "Timeline", ko: "타임라인" },
+  work: { en: "Work", ko: "작품" },
+};
+
+function getSectionLabel(sectionId: string | null, locale: "en" | "ko") {
+  if (!sectionId) return locale === "ko" ? "전체 페이지" : "Whole page";
+  return sectionLabels[sectionId]?.[locale] || sectionId.replace(/[-_]/g, " ");
+}
 
 export default function AdminEditorPage() {
   const { locale } = useLanguage();
@@ -22,6 +54,7 @@ export default function AdminEditorPage() {
   const { content, loading: contentLoading } = useSiteContent();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [previewPageId, setPreviewPageId] = useState<SitePageId>("home");
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [draft, setDraft] = useState<SiteSettings>(defaultSiteSettings);
   const [loadedDraft, setLoadedDraft] = useState<SiteSettings>(defaultSiteSettings);
   const [pageContentDraft, setPageContentDraft] = useState<SitePageContent>(() => getDefaultSitePageContent("home"));
@@ -94,6 +127,17 @@ export default function AdminEditorPage() {
   }, []);
 
   useEffect(() => {
+    const handlePreviewSection = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.data?.type !== "uau-editor-section") return;
+      if (event.data.pageId === previewPageId && typeof event.data.sectionId === "string") {
+        setActiveSection(event.data.sectionId);
+      }
+    };
+    window.addEventListener("message", handlePreviewSection);
+    return () => window.removeEventListener("message", handlePreviewSection);
+  }, [previewPageId]);
+
+  useEffect(() => {
     previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft, pageId: previewPageId }, window.location.origin);
   }, [draft, previewPageId]);
 
@@ -127,6 +171,7 @@ export default function AdminEditorPage() {
 
   function openPreviewPage(pageId: SitePageId) {
     setSaved(false);
+    setActiveSection(null);
     setPreviewPageId(pageId);
     const path = sitePageById[pageId].previewPath;
     const separator = path.includes("?") ? "&" : "?";
@@ -171,7 +216,7 @@ export default function AdminEditorPage() {
   return <main className="admin-editor-page"><DemoNotice /><div className="admin-editor-shell">
     <header className="admin-editor-top"><div><a className="admin-editor-back" href="/admin">← {tx(locale, "Admin overview", "관리자 개요")}</a><MetaLine>{tx(locale, "ADMIN / SITE EDITOR", "관리자 / 사이트 편집기")}</MetaLine><h1>{tx(locale, <>Shape the<br /><em>public room.</em></>, <>공개된 공간을<br /><em>다듬으세요.</em></>)}</h1></div><div className="admin-editor-actions"><a className="button button-quiet" href={currentPage.previewPath} target="_blank" rel="noreferrer">{tx(locale, "Open current page", "현재 페이지 열기")} <ExternalLink size={14} /></a><button className="button button-blue" type="button" onClick={() => void saveSettings()} disabled={saving || pageSettingsLoading}>{saved ? <Check size={14} /> : <ArrowUpRight size={14} />} {saving ? tx(locale, "Publishing…", "발행 중…") : saved ? tx(locale, "Published", "발행됨") : tx(locale, "Publish changes", "변경사항 발행")}</button></div></header>
     <div className="admin-editor-layout"><aside className="admin-editor-controls"><div className="admin-editor-control-head"><div><MetaLine>{tx(locale, "LIVE CONTROLS", "실시간 컨트롤")}</MetaLine><h2>{tx(locale, "Tune this room.", "이 공간을 조절하세요.")}</h2></div><SlidersHorizontal size={18} /></div><p className="admin-editor-copy">{tx(locale, "The preview and this control room follow the same page. Change the page in the preview or here, then publish only when it feels right.", "미리보기와 이 컨트롤 룸은 같은 페이지를 바라봅니다. 미리보기나 여기서 페이지를 바꾸고, 마음에 들 때만 발행하세요.")}</p><div className="editor-page-switcher"><label className="editor-select-field"><span>{tx(locale, "Editing page", "편집 중인 페이지")}</span><select value={previewPageId} onChange={(event) => openPreviewPage(event.target.value as SitePageId)}>{sitePages.map((page) => <option key={page.id} value={page.id}>{locale === "ko" ? page.labelKo : page.label}</option>)}</select></label><p>{locale === "ko" ? currentPage.descriptionKo : currentPage.description}</p></div>
-      <label className="editor-range"><span>{tx(locale, "Display scale", "디스플레이 크기")}<output>{Math.round(draft.displayScale * 100)}%</output></span><input type="range" min="0.55" max="1.65" step="0.01" value={draft.displayScale} onChange={(event) => updateSetting("displayScale", Number(event.target.value))} /></label>
+      <div className="editor-active-section" aria-live="polite"><span>{tx(locale, "EDITING FOCUS", "현재 편집 초점")}</span><strong>{getSectionLabel(activeSection, locale)}</strong><small>{tx(locale, "Move over a section in the preview to sync its controls.", "미리보기에서 섹션 위에 마우스를 올리면 해당 컨트롤과 동기화됩니다.")}</small></div><label className="editor-range"><span>{tx(locale, "Display scale", "디스플레이 크기")}<output>{Math.round(draft.displayScale * 100)}%</output></span><input type="range" min="0.55" max="1.65" step="0.01" value={draft.displayScale} onChange={(event) => updateSetting("displayScale", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Body scale", "본문 크기")}<output>{Math.round(draft.bodyScale * 100)}%</output></span><input type="range" min="0.55" max="1.6" step="0.01" value={draft.bodyScale} onChange={(event) => updateSetting("bodyScale", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Content width", "콘텐츠 폭")}<output>{draft.contentWidth}px</output></span><input type="range" min="520" max="1900" step="10" value={draft.contentWidth} onChange={(event) => updateSetting("contentWidth", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Section rhythm", "섹션 간격")}<output>{Math.round(draft.sectionSpace * 100)}%</output></span><input type="range" min="0.25" max="2.4" step="0.01" value={draft.sectionSpace} onChange={(event) => updateSetting("sectionSpace", Number(event.target.value))} /></label>

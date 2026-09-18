@@ -147,10 +147,15 @@ export function PageIntro({ className = "", split = false, bare = false, showAct
 }
 
 export function PageSection({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
-  const { content } = useSitePageContent();
+  const { content, pageId } = useSitePageContent();
   if (content.hiddenSections.includes(sectionId)) return null;
   const order = content.sectionOrder.indexOf(sectionId);
-  return <div className="page-editable-section" data-page-section={sectionId} style={{ order: order < 0 ? 999 : order }}>{children}</div>;
+  function announceFocus() {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "uau-editor-section", pageId, sectionId }, window.location.origin);
+    }
+  }
+  return <div className="page-editable-section" data-page-section={sectionId} style={{ order: order < 0 ? 999 : order }} onMouseEnter={announceFocus} onFocusCapture={announceFocus}>{children}</div>;
 }
 
 export function BookmarkButton({ label = "Save", targetType, targetId }: { label?: string; targetType?: "artist" | "work" | "project" | "event" | "opportunity" | "thread"; targetId?: string }) {
@@ -166,8 +171,8 @@ export function BookmarkButton({ label = "Save", targetType, targetId }: { label
   return <button className={saved ? "save-button saved" : "save-button"} onClick={() => void toggleSaved()} aria-pressed={saved} aria-label={saved ? tx(locale, "Remove from saved", "저장 목록에서 제거") : saveText}><Bookmark size={15} fill={saved ? "currentColor" : "none"} />{saved ? tx(locale, "Saved", "저장됨") : label === "" ? "" : saveText}</button>;
 }
 
-export function ArtImage({ className = "", position = "center", label = "Artwork image" }: { className?: string; position?: string; label?: string }) {
-  return <div className={`art-image ${className}`}><img src="/assets/uau-hero.png" alt={label} style={{ objectPosition: position }} /><span className="art-image-glow" /></div>;
+export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy" }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy" }) {
+  return <div className={`art-image ${className}`}><img src="/assets/uau-hero.png" alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} /><span className="art-image-glow" /></div>;
 }
 
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }

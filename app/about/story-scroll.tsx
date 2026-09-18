@@ -57,6 +57,8 @@ export function FlowArt({
   const wheelLockedRef = useRef(false);
   const lastScrollYRef = useRef(0);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeLabel, setActiveLabel] = useState("");
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -125,6 +127,8 @@ export function FlowArt({
 
         if (nextIndex === currentIndex) return false;
         activeIndexRef.current = nextIndex;
+        setActiveIndex(nextIndex);
+        setActiveLabel(sections[nextIndex]?.getAttribute('aria-label') || '');
         wheelLockedRef.current = true;
         window.scrollTo({ top: snapScrolls[nextIndex], behavior: 'smooth' });
         window.setTimeout(() => {
@@ -163,6 +167,8 @@ export function FlowArt({
       };
 
       activeIndexRef.current = nearestIndex();
+      setActiveIndex(activeIndexRef.current);
+      setActiveLabel(sections[activeIndexRef.current]?.getAttribute('aria-label') || '');
       lastScrollYRef.current = window.scrollY;
       window.addEventListener('wheel', onWheel, { passive: false });
       window.addEventListener('scroll', onScroll, { passive: true });
@@ -186,6 +192,11 @@ export function FlowArt({
       aria-label={ariaLabel}
       className={cx('story-flow', className)}
     >
+      <div className="story-progress" aria-live="polite" aria-label="Story progress">
+        <span>U.A.U / STORY</span>
+        <strong>{String(activeIndex + 1).padStart(2, '0')} / {String(React.Children.count(children)).padStart(2, '0')}</strong>
+        {activeLabel && <small>{activeLabel}</small>}
+      </div>
       {children}
     </div>
   );

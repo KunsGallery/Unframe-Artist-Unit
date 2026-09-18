@@ -51,6 +51,8 @@ export type UauUserProfile = {
   bio?: string;
   practice?: string;
   websiteUrl?: string;
+  profileImageUrl?: string;
+  siteCoverImageUrl?: string;
   onboardingCompleted?: boolean;
   publicSlug?: string;
   siteTemplate?: ArtistSiteTemplate;
@@ -103,6 +105,8 @@ export type PublicProfile = {
   practice?: string;
   bio?: string;
   websiteUrl?: string;
+  profileImageUrl?: string;
+  siteCoverImageUrl?: string;
   siteTemplate: ArtistSiteTemplate;
   siteSections?: ArtistSiteSection[];
   siteAccent?: ArtistSiteAccent;

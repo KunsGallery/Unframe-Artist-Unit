@@ -59,6 +59,8 @@ service cloud.firestore {
           'practice',
           'artistName',
           'websiteUrl',
+          'profileImageUrl',
+          'siteCoverImageUrl',
           'onboardingCompleted',
           'publicSlug',
           'siteTemplate',
@@ -104,6 +106,8 @@ service cloud.firestore {
             'practice',
             'artistName',
             'websiteUrl',
+            'profileImageUrl',
+            'siteCoverImageUrl',
             'onboardingCompleted',
             'publicSlug',
             'siteTemplate',
@@ -156,6 +160,8 @@ service cloud.firestore {
             'practice',
             'bio',
             'websiteUrl',
+            'profileImageUrl',
+            'siteCoverImageUrl',
             'siteTemplate',
             'siteSections',
             'siteAccent',
@@ -173,6 +179,27 @@ service cloud.firestore {
             'published',
             'updatedAt'
           ]));
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /media_assets/{assetId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || resource.data.visibility == 'public';
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.key is string
+        && request.resource.data.publicUrl is string
+        && request.resource.data.contentType is string
+        && request.resource.data.size is number;
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid);
 
       allow delete: if isAdmin()
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
