@@ -8,7 +8,7 @@ import { DemoNotice, MetaLine } from "../../components";
 import { useAuth } from "../../auth-provider";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
-import { accountTypes, savePublicProfile, saveUserProfile, useArtistMembership, useMembership, useUserProfile, type ArtistSiteAccent, type ArtistSiteSection, type ArtistSiteTemplate, type UauAccountType } from "../../profile";
+import { accountTypes, savePublicProfile, saveUserProfile, useArtistMembership, useMembership, useUserProfile, type ArtistSiteAccent, type ArtistSiteExhibition, type ArtistSiteSection, type ArtistSiteTemplate, type ArtistSiteWork, type UauAccountType } from "../../profile";
 import { artistSiteAccentLabels, artistSiteSectionLabels, defaultArtistSiteSections, normalizeArtistSiteSections } from "../../artist/site-config";
 import { DashboardSidebar } from "../dashboard-sidebar";
 
@@ -25,6 +25,8 @@ type ProfileForm = {
   siteTemplate: ArtistSiteTemplate;
   siteSections: ArtistSiteSection[];
   siteAccent: ArtistSiteAccent;
+  siteWorks: ArtistSiteWork[];
+  siteExhibitions: ArtistSiteExhibition[];
   sitePublished: boolean;
   showExhibitions: boolean;
   showCV: boolean;
@@ -44,6 +46,8 @@ const emptyForm: ProfileForm = {
   siteTemplate: "editorial",
   siteSections: [...defaultArtistSiteSections],
   siteAccent: "blue",
+  siteWorks: [],
+  siteExhibitions: [],
   sitePublished: false,
   showExhibitions: true,
   showCV: true,
@@ -103,6 +107,8 @@ export default function DashboardProfilePage() {
       siteTemplate: profile?.siteTemplate || "editorial",
       siteSections: normalizeArtistSiteSections(profile?.siteSections),
       siteAccent: profile?.siteAccent || "blue",
+      siteWorks: profile?.siteWorks || [],
+      siteExhibitions: profile?.siteExhibitions || [],
       sitePublished: profile?.sitePublished === true,
       showExhibitions: profile?.showExhibitions !== false,
       showCV: profile?.showCV !== false,
@@ -164,6 +170,8 @@ export default function DashboardProfilePage() {
         siteTemplate: form.siteTemplate,
         siteSections: form.siteSections,
         siteAccent: form.siteAccent,
+        siteWorks: form.siteWorks,
+        siteExhibitions: form.siteExhibitions,
         showExhibitions: form.siteSections.includes("exhibitions"),
         showCV: form.siteSections.includes("cv"),
         showAbout: form.siteSections.includes("about"),
@@ -176,6 +184,30 @@ export default function DashboardProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function updateWork(index: number, field: keyof ArtistSiteWork, value: string) {
+    setField("siteWorks", form.siteWorks.map((work, workIndex) => workIndex === index ? { ...work, [field]: value } : work));
+  }
+
+  function addWork() {
+    setField("siteWorks", [...form.siteWorks, { id: `work-${Date.now()}`, title: "", year: "", medium: "", imageUrl: "" }]);
+  }
+
+  function removeWork(index: number) {
+    setField("siteWorks", form.siteWorks.filter((_, workIndex) => workIndex !== index));
+  }
+
+  function updateExhibition(index: number, field: keyof ArtistSiteExhibition, value: string) {
+    setField("siteExhibitions", form.siteExhibitions.map((item, itemIndex) => itemIndex === index ? { ...item, [field]: value } : item));
+  }
+
+  function addExhibition() {
+    setField("siteExhibitions", [...form.siteExhibitions, { id: `exhibition-${Date.now()}`, year: "", title: "", venue: "", location: "" }]);
+  }
+
+  function removeExhibition(index: number) {
+    setField("siteExhibitions", form.siteExhibitions.filter((_, itemIndex) => itemIndex !== index));
   }
 
   if (authLoading || !user || profileLoading) {
@@ -199,6 +231,7 @@ export default function DashboardProfilePage() {
       <div className="builder-template-list">{templateChoices.map((template) => <button key={template.value} type="button" className={form.siteTemplate === template.value ? "builder-template is-selected" : "builder-template"} onClick={() => setField("siteTemplate", template.value)} aria-pressed={form.siteTemplate === template.value}><div className={`builder-preview builder-preview-${template.value}`}><span>{template.value === "gallery" ? "IMAGE / 01" : template.value === "editorial" ? "ABOUT / WORK" : "INDEX / 2026"}</span><strong>{form.displayName || "Your name"}</strong><i /><small>{template.value === "gallery" ? "a work stays in the room" : template.value === "editorial" ? "a practice in motion" : "selected works / archive"}</small></div><div className="builder-template-copy"><strong>{tx(locale, template.en, template.ko)}</strong><span>{tx(locale, template.noteEn, template.noteKo)}</span>{form.siteTemplate === template.value && <Check size={15} />}</div></button>)}</div>
       <div className="builder-settings"><div><MetaLine>{tx(locale, "SITE ADDRESS", "페이지 주소")}</MetaLine><label className="builder-slug-field"><span>uau.unframe.kr/artist/</span><input value={form.publicSlug} onChange={(event) => setField("publicSlug", event.target.value)} placeholder="your-name" aria-label={tx(locale, "Public page address", "공개 페이지 주소")} /></label><label>{tx(locale, "Website / portfolio link", "웹사이트 / 포트폴리오 링크")}<input type="url" value={form.websiteUrl} onChange={(event) => setField("websiteUrl", event.target.value)} placeholder="https://" /></label></div><div className="builder-controls"><MetaLine>{tx(locale, "PUBLISH SETTINGS", "공개 설정")}</MetaLine><label className="builder-check"><input type="checkbox" checked={form.sitePublished} onChange={(event) => setField("sitePublished", event.target.checked)} /><span><strong>{tx(locale, "Publish my page", "내 페이지 공개하기")}</strong><small>{tx(locale, "Anyone with the link can visit it.", "링크를 가진 누구나 방문할 수 있습니다.")}</small></span></label><div className="builder-sections"><span>{tx(locale, "Show on page", "페이지에 표시할 섹션")}</span>{(["exhibitions", "cv", "about"] as ArtistSiteSection[]).map((section) => <label key={section}><input type="checkbox" checked={form.siteSections.includes(section)} onChange={() => toggleSection(section)} /> {tx(locale, artistSiteSectionLabels[section].en, artistSiteSectionLabels[section].ko)}</label>)}</div></div></div>
       <div className="builder-system-settings"><div className="builder-section-order"><MetaLine>{tx(locale, "PAGE ORDER", "페이지 순서")}</MetaLine><p>{tx(locale, "Arrange the sections in the order your practice wants to be read.", "작업이 읽히길 바라는 순서대로 섹션을 배치하세요.")}</p><div className="builder-order-list">{form.siteSections.map((section, index) => <div className="builder-order-row" key={section}><span>0{index + 1}</span><strong>{tx(locale, artistSiteSectionLabels[section].en, artistSiteSectionLabels[section].ko)}</strong><div><button type="button" onClick={() => moveSection(index, -1)} disabled={index === 0} aria-label={tx(locale, `Move ${artistSiteSectionLabels[section].en} up`, `${artistSiteSectionLabels[section].ko} 위로 이동`)}><ArrowUp size={14} /></button><button type="button" onClick={() => moveSection(index, 1)} disabled={index === form.siteSections.length - 1} aria-label={tx(locale, `Move ${artistSiteSectionLabels[section].en} down`, `${artistSiteSectionLabels[section].ko} 아래로 이동`)}><ArrowDown size={14} /></button></div></div>)}</div></div><div className="builder-accent-control"><MetaLine>{tx(locale, "ACCENT", "강조색")}</MetaLine><p>{tx(locale, "Choose a restrained accent for your public room.", "공개 페이지에 사용할 절제된 강조색을 고르세요.")}</p><label><span className="sr-only">{tx(locale, "Artist page accent", "아티스트 페이지 강조색")}</span><select value={form.siteAccent} onChange={(event) => setField("siteAccent", event.target.value as ArtistSiteAccent)}>{(["blue", "ink", "clay"] as ArtistSiteAccent[]).map((accent) => <option value={accent} key={accent}>{tx(locale, artistSiteAccentLabels[accent].en, artistSiteAccentLabels[accent].ko)}</option>)}</select></label></div></div>
+      <div className="builder-records"><div className="builder-records-heading"><div><MetaLine>{tx(locale, "PUBLIC RECORDS", "공개 기록")}</MetaLine><h3>{tx(locale, "Give the room something real to hold.", "공간에 실제 기록을 남겨보세요.")}</h3></div><p>{tx(locale, "Add selected works and exhibitions. They will appear on your public page in the order you save them.", "대표 작품과 전시를 추가하세요. 저장한 순서대로 공개 페이지에 나타납니다.")}</p></div><div className="builder-record-grid"><section><div className="builder-record-head"><strong>{tx(locale, "Selected works", "대표 작품")}</strong><button type="button" onClick={addWork}>+ {tx(locale, "Add work", "작품 추가")}</button></div>{form.siteWorks.length === 0 && <p className="builder-record-empty">{tx(locale, "No works added yet.", "아직 추가된 작품이 없습니다.")}</p>}{form.siteWorks.map((work, index) => <div className="builder-record-card" key={work.id}><div className="builder-record-card-top"><span>0{index + 1}</span><button type="button" onClick={() => removeWork(index)}>{tx(locale, "Remove", "삭제")}</button></div><label>{tx(locale, "Title", "제목")}<input value={work.title} onChange={(event) => updateWork(index, "title", event.target.value)} placeholder={tx(locale, "The work title", "작품 제목")} /></label><div className="profile-two-up"><label>{tx(locale, "Year", "연도")}<input value={work.year || ""} onChange={(event) => updateWork(index, "year", event.target.value)} placeholder="2026" /></label><label>{tx(locale, "Medium", "매체")}<input value={work.medium || ""} onChange={(event) => updateWork(index, "medium", event.target.value)} placeholder={tx(locale, "Oil on linen", "린넨에 유채")} /></label></div><label>{tx(locale, "Image URL", "이미지 주소")}<input type="url" value={work.imageUrl || ""} onChange={(event) => updateWork(index, "imageUrl", event.target.value)} placeholder="https://" /></label></div>)}</section><section><div className="builder-record-head"><strong>{tx(locale, "Exhibitions", "전시")}</strong><button type="button" onClick={addExhibition}>+ {tx(locale, "Add exhibition", "전시 추가")}</button></div>{form.siteExhibitions.length === 0 && <p className="builder-record-empty">{tx(locale, "No exhibitions added yet.", "아직 추가된 전시가 없습니다.")}</p>}{form.siteExhibitions.map((exhibition, index) => <div className="builder-record-card" key={exhibition.id}><div className="builder-record-card-top"><span>0{index + 1}</span><button type="button" onClick={() => removeExhibition(index)}>{tx(locale, "Remove", "삭제")}</button></div><div className="profile-two-up"><label>{tx(locale, "Year", "연도")}<input value={exhibition.year} onChange={(event) => updateExhibition(index, "year", event.target.value)} placeholder="2026" /></label><label>{tx(locale, "Location", "장소")}<input value={exhibition.location || ""} onChange={(event) => updateExhibition(index, "location", event.target.value)} placeholder={tx(locale, "Seoul", "서울")} /></label></div><label>{tx(locale, "Exhibition title", "전시명")}<input value={exhibition.title} onChange={(event) => updateExhibition(index, "title", event.target.value)} placeholder={tx(locale, "Exhibition title", "전시명")} /></label><label>{tx(locale, "Venue", "공간")}<input value={exhibition.venue || ""} onChange={(event) => updateExhibition(index, "venue", event.target.value)} placeholder={tx(locale, "Gallery or project space", "갤러리 또는 프로젝트 스페이스")} /></label></div>)}</section></div></div>
       <div className="builder-footer"><span>{tx(locale, "Your page is saved with your profile. Publish when it feels ready.", "페이지는 프로필과 함께 저장됩니다. 준비가 되었을 때 공개하세요.")}</span>{publicUrl && <a className="text-link" href={publicUrl} target="_blank" rel="noreferrer"><Eye size={14} /> {tx(locale, "Preview page", "페이지 미리보기")} <ExternalLink size={13} /></a>}</div>
     </section>
   </section></div></main>;

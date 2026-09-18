@@ -12,6 +12,7 @@ export function I18nProvider({ children, initialLocale }: { children: React.Reac
   useEffect(() => {
     document.documentElement.lang = locale;
     window.localStorage.setItem("uau-locale", locale);
+    document.cookie = `uau-locale=${locale}; path=/; max-age=31536000; samesite=lax`;
   }, [locale]);
 
   return <LanguageContext.Provider value={{ locale, setLocale }}>{children}</LanguageContext.Provider>;

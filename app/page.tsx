@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, MoveUpRight } from "lucide-react";
-import { ArtImage, BookmarkButton, DemoNotice, MetaLine, SectionHeading, VerifiedMark } from "./components";
-import { annualRecap, artists, artworks, events, journal, opportunities } from "./data";
+import { ArtImage, BookmarkButton, DemoNotice, MetaLine, SectionHeading } from "./components";
+import { annualRecap, artworks, events, journal, opportunities } from "./data";
 import { ConnectionMarquee, RotatingWord } from "./motion-components";
 import { HomeFaq } from "./components/home-faq";
+import { NewlyConnected } from "./components/newly-connected";
 import { getServerLocale } from "./server-locale";
-import { artistText, artworkText, cityText, countryText, tx } from "./i18n-shared";
+import { artworkText, tx } from "./i18n-shared";
 
 export default function Home() {
   const locale = getServerLocale();
@@ -33,7 +34,7 @@ export default function Home() {
 
     <section className="blue-panel page-wrap"><div className="panel-copy"><MetaLine>{tx(locale, "U.A.U SELECT / SEPTEMBER", "U.A.U 셀렉트 / 9월")}</MetaLine><h2>{tx(locale, <>New forms<br /><em>of being together.</em></>, <>함께 존재하는<br /><em>새로운 형식.</em></>)}</h2><p>{tx(locale, "A monthly selection by the UNFRAME team — artists, works, and the threads we keep noticing.", "UNFRAME 팀이 매달 고르는 아티스트와 작품, 그리고 우리가 계속 주목하는 연결의 실마리.")}</p><Link className="button button-light" href="/works">{tx(locale, "Enter the selection", "셀렉트 보기")} <ArrowUpRight size={16} /></Link></div><div className="panel-art"><ArtImage className="select-art" label={tx(locale, "Selected sculptural artwork", "선정된 조각 작품")} position="70% center" /><span className="panel-index">SELECT / 09</span></div></section>
 
-    <section className="page-wrap section-space" id="artists"><SectionHeading title={tx(locale, "New in the unit", "유닛에 새로 합류한 아티스트")} action={tx(locale, "All artists", "모든 아티스트")} href="/artists" /><div className="artist-list">{artists.slice(0, 4).map((artist, index) => { const copy = artistText(locale, artist.slug)!; return <Link href={`/${artist.slug}`} className="artist-row" key={artist.slug}><span className="artist-index">0{index + 1}</span><span className={`artist-avatar ${artist.tone}`}>{artist.initials}</span><span className="artist-name">{artist.name} {artist.verified && <VerifiedMark compact />}<small>{copy.discipline}</small></span><span className="artist-place">{cityText(locale, artist.city)}, {countryText(locale, artist.country)}</span><span className="artist-tags">{copy.tags.slice(0, 2).map(tag => <span key={tag}>{tag}</span>)}</span><ArrowUpRight className="row-arrow" size={17} /></Link>})}</div></section>
+    <section className="page-wrap section-space" id="artists"><SectionHeading title={tx(locale, "Newly connected", "새롭게 연결된 아티스트")} action={tx(locale, "All artists", "모든 아티스트")} href="/artists" /><p className="section-note">{tx(locale, "New practices entering the unit this week.", "이번 주 유닛에 새롭게 연결된 실천들입니다.")}</p><NewlyConnected locale={locale} /></section>
 
     <section className="page-wrap section-space works-section"><SectionHeading title={tx(locale, "Works to spend time with", "천천히 머물러 볼 작품")} action={tx(locale, "Discover all works", "모든 작품 보기")} href="/works" /><div className="works-grid">{artworks.slice(0, 3).map(work => { const copy = artworkText(locale, work.id)!; return <Link href={`/works/${work.id}`} className="work-card" key={work.id}><ArtImage className={`work-art ${work.accent}`} position={work.imagePosition} label={work.title} /><div className="work-info"><div><strong>{work.title}</strong><span>{work.artist} · {work.year}</span></div><BookmarkButton label="" /></div><MetaLine>{copy.medium}</MetaLine></Link>})}</div></section>
 

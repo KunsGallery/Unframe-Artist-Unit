@@ -9,50 +9,50 @@ export default function AboutPage() {
   return (
     <main className="story-page">
       <FlowArt aria-label={tx(locale, "u.a.u introduction", "u.a.u 소개")}>
-        <FlowSection className="story-tone-blue" aria-label={tx(locale, "For artists", "아티스트를 위한 공간")}>
+        <FlowSection className="story-tone-blue" aria-label={tx(locale, "A connection that lasts longer than one person", "한 사람보다 오래 남는 연결")}>
           <div className="story-card-topline">
-            <span>{tx(locale, "01 / FOR ARTISTS", "01 / 아티스트를 위한 공간")}</span>
-            <span>{tx(locale, "MAKE YOUR WAY IN", "당신의 방식으로 들어오기")}</span>
+            <span>{tx(locale, "01 / THE CONNECTION", "01 / 연결의 시작")}</span>
+            <span>{tx(locale, "LONGER THAN ONE PERSON", "한 사람보다 오래")}</span>
           </div>
           <div className="story-card-main">
-            <p className="story-kicker">{tx(locale, "A page for the practice behind the work", "작품 뒤의 실천을 위한 페이지")}</p>
+            <p className="story-kicker">{tx(locale, "A network held by a moving brand", "움직이는 브랜드가 쌓아가는 네트워크")}</p>
             <h1>
-              {tx(locale, "Make", "만들고")}
+              {tx(locale, "Stay", "남고")}
               <br />
-              <em>{tx(locale, "your page.", "당신의 페이지를.")}</em>
+              <em>{tx(locale, "connected.", "연결됩니다.")}</em>
             </h1>
             <p className="story-card-copy">
-              {tx(locale, "Shape how your practice is seen. Bring the work, references, and directions that make you yours — then let the page keep moving with you.", "당신의 실천이 어떻게 보일지 직접 만드세요. 작업과 레퍼런스, 당신을 당신답게 만드는 방향을 가져오면 페이지도 함께 계속 움직입니다.")}
+              {tx(locale, "This is not a relationship built around one person. It grows inside UNFRAME — through exhibitions, artists, audiences, conversations, and the records that remain.", "개인이 중심이 되는 관계가 아닙니다. 전시와 작가, 관객과 대화, 그리고 남겨진 기록을 통해 UNFRAME 안에서 계속 자라나는 관계입니다.")}
             </p>
           </div>
           <div className="story-card-bottomline">
-            <span>u.a.u / UNFRAME ARTIST UNIT</span>
+            <span>{tx(locale, "UNFRAME → U.A.U", "UNFRAME → U.A.U")}</span>
               <Link href="/artists">
-              {tx(locale, "Explore artist pages", "아티스트 페이지 둘러보기")} <ArrowUpRight size={16} />
+              {tx(locale, "Meet the artists", "아티스트 만나기")} <ArrowUpRight size={16} />
             </Link>
           </div>
         </FlowSection>
 
-        <FlowSection className="story-tone-ink" aria-label={tx(locale, "For curators and directors", "큐레이터와 디렉터를 위한 공간")}>
+        <FlowSection className="story-tone-ink" aria-label={tx(locale, "Starting from a place already in motion", "이미 움직이고 있는 곳에서 시작합니다")}>
           <div className="story-card-topline">
-            <span>{tx(locale, "02 / FOR CURATORS & DIRECTORS", "02 / 큐레이터와 디렉터를 위한 공간")}</span>
-            <span>{tx(locale, "FOLLOW THE THREAD", "연결의 실마리 따라가기")}</span>
+            <span>{tx(locale, "02 / ALREADY IN MOTION", "02 / 이미 움직이고 있는 곳")}</span>
+            <span>{tx(locale, "FOLLOW WHAT COMES AFTER", "그 이후를 따라가기")}</span>
           </div>
           <div className="story-card-main">
-            <p className="story-kicker">{tx(locale, "A place to begin with a real encounter", "실제 만남에서 시작하는 자리")}</p>
+            <p className="story-kicker">{tx(locale, "UNFRAME came first", "UNFRAME이 먼저 있었습니다")}</p>
             <h2>
-              {tx(locale, "Find", "찾고")}
+              {tx(locale, "Begin", "시작하고")}
               <br />
-              <em>{tx(locale, "the practice.", "실천을.")}</em>
+              <em>{tx(locale, "where it moves.", "움직이는 곳에서.")}</em>
             </h2>
             <p className="story-card-copy">
-              {tx(locale, "Start from a work, a question, or an instinct. Follow the thread into the next studio visit, proposal, conversation, or collaboration.", "작품과 질문, 혹은 직감에서 시작하세요. 다음 스튜디오 방문과 제안, 대화, 협업으로 이어지는 실마리를 따라가세요.")}
+              {tx(locale, "Before u.a.u, UNFRAME was already opening exhibitions, meeting artists, welcoming audiences, and making the next project. u.a.u extends that motion into the relationships that come after.", "u.a.u가 생기기 전부터 UNFRAME은 전시를 열고, 작가를 만나고, 관객을 맞이하고, 다음 프로젝트를 만들고 있었습니다. u.a.u는 그 움직임을 이후의 관계로 확장합니다.")}
             </p>
           </div>
           <div className="story-card-bottomline">
-            <span>02 / 04</span>
+            <span>{tx(locale, "EXHIBITION → ENCOUNTER → CONNECTION", "전시 → 만남 → 연결")}</span>
               <Link href="/connections">
-              {tx(locale, "See the connections", "연결 보기")} <ArrowUpRight size={16} />
+              {tx(locale, "Follow the thread", "실마리 따라가기")} <ArrowUpRight size={16} />
             </Link>
           </div>
         </FlowSection>

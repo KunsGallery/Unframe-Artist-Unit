@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Globe2, Instagram, Mail } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
 import { db } from "./firebase-client";
+import { recordEngagement } from "./engagements";
+import { useAuth } from "./auth-provider";
 import type { PublicProfile } from "./profile";
 import { artistSiteSectionLabels, getArtistSiteSections } from "./artist/site-config";
 
@@ -24,15 +26,17 @@ function PublicLinks({ profile, locale }: { profile: PublicProfile; locale: "en"
 }
 
 function ArtistIdentity({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  return <div className="public-artist-identity"><div className="public-artist-mark">{getInitials(profile.displayName)}</div><div><span>{profile.practice || tx(locale, "Artist", "아티스트")}</span><h1>{profile.artistName || profile.displayName}</h1><p>{profile.basedInCity}{profile.basedInCity && profile.country ? " · " : ""}{profile.country}</p></div></div>;
+  return <div className="public-artist-identity"><div className="public-artist-mark">{getInitials(profile.displayName)}</div><div><span>{profile.practice || tx(locale, "Artist", "아티스트")}</span><h1>{profile.artistName || profile.displayName}</h1><p>{profile.basedInCity}{profile.basedInCity && profile.country ? " · " : ""}{profile.country}</p><div className="public-artist-id"><strong>{profile.uauArtistId || tx(locale, "Identity in progress", "아이덴티티 생성 중")}</strong>{profile.verificationStatus === "approved" && <small>{tx(locale, "Verified Artist", "인증 아티스트")}</small>}{profile.foundingNumber && <small>{profile.foundingStatus === "founding" ? tx(locale, "Founding Artist", "Founding Artist") : tx(locale, "Connected Artist", "Connected Artist")}</small>}</div></div></div>;
 }
 
 function WorksSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  return <section id="works" className="public-artist-works"><div className="public-section-label">{tx(locale, "Artworks", "작품")} <span>/{tx(locale, "selected works", "선정 작품")}</span></div><div className="public-work-feature"><div className="public-work-image"><img src="/assets/uau-hero.png" alt={tx(locale, `${profile.displayName}'s featured work`, `${profile.displayName}의 대표 작품`)} /></div><div className="public-work-copy"><span>{tx(locale, "Selected work / 01", "선정 작품 / 01")}</span><h2>{tx(locale, "The work is still becoming.", "작품은 아직 되어가는 중입니다.")}</h2><p>{tx(locale, "This room will hold the works, fragments, and images the artist chooses to keep in conversation.", "이 공간에는 아티스트가 대화 속에 남겨두고 싶은 작품과 파편, 이미지가 쌓입니다.")}</p><Link className="text-link" href="/works">{tx(locale, "Explore the archive", "아카이브 둘러보기")} <ArrowUpRight size={14} /></Link></div></div></section>;
+  const works = profile.siteWorks || [];
+  return <section id="works" className="public-artist-works"><div className="public-section-label">{tx(locale, "Artworks", "작품")} <span>/{tx(locale, "selected works", "선정 작품")}</span></div>{works.length ? <div className="public-site-work-grid">{works.map((work, index) => <article className="public-site-work-card" key={work.id}><div className="public-work-image">{work.imageUrl ? <img src={work.imageUrl} alt={work.title} /> : <img src="/assets/uau-hero.png" alt={work.title} />}</div><div className="public-site-work-copy"><span>{String(index + 1).padStart(2, "0")} / {work.year || tx(locale, "undated", "연도 미상")}</span><h2>{work.title || tx(locale, "Untitled work", "제목 없는 작품")}</h2><p>{work.medium || tx(locale, "Medium to be added", "매체를 추가해 주세요")}</p></div></article>)}</div> : <div className="public-work-feature"><div className="public-work-image"><img src="/assets/uau-hero.png" alt={tx(locale, `${profile.displayName}'s featured work`, `${profile.displayName}의 대표 작품`)} /></div><div className="public-work-copy"><span>{tx(locale, "The first room is waiting", "첫 번째 방을 기다리는 중")}</span><h2>{tx(locale, "The work is still becoming.", "작품은 아직 되어가는 중입니다.")}</h2><p>{tx(locale, "Selected works will appear here as the artist builds their public archive.", "아티스트가 공개 아카이브를 만들어 가면 대표 작품이 이곳에 기록됩니다.")}</p><Link className="text-link" href="/login">{tx(locale, "Build an artist page", "아티스트 페이지 만들기")} <ArrowUpRight size={14} /></Link></div></div>}</section>;
 }
 
 function ExhibitionsSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  return <section id="exhibitions" className="public-artist-section"><div className="public-section-label">{tx(locale, "Exhibitions", "전시")}</div><div className="public-record-list"><div><span>2026</span><strong>{tx(locale, "UNFRAME Salon / Current practice", "UNFRAME 살롱 / 현재의 실천")}</strong><small>{profile.basedInCity || tx(locale, "Location to be added", "장소 준비 중")}</small></div><div><span>{tx(locale, "Next", "다음")}</span><strong>{tx(locale, "The next room is open.", "다음 방이 열려 있습니다.")}</strong><small>{tx(locale, "New exhibition records will appear here.", "새로운 전시 기록이 이곳에 남습니다.")}</small></div></div></section>;
+  const exhibitions = profile.siteExhibitions || [];
+  return <section id="exhibitions" className="public-artist-section"><div className="public-section-label">{tx(locale, "Exhibitions", "전시")}</div>{exhibitions.length ? <div className="public-record-list">{exhibitions.map((exhibition) => <div key={exhibition.id}><span>{exhibition.year}</span><strong>{exhibition.title}</strong><small>{[exhibition.venue, exhibition.location].filter(Boolean).join(" · ") || tx(locale, "Location to be added", "장소 준비 중")}</small></div>)}</div> : <div className="public-empty-record"><strong>{tx(locale, "The next room is open.", "다음 방이 열려 있습니다.")}</strong><span>{tx(locale, "Exhibition records will appear here as the practice continues.", "작업이 계속되면 전시 기록이 이곳에 남습니다.")}</span></div>}</section>;
 }
 
 function CvSection({ locale }: { locale: "en" | "ko" }) {
@@ -61,9 +65,11 @@ function ArchiveTemplate({ profile, locale }: { profile: PublicProfile; locale: 
 
 export function PublicArtistPage({ slug }: { slug: string }) {
   const { locale } = useLanguage();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const recordedView = useRef(false);
 
   useEffect(() => {
     if (!db) {
@@ -83,8 +89,14 @@ export function PublicArtistPage({ slug }: { slug: string }) {
     });
   }, [slug]);
 
+  useEffect(() => {
+    if (!user || !profile || recordedView.current) return;
+    recordedView.current = true;
+    void recordEngagement({ actorUid: user.uid, action: "view", targetType: "artist", targetId: slug, source: "public-artist-page" });
+  }, [profile, slug, user]);
+
   if (loading) return <main className="public-artist-page"><div className="public-page-loading">{tx(locale, "Opening the artist's room…", "아티스트의 공간을 여는 중…")}</div></main>;
   if (error || !profile) return <main className="public-artist-page"><div className="public-page-private"><span>u.a.u</span><h1>{tx(locale, "This room is not open yet.", "아직 열리지 않은 공간입니다.")}</h1><p>{tx(locale, "The artist is still shaping this page. Come back when the door is open.", "아티스트가 아직 페이지를 다듬고 있습니다. 문이 열리면 다시 찾아와 주세요.")}</p><Link className="button button-blue" href="/artists">{tx(locale, "Explore artists", "아티스트 둘러보기")} <ArrowUpRight size={16} /></Link></div></main>;
 
-  return <main className="public-artist-page"><SiteHeader profile={profile} locale={locale} /><div className="public-artist-shell" data-site-accent={profile.siteAccent || "blue"}>{profile.siteTemplate === "gallery" ? <GalleryTemplate profile={profile} locale={locale} /> : profile.siteTemplate === "archive" ? <ArchiveTemplate profile={profile} locale={locale} /> : <EditorialTemplate profile={profile} locale={locale} />}<footer className="public-artist-footer"><span>u.a.u / UNFRAME ARTIST UNIT</span><span>{profile.displayName} · {profile.basedInCity}</span><Link href="/">{tx(locale, "Enter u.a.u", "u.a.u 들어가기")} <ArrowUpRight size={13} /></Link></footer></div></main>;
+  return <main className="public-artist-page"><SiteHeader profile={profile} locale={locale} /><div className="public-artist-shell" data-site-accent={profile.siteAccent || "blue"}>{profile.siteTemplate === "gallery" ? <GalleryTemplate profile={profile} locale={locale} /> : profile.siteTemplate === "archive" ? <ArchiveTemplate profile={profile} locale={locale} /> : <EditorialTemplate profile={profile} locale={locale} />}<footer className="public-artist-footer"><span>u.a.u / UNFRAME ARTIST UNIT</span><span>{profile.uauArtistId || profile.displayName} · {profile.basedInCity}</span><Link href="/">{tx(locale, "Enter u.a.u", "u.a.u 들어가기")} <ArrowUpRight size={13} /></Link></footer></div></main>;
 }

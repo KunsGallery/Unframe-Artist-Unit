@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { collection, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, onSnapshot, runTransaction, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { ArrowUpRight, Bell, Check, FileText, LayoutDashboard, LogOut, ShieldCheck, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DemoNotice, MetaLine } from "../components";
@@ -37,7 +37,7 @@ function useAdminData(uid?: string | null) {
       setError("Admin access could not be verified.");
       setAccess("denied");
     });
-    const names = ["users", "artists", "artworks", "projects", "notifications"];
+    const names = ["users", "artists", "artworks", "projects", "notifications", "engagement_events"];
     const unsubscribeCollections = names.map((name) => onSnapshot(collection(firestore, name), (snapshot) => {
       setCollections((current) => ({ ...current, [name]: snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) }));
     }, (snapshotError) => setError(snapshotError.message)));
@@ -76,16 +76,69 @@ export default function AdminClient() {
     artworks: collections.artworks?.length ?? 0,
     projects: collections.projects?.length ?? 0,
     notifications: collections.notifications?.length ?? 0,
+    views: (collections.engagement_events ?? []).filter((event) => event.action === "view").length,
+    saves: (collections.engagement_events ?? []).filter((event) => event.action === "save" && event.active !== false).length,
   }), [collections]);
   const pendingArtists = useMemo(() => (collections.artists ?? []).filter((artist) => artist.applicationStatus === "pending"), [collections.artists]);
   const recentNotifications = useMemo(() => (collections.notifications ?? []).slice(0, 6) as UauNotification[], [collections.notifications]);
 
   async function approveArtist(artistId: string) {
     if (!db) return;
+    const firestore = db;
     setActionError(null);
     try {
-      await updateDoc(doc(db, "artists", artistId), { verified: true, applicationStatus: "approved", published: true, updatedAt: serverTimestamp() });
-      setNotice(tx(locale, "Artist approved and published.", "아티스트를 승인하고 공개했습니다."));
+      await runTransaction(firestore, async (transaction) => {
+        const artistRef = doc(firestore, "artists", artistId);
+        const counterRef = doc(firestore, "counters", "foundingArtists");
+        const artistSnapshot = await transaction.get(artistRef);
+        if (!artistSnapshot.exists()) throw new Error("Artist application no longer exists.");
+        const artist = artistSnapshot.data();
+        const ownerUid = typeof artist.ownerUid === "string" ? artist.ownerUid : "";
+        const userRef = ownerUid ? doc(firestore, "users", ownerUid) : null;
+        const userSnapshot = userRef ? await transaction.get(userRef) : null;
+        const counterSnapshot = await transaction.get(counterRef);
+        const existingNumber = typeof artist.foundingNumber === "number" ? artist.foundingNumber : null;
+        const nextNumber = existingNumber ?? Number(counterSnapshot.data()?.nextNumber ?? 1);
+        const foundingStatus = nextNumber <= 100 ? "founding" : "regular";
+        const artistIdLabel = `U.A.U. ${String(nextNumber).padStart(3, "0")}`;
+        if (!existingNumber) transaction.set(counterRef, { nextNumber: nextNumber + 1, updatedAt: serverTimestamp() }, { merge: true });
+        transaction.update(artistRef, {
+          verified: true,
+          applicationStatus: "approved",
+          published: true,
+          uauArtistId: artistIdLabel,
+          foundingNumber: nextNumber,
+          foundingStatus,
+          verificationStatus: "approved",
+          verifiedAt: serverTimestamp(),
+          approvedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        if (userRef) {
+          const userData = userSnapshot?.data();
+          transaction.set(userRef, {
+            uauArtistId: artistIdLabel,
+            foundingNumber: nextNumber,
+            foundingStatus,
+            verificationStatus: "approved",
+            verifiedAt: serverTimestamp(),
+            approvedAt: serverTimestamp(),
+            connectedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          const publicSlug = typeof userData?.publicSlug === "string" ? userData.publicSlug : "";
+          if (publicSlug) transaction.set(doc(firestore, "public_profiles", publicSlug), {
+            uauArtistId: artistIdLabel,
+            foundingNumber: nextNumber,
+            foundingStatus,
+            verificationStatus: "approved",
+            verifiedAt: serverTimestamp(),
+            published: true,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        }
+      });
+      setNotice(tx(locale, "Artist approved, numbered, and published.", "아티스트를 승인하고 번호를 발급해 공개했습니다."));
     } catch (approveError) {
       setActionError(approveError instanceof Error ? approveError.message : "Approval failed.");
     }

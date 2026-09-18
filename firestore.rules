@@ -60,6 +60,17 @@ service cloud.firestore {
           'siteSections',
           'siteAccent',
           'sitePublished',
+          'uauArtistId',
+          'foundingNumber',
+          'foundingStatus',
+          'verificationStatus',
+          'invitationNumber',
+          'invitationAcceptedAt',
+          'verifiedAt',
+          'approvedAt',
+          'connectedAt',
+          'siteWorks',
+          'siteExhibitions',
           'showExhibitions',
           'showCV',
           'showAbout',
@@ -89,6 +100,17 @@ service cloud.firestore {
             'siteSections',
             'siteAccent',
             'sitePublished',
+            'uauArtistId',
+            'foundingNumber',
+            'foundingStatus',
+            'verificationStatus',
+            'invitationNumber',
+            'invitationAcceptedAt',
+            'verifiedAt',
+            'approvedAt',
+            'connectedAt',
+            'siteWorks',
+            'siteExhibitions',
             'showExhibitions',
             'showCV',
             'showAbout',
@@ -127,6 +149,14 @@ service cloud.firestore {
             'siteTemplate',
             'siteSections',
             'siteAccent',
+            'uauArtistId',
+            'foundingNumber',
+            'foundingStatus',
+            'verificationStatus',
+            'invitationNumber',
+            'verifiedAt',
+            'siteWorks',
+            'siteExhibitions',
             'showExhibitions',
             'showCV',
             'showAbout',
@@ -172,6 +202,13 @@ service cloud.firestore {
             'mediums',
             'practiceTags',
             'visualTags',
+            'invitationNumber',
+            'uauArtistId',
+            'foundingNumber',
+            'foundingStatus',
+            'verificationStatus',
+            'verifiedAt',
+            'approvedAt',
             'availableFor',
             'careerStage',
             'updatedAt'
@@ -226,6 +263,15 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if isAdmin() || resource.data.published == true;
       allow write: if isAdmin();
+    }
+
+    match /exhibitions/{exhibitionId} {
+      allow read: if isAdmin()
+        || resource.data.published == true
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow write: if isAdmin()
+        || (signedIn()
+          && request.resource.data.ownerUid == request.auth.uid);
     }
 
     match /threads/{threadId} {
@@ -403,6 +449,10 @@ service cloud.firestore {
     }
 
     match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /counters/{counterId} {
       allow read, write: if isAdmin();
     }
 

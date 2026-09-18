@@ -1,13 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
 import { db } from "./firebase-client";
 
 export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
 export type ArtistSiteTemplate = "gallery" | "editorial" | "archive";
 export type ArtistSiteSection = "works" | "exhibitions" | "cv" | "about";
 export type ArtistSiteAccent = "blue" | "ink" | "clay";
+
+export type ArtistVerificationStatus = "pending" | "approved" | "rejected";
+export type ArtistFoundingStatus = "founding" | "regular";
+
+export type ArtistSiteWork = {
+  id: string;
+  title: string;
+  year?: string;
+  medium?: string;
+  imageUrl?: string;
+};
+
+export type ArtistSiteExhibition = {
+  id: string;
+  year: string;
+  title: string;
+  venue?: string;
+  location?: string;
+};
 
 export type UauUserProfile = {
   uid: string;
@@ -26,6 +45,17 @@ export type UauUserProfile = {
   siteSections?: ArtistSiteSection[];
   siteAccent?: ArtistSiteAccent;
   sitePublished?: boolean;
+  uauArtistId?: string;
+  foundingNumber?: number;
+  foundingStatus?: ArtistFoundingStatus;
+  verificationStatus?: ArtistVerificationStatus;
+  invitationNumber?: number;
+  invitationAcceptedAt?: Timestamp | null;
+  verifiedAt?: Timestamp | null;
+  approvedAt?: Timestamp | null;
+  connectedAt?: Timestamp | null;
+  siteWorks?: ArtistSiteWork[];
+  siteExhibitions?: ArtistSiteExhibition[];
   showExhibitions?: boolean;
   showCV?: boolean;
   showAbout?: boolean;
@@ -68,6 +98,14 @@ export type PublicProfile = {
   showCV: boolean;
   showAbout: boolean;
   published: boolean;
+  uauArtistId?: string;
+  foundingNumber?: number;
+  foundingStatus?: ArtistFoundingStatus;
+  verificationStatus?: ArtistVerificationStatus;
+  invitationNumber?: number;
+  verifiedAt?: Timestamp | null;
+  siteWorks?: ArtistSiteWork[];
+  siteExhibitions?: ArtistSiteExhibition[];
 };
 
 export const accountTypes: Array<{ value: UauAccountType; en: string; ko: string }> = [
@@ -170,4 +208,31 @@ export async function savePublicProfile(uid: string, slug: string, values: Omit<
     { ...values, slug, ownerUid: uid, updatedAt: serverTimestamp() },
     { merge: true },
   );
+}
+
+export async function createArtistApplication(uid: string, values: {
+  name: string;
+  artistName?: string;
+  country: string;
+  basedInCity: string;
+  practice: string;
+  bio?: string;
+  invitationNumber?: number;
+}) {
+  if (!db) throw new Error("Firebase is not configured.");
+  return addDoc(collection(db, "artists"), {
+    ownerUid: uid,
+    name: values.name,
+    artistName: values.artistName || values.name,
+    country: values.country,
+    basedInCity: values.basedInCity,
+    practice: values.practice,
+    bio: values.bio || "",
+    invitationNumber: values.invitationNumber ?? null,
+    verified: false,
+    applicationStatus: "pending",
+    published: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 }
