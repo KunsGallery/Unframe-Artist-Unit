@@ -360,6 +360,47 @@ h1 em, h2 em, h3 em { font-style: italic; }
 .role-review-row .button-quiet { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: transparent; color: var(--muted); }
 @media (max-width: 700px) { .admin-access-heading { grid-template-columns: 1fr; gap: 30px; }.role-review-row { align-items: flex-start; flex-direction: column; }.admin-route-link { right: 12px; bottom: 12px; } }
 
+.admin-testing-panel { border-top: 1px solid var(--ink); padding: 76px 0 130px; }
+.admin-testing-wrap { width: min(1200px, calc(100% - 72px)); margin-inline: auto; }
+.admin-testing-heading { display: grid; grid-template-columns: 1.1fr .9fr; gap: 70px; align-items: end; padding-bottom: 48px; }
+.admin-testing-heading h2 { margin: 16px 0 0; font-family: var(--serif); font-size: clamp(46px, 6vw, 88px); font-weight: 400; letter-spacing: -.055em; line-height: .82; }
+.admin-testing-heading p:last-child { max-width: 410px; margin: 0 0 3px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.admin-testing-message { margin-bottom: 28px; padding: 13px 15px; border-top: 1px solid var(--blue); border-bottom: 1px solid var(--line); background: var(--blue-soft); color: var(--ink); font-size: 12px; }
+.admin-testing-message.is-error { border-top-color: var(--clay); background: #f3d9d0; }
+.admin-testing-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+.admin-testing-section, .admin-testing-records { min-width: 0; padding: 27px 24px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+.admin-testing-section-head, .admin-testing-records-heading { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
+.admin-testing-section-head > svg, .admin-testing-records-heading > span { color: var(--blue); }
+.admin-testing-section h3, .admin-testing-records h3 { margin: 13px 0 0; font-family: var(--serif); font-size: clamp(29px, 3vw, 45px); font-weight: 400; letter-spacing: -.035em; line-height: .9; }
+.admin-testing-copy { max-width: 500px; margin: 22px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.admin-testing-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 25px; }
+.admin-testing-actions .button { display: inline-flex; align-items: center; gap: 7px; }
+.admin-testing-actions .button:disabled { cursor: wait; opacity: .52; }
+.admin-testing-profile { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin-top: 35px; padding-top: 15px; border-top: 1px solid var(--line); }
+.admin-testing-profile span { grid-column: 1 / -1; color: var(--muted); font-size: 9px; letter-spacing: .12em; }
+.admin-testing-profile strong { font-family: var(--serif); font-size: 21px; font-weight: 400; }
+.admin-testing-profile small { align-self: end; color: var(--blue); font-size: 10px; text-align: right; }
+.admin-testing-metrics { margin-top: 25px; border-top: 1px solid var(--line); }
+.admin-testing-metrics a { display: grid; grid-template-columns: 54px 1fr 15px; align-items: center; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.admin-testing-metrics a:hover span, .admin-testing-metrics a:hover svg { color: var(--blue); }
+.admin-testing-metrics strong { font-family: var(--serif); font-size: 35px; font-weight: 400; }
+.admin-testing-metrics span { color: var(--muted); font-size: 11px; }
+.admin-testing-metrics svg { color: var(--muted); }
+.admin-testing-records { margin-top: 18px; padding-bottom: 4px; }
+.admin-testing-records-heading { align-items: end; padding-bottom: 20px; }
+.admin-testing-records-heading > span { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.admin-testing-record-list { border-top: 1px solid var(--line); }
+.admin-testing-record { display: grid; grid-template-columns: 1fr 28px; gap: 12px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.admin-testing-record div { min-width: 0; }
+.admin-testing-record span, .admin-testing-record strong, .admin-testing-record small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-testing-record span { color: var(--blue); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.admin-testing-record strong { margin-top: 4px; font-family: var(--serif); font-size: 20px; font-weight: 400; }
+.admin-testing-record small { margin-top: 4px; color: var(--muted); font-size: 9px; }
+.admin-testing-record button { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--blue); background: transparent; color: var(--blue); }
+.admin-testing-record button:hover { background: var(--blue); color: #fff; }
+@media (max-width: 860px) { .admin-testing-heading, .admin-testing-grid { grid-template-columns: 1fr; gap: 18px; }.admin-testing-heading { gap: 30px; }.admin-testing-wrap { width: min(100% - 40px, 680px); } }
+@media (max-width: 500px) { .admin-testing-panel { padding: 58px 0 90px; }.admin-testing-section, .admin-testing-records { padding: 24px 0; }.admin-testing-heading h2 { font-size: 57px; }.admin-testing-profile { grid-template-columns: 1fr; }.admin-testing-profile small { text-align: left; }.admin-testing-actions { align-items: stretch; flex-direction: column; }.admin-testing-actions .button { justify-content: center; } }
+
 @media (max-width: 860px) { .entry-hero, .entry-detail-hero, .recommendation-intro, .recommendation-lower, .participant-thread, .entry-note { grid-template-columns: 1fr; gap: 35px; }.entry-detail-stamp { min-height: 200px; }.entry-hero { padding-top: 70px; }.entry-hero p { max-width: 480px; }.participant-thread { padding-top: 60px; } }
 @media (max-width: 500px) { .entry-page, .entry-detail-page { padding-bottom: 75px; }.entry-hero h1, .entry-detail-hero h1 { font-size: 67px; }.entry-role-row { grid-template-columns: 32px 1fr 18px; gap: 12px; }.intent-choice-list { grid-template-columns: 1fr; }.intent-choice:nth-child(odd) { border-right: 0; }.intent-choice { font-size: 25px; }.recommendation-row { grid-template-columns: 45px 1fr 17px; gap: 11px; }.recommendation-mark { width: 38px; height: 38px; }.recommendation-row h3 { font-size: 25px; }.candidate-row { align-items: start; }.candidate-row button { margin-top: 7px; } }
 
