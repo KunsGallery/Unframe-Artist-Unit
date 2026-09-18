@@ -11,6 +11,24 @@ export const fontPresets = {
   classic: { label: "Classic serif", heading: 'Georgia, "Times New Roman", serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
   modern: { label: "Modern sans", heading: '"Helvetica Neue", Helvetica, Arial, sans-serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
   grotesk: { label: "Grotesk + serif", heading: '"Arial Narrow", "Helvetica Neue", Helvetica, Arial, sans-serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  noto: {
+    label: "Noto editorial · KR/EN",
+    heading: '"Noto Serif KR", "Iowan Old Style", serif',
+    body: '"Noto Sans KR", "Helvetica Neue", Arial, sans-serif',
+    cssUrl: "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap",
+  },
+  editorial: {
+    label: "Cormorant + Manrope · KR/EN",
+    heading: '"Cormorant Garamond", "Noto Serif KR", serif',
+    body: '"Manrope", "Noto Sans KR", sans-serif',
+    cssUrl: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&display=swap",
+  },
+  neutral: {
+    label: "Noto sans · clear",
+    heading: '"Noto Sans KR", "Helvetica Neue", Arial, sans-serif',
+    body: '"Noto Sans KR", "Helvetica Neue", Arial, sans-serif',
+    cssUrl: "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap",
+  },
 } as const;
 
 export type FontPreset = keyof typeof fontPresets;
@@ -93,6 +111,15 @@ function isAllowedFontUrl(value: string) {
   }
 }
 
+function isAllowedStylesheetUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || (url.protocol === "http:" && url.hostname === "localhost");
+  } catch {
+    return false;
+  }
+}
+
 export function applySiteSettings(settings: SiteSettings) {
   const root = document.documentElement;
   root.style.setProperty("--site-display-scale", String(settings.displayScale));
@@ -113,6 +140,16 @@ export function applySiteSettings(settings: SiteSettings) {
   root.style.setProperty("--site-font-scale", String(settings.fontScale));
   root.style.setProperty("--site-heading-weight", String(settings.headingWeight));
   root.style.setProperty("--site-letter-spacing", `${settings.letterSpacing}em`);
+  const presetStyleId = "uau-font-preset";
+  let presetStyle = document.getElementById(presetStyleId) as HTMLLinkElement | null;
+  const presetCssUrl = "cssUrl" in preset && isAllowedStylesheetUrl(preset.cssUrl) ? preset.cssUrl : "";
+  if (presetCssUrl) {
+    presetStyle ??= Object.assign(document.createElement("link"), { id: presetStyleId, rel: "stylesheet" });
+    presetStyle.href = presetCssUrl;
+    if (!presetStyle.parentNode) document.head.appendChild(presetStyle);
+  } else if (presetStyle) {
+    presetStyle.remove();
+  }
   const styleId = "uau-r2-fonts";
   let fontStyle = document.getElementById(styleId) as HTMLStyleElement | null;
   const headingFontUrl = isAllowedFontUrl(settings.headingFontUrl) ? settings.headingFontUrl : "";
