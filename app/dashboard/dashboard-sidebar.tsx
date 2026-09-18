@@ -1,20 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bell, Bookmark, Boxes, FolderKanban, LogOut, Plus, UserRound, WandSparkles } from "lucide-react";
+import { ArrowUpRight, Bell, Bookmark, Boxes, FolderKanban, LogOut, Plus, ShieldCheck, UserRound, WandSparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../i18n-provider";
 import { useAuth } from "../auth-provider";
 import { tx } from "../i18n-shared";
 import { useNotifications } from "../notifications";
+import { db } from "../firebase-client";
 
 type DashboardSection = "overview" | "profile" | "threads" | "space" | "notifications" | "recommendations" | "brief";
+const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
   const { locale } = useLanguage();
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications(user?.uid);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!user || !db) {
+      setIsAdmin(false);
+      return;
+    }
+    return onSnapshot(doc(db, "admins", user.uid), (snapshot) => {
+      const data = snapshot.data();
+      setIsAdmin(snapshot.exists() && data?.active === true && adminRoles.includes(String(data.role)));
+    }, () => setIsAdmin(false));
+  }, [user]);
 
   async function handleLogout() {
     await logout();
@@ -62,6 +78,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
           <Link className={active === "brief" ? "active" : ""} href="/dashboard/brief">
             <ArrowUpRight size={16} /> {tx(locale, "Curatorial brief", "기획 브리프")}
           </Link>
+          {isAdmin && <Link href="/admin"><ShieldCheck size={16} /> {tx(locale, "Admin", "관리자")}</Link>}
         </div>
       </nav>
       <div className="dash-bottom">

@@ -466,6 +466,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || (signedIn() && resource.data.senderUid == request.auth.uid);
     }
 
+    match /site_settings/{settingId} {
+      allow read: if settingId == 'public';
+      allow write: if isAdmin();
+    }
+
     match /admins/{uid} {
       // An administrator must be able to read their own access document first.
       // isAdmin() itself uses this document, so restricting this read to isAdmin()
