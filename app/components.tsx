@@ -9,6 +9,7 @@ import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
 import { setSavedEngagement } from "./engagements";
 import { RadarNetwork } from "./radar/radar-network";
+import { useSitePageContent } from "./site-page-content";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
@@ -135,6 +136,21 @@ export function Footer() {
 
 export function SectionHeading({ title, action, href = "#" }: { title: string; action?: string; href?: string }) {
   return <div className="section-heading"><h2>{title}</h2>{action && <Link href={href} className="text-link">{action} <ArrowUpRight size={14} /></Link>}</div>;
+}
+
+export function PageIntro({ className = "", split = false, bare = false, showActions = true }: { className?: string; split?: boolean; bare?: boolean; showActions?: boolean }) {
+  const { locale } = useLanguage();
+  const { content } = useSitePageContent();
+  const localize = (value: { en: string; ko: string }) => value[locale];
+  const rootClassName = [bare ? "" : "page-intro", split ? "split-intro" : "", className].filter(Boolean).join(" ");
+  return <div className={rootClassName}><div><MetaLine>{localize(content.eyebrow)}</MetaLine><h1><span className="site-copy-preline">{localize(content.title)}</span><br /><em><span className="site-copy-preline">{localize(content.emphasis)}</span></em></h1></div><p>{localize(content.description)}</p>{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{localize(content.primaryLabel)} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{localize(content.secondaryLabel)} <ArrowUpRight size={14} /></Link></div>}</div>;
+}
+
+export function PageSection({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
+  const { content } = useSitePageContent();
+  if (content.hiddenSections.includes(sectionId)) return null;
+  const order = content.sectionOrder.indexOf(sectionId);
+  return <div className="page-editable-section" data-page-section={sectionId} style={{ order: order < 0 ? 999 : order }}>{children}</div>;
 }
 
 export function BookmarkButton({ label = "Save", targetType, targetId }: { label?: string; targetType?: "artist" | "work" | "project" | "event" | "opportunity" | "thread"; targetId?: string }) {

@@ -2,7 +2,18 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { doc, onSnapshot, type DocumentData } from "firebase/firestore";
+import { usePathname } from "next/navigation";
 import { db } from "./firebase-client";
+import { getSitePageId, type SitePageId } from "./site-pages";
+
+export const fontPresets = {
+  uau: { label: "u.a.u editorial", heading: '"Baskerville", "Iowan Old Style", "Times New Roman", serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  classic: { label: "Classic serif", heading: 'Georgia, "Times New Roman", serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  modern: { label: "Modern sans", heading: '"Helvetica Neue", Helvetica, Arial, sans-serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  grotesk: { label: "Grotesk + serif", heading: '"Arial Narrow", "Helvetica Neue", Helvetica, Arial, sans-serif', body: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+} as const;
+
+export type FontPreset = keyof typeof fontPresets;
 
 export type SiteSettings = {
   displayScale: number;
@@ -17,6 +28,12 @@ export type SiteSettings = {
   gridGap: number;
   radius: number;
   imageSaturation: number;
+  fontPreset: FontPreset;
+  fontScale: number;
+  headingWeight: number;
+  letterSpacing: number;
+  headingFontUrl: string;
+  bodyFontUrl: string;
 };
 
 export const defaultSiteSettings: SiteSettings = {
@@ -32,6 +49,12 @@ export const defaultSiteSettings: SiteSettings = {
   gridGap: 22,
   radius: 0,
   imageSaturation: 0.9,
+  fontPreset: "uau",
+  fontScale: 1,
+  headingWeight: 400,
+  letterSpacing: -0.045,
+  headingFontUrl: "",
+  bodyFontUrl: "",
 };
 
 const SiteSettingsContext = createContext<{ settings: SiteSettings; loading: boolean }>({ settings: defaultSiteSettings, loading: true });
@@ -50,7 +73,24 @@ function normalizeSettings(data?: DocumentData): SiteSettings {
     gridGap: typeof data?.gridGap === "number" ? data.gridGap : defaultSiteSettings.gridGap,
     radius: typeof data?.radius === "number" ? data.radius : defaultSiteSettings.radius,
     imageSaturation: typeof data?.imageSaturation === "number" ? data.imageSaturation : defaultSiteSettings.imageSaturation,
+    fontPreset: typeof data?.fontPreset === "string" && data.fontPreset in fontPresets ? data.fontPreset as FontPreset : defaultSiteSettings.fontPreset,
+    fontScale: typeof data?.fontScale === "number" ? data.fontScale : defaultSiteSettings.fontScale,
+    headingWeight: typeof data?.headingWeight === "number" ? data.headingWeight : defaultSiteSettings.headingWeight,
+    letterSpacing: typeof data?.letterSpacing === "number" ? data.letterSpacing : defaultSiteSettings.letterSpacing,
+    headingFontUrl: typeof data?.headingFontUrl === "string" ? data.headingFontUrl : defaultSiteSettings.headingFontUrl,
+    bodyFontUrl: typeof data?.bodyFontUrl === "string" ? data.bodyFontUrl : defaultSiteSettings.bodyFontUrl,
   };
+}
+
+export const normalizeSiteSettings = normalizeSettings;
+
+function isAllowedFontUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || (url.protocol === "http:" && url.hostname === "localhost");
+  } catch {
+    return false;
+  }
 }
 
 export function applySiteSettings(settings: SiteSettings) {
@@ -67,10 +107,35 @@ export function applySiteSettings(settings: SiteSettings) {
   root.style.setProperty("--site-grid-gap", `${settings.gridGap}px`);
   root.style.setProperty("--site-radius", `${settings.radius}px`);
   root.style.setProperty("--site-image-saturation", String(settings.imageSaturation));
+  const preset = fontPresets[settings.fontPreset] ?? fontPresets.uau;
+  root.style.setProperty("--site-heading-font", preset.heading);
+  root.style.setProperty("--site-body-font", preset.body);
+  root.style.setProperty("--site-font-scale", String(settings.fontScale));
+  root.style.setProperty("--site-heading-weight", String(settings.headingWeight));
+  root.style.setProperty("--site-letter-spacing", `${settings.letterSpacing}em`);
+  const styleId = "uau-r2-fonts";
+  let fontStyle = document.getElementById(styleId) as HTMLStyleElement | null;
+  const headingFontUrl = isAllowedFontUrl(settings.headingFontUrl) ? settings.headingFontUrl : "";
+  const bodyFontUrl = isAllowedFontUrl(settings.bodyFontUrl) ? settings.bodyFontUrl : "";
+  if (headingFontUrl || bodyFontUrl) {
+    fontStyle ??= Object.assign(document.createElement("style"), { id: styleId });
+    const heading = headingFontUrl ? `@font-face{font-family:uau-r2-heading;src:url("${headingFontUrl}") format("woff2");font-display:swap;}` : "";
+    const body = bodyFontUrl ? `@font-face{font-family:uau-r2-body;src:url("${bodyFontUrl}") format("woff2");font-display:swap;}` : "";
+    fontStyle.textContent = `${heading}${body}`;
+    if (!fontStyle.parentNode) document.head.appendChild(fontStyle);
+    root.style.setProperty("--site-heading-font", headingFontUrl ? "uau-r2-heading, var(--serif)" : preset.heading);
+    root.style.setProperty("--site-body-font", bodyFontUrl ? "uau-r2-body, var(--sans)" : preset.body);
+  } else if (fontStyle) {
+    fontStyle.remove();
+  }
 }
 
 export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState(defaultSiteSettings);
+  const pathname = usePathname();
+  const pageId = getSitePageId(pathname);
+  const [baseSettings, setBaseSettings] = useState(defaultSiteSettings);
+  const [pageSettings, setPageSettings] = useState<SiteSettings | null>(null);
+  const [previewSettings, setPreviewSettings] = useState<{ pageId?: SitePageId; settings: SiteSettings } | null>(null);
   const [loading, setLoading] = useState(Boolean(db));
 
   useEffect(() => {
@@ -81,8 +146,7 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
     }
     return onSnapshot(doc(db, "site_settings", "public"), (snapshot) => {
       const next = normalizeSettings(snapshot.data());
-      setSettings(next);
-      applySiteSettings(next);
+      setBaseSettings(next);
       setLoading(false);
     }, () => {
       setLoading(false);
@@ -91,14 +155,31 @@ export function SiteSettingsProvider({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
+    if (!db) return;
+    return onSnapshot(doc(db, "site_page_settings", pageId), (snapshot) => {
+      setPageSettings(snapshot.exists() ? normalizeSettings(snapshot.data()) : null);
+    }, () => setPageSettings(null));
+  }, [pageId]);
+
+  useEffect(() => {
+    const resolved = previewSettings && (!previewSettings.pageId || previewSettings.pageId === pageId) ? previewSettings.settings : pageSettings ?? baseSettings;
+    applySiteSettings(resolved);
+    if (window.parent !== window) window.parent.postMessage({ type: "uau-editor-route", pageId, pathname }, window.location.origin);
+  }, [baseSettings, pageId, pageSettings, pathname, previewSettings]);
+
+  useEffect(() => {
     const handlePreviewMessage = (event: MessageEvent) => {
-      if (event.data?.type !== "uau-site-preview-settings") return;
-      applySiteSettings(normalizeSettings(event.data.settings));
+      if (event.origin !== window.location.origin || event.data?.type !== "uau-site-preview-settings") return;
+      const nextPageId = typeof event.data.pageId === "string" ? event.data.pageId as SitePageId : undefined;
+      const nextSettings = normalizeSettings(event.data.settings);
+      setPreviewSettings({ pageId: nextPageId, settings: nextSettings });
+      applySiteSettings(nextSettings);
     };
     window.addEventListener("message", handlePreviewMessage);
     return () => window.removeEventListener("message", handlePreviewMessage);
   }, []);
 
+  const settings = previewSettings && (!previewSettings.pageId || previewSettings.pageId === pageId) ? previewSettings.settings : pageSettings ?? baseSettings;
   const value = useMemo(() => ({ settings, loading }), [loading, settings]);
   return <SiteSettingsContext.Provider value={value}>{children}</SiteSettingsContext.Provider>;
 }

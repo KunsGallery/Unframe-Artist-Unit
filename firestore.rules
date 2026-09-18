@@ -471,6 +471,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Each public route can carry its own visual system. The editor writes these
+    // documents; the public site only needs to read them.
+    match /site_page_settings/{pageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /site_content/{contentId} {
       allow read: if contentId == 'home';
       allow write: if isAdmin();
