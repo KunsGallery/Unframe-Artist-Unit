@@ -8,7 +8,7 @@ import { useAuth } from "../auth-provider";
 import { tx } from "../i18n-shared";
 import { useNotifications } from "../notifications";
 
-type DashboardSection = "overview" | "profile" | "threads" | "space" | "notifications";
+type DashboardSection = "overview" | "profile" | "threads" | "space" | "notifications" | "recommendations" | "brief";
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
   const { locale } = useLanguage();
@@ -50,11 +50,17 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Discover", "탐색")}</span>
+          <Link className={active === "recommendations" ? "active" : ""} href="/dashboard/recommendations">
+            <WandSparkles size={16} /> {tx(locale, "For you", "당신을 위한 추천")}
+          </Link>
           <Link href="/works">
             <Bookmark size={16} /> {tx(locale, "Saved works", "저장한 작품")}
           </Link>
           <Link href="/projects">
             <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}
+          </Link>
+          <Link className={active === "brief" ? "active" : ""} href="/dashboard/brief">
+            <ArrowUpRight size={16} /> {tx(locale, "Curatorial brief", "기획 브리프")}
           </Link>
         </div>
       </nav>

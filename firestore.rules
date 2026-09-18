@@ -45,6 +45,11 @@ service cloud.firestore {
           'email',
           'displayName',
           'accountType',
+          'accessStatus',
+          'intentWords',
+          'collectorPreferences',
+          'recommendationDigest',
+          'recommendationOptIn',
           'country',
           'language',
           'currency',
@@ -85,6 +90,11 @@ service cloud.firestore {
             'email',
             'displayName',
             'accountType',
+            'accessStatus',
+            'intentWords',
+            'collectorPreferences',
+            'recommendationDigest',
+            'recommendationOptIn',
             'country',
             'language',
             'currency',
@@ -438,6 +448,22 @@ service cloud.firestore {
 
     match /collector_profiles/{collectorUid} {
       allow read, write: if isAdmin() || isOwner(collectorUid);
+    }
+
+    match /curatorial_briefs/{briefId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
+    }
+
+    match /curatorial_proposals/{proposalId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.senderUid == request.auth.uid)
+        || (signedIn()
+          && exists(/databases/$(database)/documents/public_profiles/$(resource.data.recipientSlug))
+          && get(/databases/$(database)/documents/public_profiles/$(resource.data.recipientSlug)).data.ownerUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.senderUid == request.auth.uid;
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.senderUid == request.auth.uid);
     }
 
     match /admins/{uid} {

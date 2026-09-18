@@ -5,6 +5,8 @@ import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, setDoc, wh
 import { db } from "./firebase-client";
 
 export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
+export type UauAccessStatus = "open" | "pending" | "approved" | "rejected";
+export type RecommendationDigest = "realtime" | "weekly" | "monthly" | "off";
 export type ArtistSiteTemplate = "gallery" | "editorial" | "archive";
 export type ArtistSiteSection = "works" | "exhibitions" | "cv" | "about";
 export type ArtistSiteAccent = "blue" | "ink" | "clay";
@@ -34,6 +36,16 @@ export type UauUserProfile = {
   displayName?: string;
   artistName?: string;
   accountType?: UauAccountType;
+  accessStatus?: UauAccessStatus;
+  intentWords?: string[];
+  collectorPreferences?: {
+    media?: string[];
+    materials?: string[];
+    themes?: string[];
+    regions?: string[];
+  };
+  recommendationDigest?: RecommendationDigest;
+  recommendationOptIn?: boolean;
   country?: string;
   basedInCity?: string;
   bio?: string;
@@ -116,6 +128,10 @@ export const accountTypes: Array<{ value: UauAccountType; en: string; ko: string
   { value: "director", en: "Director / producer", ko: "디렉터 / 프로듀서" },
   { value: "institution", en: "Institution", ko: "기관" },
 ];
+
+export function roleRequiresApproval(role?: UauAccountType | "") {
+  return role === "curator" || role === "gallery" || role === "director" || role === "institution";
+}
 
 export function useUserProfile(uid?: string | null) {
   const [profile, setProfile] = useState<UauUserProfile | null>(null);

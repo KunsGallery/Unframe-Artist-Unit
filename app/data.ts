@@ -46,8 +46,8 @@ export const artworks: Artwork[] = [
 ];
 
 export const projects = [
-  { slug: "after-the-salon", title: "After the Salon", meta: "UNFRAME Salon 04 · 2026", description: "A conversation that kept moving after the exhibition closed.", artists: ["Seo Yujin", "Han Mira", "Yoon Doyun"], status: "In process" },
-  { slug: "soft-violence", title: "Soft Violence", meta: "Research unit · 2025—26", description: "Three practices looking at how a surface can hold both care and resistance.", artists: ["Han Mira", "Maria Novak"], status: "Archive" },
+  { slug: "after-the-salon", title: "After the Salon", meta: "UNFRAME Salon 04 · 2026", description: "A conversation that kept moving after the exhibition closed.", artists: ["Seo Yujin", "Han Mira", "Yoon Doyun"], participantSlugs: ["seo-yujin", "han-mira", "yoon-doyun"], status: "In process" },
+  { slug: "soft-violence", title: "Soft Violence", meta: "Research unit · 2025—26", description: "Three practices looking at how a surface can hold both care and resistance.", artists: ["Han Mira", "Maria Novak"], participantSlugs: ["han-mira", "maria-novak"], status: "Archive" },
 ];
 
 export const journal = [
