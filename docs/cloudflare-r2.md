@@ -27,7 +27,7 @@ FIREBASE_ADMIN_CLIENT_EMAIL=
 FIREBASE_ADMIN_PRIVATE_KEY=
 ```
 
-이미지 업로드의 로그인 토큰 검증에는 `FIREBASE_ADMIN_PROJECT_ID`만 필요합니다. 조직 정책으로 서비스 계정 키 생성을 제한한 Firebase/Google Cloud 프로젝트에서도 업로드 기능을 사용할 수 있습니다. `FIREBASE_ADMIN_CLIENT_EMAIL`과 `FIREBASE_ADMIN_PRIVATE_KEY`는 향후 서버가 Firebase Admin 쓰기 권한을 직접 써야 할 때만 추가하세요.
+이미지 업로드의 로그인 토큰 검증에는 `FIREBASE_ADMIN_PROJECT_ID`만 필요합니다. 조직 정책으로 서비스 계정 키 생성을 제한한 Firebase/Google Cloud 프로젝트에서도 업로드 기능을 사용할 수 있습니다. 이 업로드 기능은 `FIREBASE_ADMIN_CLIENT_EMAIL`과 `FIREBASE_ADMIN_PRIVATE_KEY`를 읽지 않으므로, 기존에 등록한 값이 잘못되어도 영향을 받지 않습니다.
 
 `FIREBASE_ADMIN_PRIVATE_KEY`는 줄바꿈을 실제 줄바꿈으로 넣거나 `\\n` 형태로 넣을 수 있습니다. 서버 코드가 두 형식을 모두 처리합니다. R2 비밀키와 Firebase Admin 비밀키에는 `NEXT_PUBLIC_` 접두사를 사용하면 안 됩니다.
 
