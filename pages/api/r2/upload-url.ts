@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getFirebaseAdminAuth } from "../../../app/server/firebase-admin";
 
 type UploadResponse = {
   error?: string;
@@ -46,16 +49,17 @@ function extensionFor(contentType: string, filename: string) {
   return known[contentType] || filename.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
 }
 
-function messageForError(error: unknown) {
+function messageForError(error: unknown, stage: "identity" | "upload") {
   const message = error instanceof Error ? error.message : "";
+  const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
   if (message.includes("credentials are not configured") || message.includes("not configured")) {
     return { status: 503, error: "Image uploads are not configured yet." };
   }
-  if (message.includes("Firebase Admin credentials")) {
-    return { status: 503, error: "Account verification is not configured yet." };
-  }
-  if (message.includes("auth/id-token") || message.includes("verifyIdToken")) {
-    return { status: 401, error: "Please sign in again before uploading an image." };
+  if (stage === "identity") {
+    if (code.startsWith("auth/") || message.includes("auth/id-token") || message.includes("verifyIdToken")) {
+      return { status: 401, error: "Please sign in again before uploading an image." };
+    }
+    return { status: 503, error: "Account verification is temporarily unavailable. Please try again shortly." };
   }
   console.error("Image upload URL error", error);
   return { status: 500, error: "Image uploads are temporarily unavailable. Please try again shortly." };
@@ -79,12 +83,14 @@ export default async function handler(request: NextApiRequest, response: NextApi
       return response.status(401).json({ error: "Please sign in before uploading an image." });
     }
 
-    const [{ PutObjectCommand, S3Client }, { getSignedUrl }, { getFirebaseAdminAuth }] = await Promise.all([
-      import("@aws-sdk/client-s3"),
-      import("@aws-sdk/s3-request-presigner"),
-      import("../../../app/server/firebase-admin"),
-    ]);
-    const decodedToken = await getFirebaseAdminAuth().verifyIdToken(authorization.slice("Bearer ".length));
+    let decodedToken;
+    try {
+      decodedToken = await getFirebaseAdminAuth().verifyIdToken(authorization.slice("Bearer ".length));
+    } catch (error) {
+      console.error("Image upload identity verification error", error);
+      const result = messageForError(error, "identity");
+      return response.status(result.status).json({ error: result.error });
+    }
     const payload = (request.body && typeof request.body === "object" ? request.body : {}) as {
       filename?: string;
       contentType?: string;
@@ -126,16 +132,23 @@ export default async function handler(request: NextApiRequest, response: NextApi
       endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
       credentials: { accessKeyId, secretAccessKey },
     });
-    const uploadUrl = await getSignedUrl(
-      client,
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        ContentType: contentType,
-        CacheControl: "public, max-age=31536000, immutable",
-      }),
-      { expiresIn: 900 },
-    );
+    let uploadUrl: string;
+    try {
+      uploadUrl = await getSignedUrl(
+        client,
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          ContentType: contentType,
+          CacheControl: "public, max-age=31536000, immutable",
+        }),
+        { expiresIn: 900 },
+      );
+    } catch (error) {
+      console.error("Image upload URL signing error", error);
+      const result = messageForError(error, "upload");
+      return response.status(result.status).json({ error: result.error });
+    }
 
     return response.status(200).json({
       key,
@@ -145,7 +158,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
       maxBytes,
     });
   } catch (error) {
-    const result = messageForError(error);
+    const result = messageForError(error, "upload");
     return response.status(result.status).json({ error: result.error });
   }
 }
