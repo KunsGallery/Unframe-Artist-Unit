@@ -51,7 +51,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
   }
   if (!response.ok || !payload.uploadUrl || !payload.key || !payload.publicUrl) {
     if (response.status === 401) throw new Error("Please sign in again before uploading an image.");
-    if (response.status >= 500) throw new Error("Image uploads are temporarily unavailable. Please try again shortly.");
+    if (response.status >= 500) throw new Error(payload.error || "Image uploads are temporarily unavailable. Please try again shortly.");
     throw new Error(payload.error || "We could not prepare this image upload. Please try again.");
   }
 

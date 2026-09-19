@@ -1,8 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getFirebaseAdminAuth } from "../../../app/server/firebase-admin";
 
 type UploadResponse = {
   error?: string;
@@ -85,6 +82,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
 
     let decodedToken;
     try {
+      const { getFirebaseAdminAuth } = await import("../../../app/server/firebase-admin");
       decodedToken = await getFirebaseAdminAuth().verifyIdToken(authorization.slice("Bearer ".length));
     } catch (error) {
       console.error("Image upload identity verification error", error);
@@ -127,13 +125,17 @@ export default async function handler(request: NextApiRequest, response: NextApi
     const entity = cleanSegment(payload.entityId || "unassigned", "unassigned");
     const filenameBase = cleanSegment(filename.replace(/\.[^.]+$/, ""), "asset");
     const key = `uau/${decodedToken.uid}/${folder}/${entity}/${randomUUID()}-${filenameBase}.${extensionFor(contentType, filename)}`;
-    const client = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey },
-    });
     let uploadUrl: string;
     try {
+      const [{ PutObjectCommand, S3Client }, { getSignedUrl }] = await Promise.all([
+        import("@aws-sdk/client-s3"),
+        import("@aws-sdk/s3-request-presigner"),
+      ]);
+      const client = new S3Client({
+        region: "auto",
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+      });
       uploadUrl = await getSignedUrl(
         client,
         new PutObjectCommand({
@@ -146,8 +148,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
       );
     } catch (error) {
       console.error("Image upload URL signing error", error);
-      const result = messageForError(error, "upload");
-      return response.status(result.status).json({ error: result.error });
+      return response.status(503).json({ error: "Image upload preparation is temporarily unavailable. Please try again shortly." });
     }
 
     return response.status(200).json({
