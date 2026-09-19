@@ -26,7 +26,7 @@ export function R2ImageUploader({ value, assetType, entityId, label, description
   async function handleFile(file?: File) {
     if (!file) return;
     if (!file.type.startsWith("image/") || !["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
-      setError("Choose a JPG, PNG, WebP or AVIF image.");
+      setError("Choose a JPG, PNG, WebP, or AVIF image.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -53,7 +53,7 @@ export function R2ImageUploader({ value, assetType, entityId, label, description
   return <div className="r2-uploader">
     <div className="r2-uploader-heading"><div><strong>{label}</strong><span>{description}</span></div>{previewUrl ? <button type="button" className="r2-uploader-remove" onClick={() => { setPreviewUrl(""); onChange(""); }} aria-label={`Remove ${label}`}><X size={14} /></button> : <ImagePlus size={17} aria-hidden="true" />}</div>
     <button type="button" className={`r2-uploader-dropzone${previewUrl ? " has-preview" : ""}`} onClick={() => inputRef.current?.click()} disabled={progress !== null} aria-busy={progress !== null}>
-      {previewUrl ? <img src={previewUrl} alt="" /> : <span><UploadCloud size={20} /><b>Choose an image</b><small>JPG, PNG, WebP or AVIF · up to 50MB</small></span>}
+      {previewUrl ? <img src={previewUrl} alt="" /> : <span><UploadCloud size={20} /><b>Choose an image</b><small>JPG, PNG, WebP, or AVIF · up to 50MB</small></span>}
       {progress !== null && <span className="r2-uploader-progress" role="progressbar" aria-label={`Uploading ${label}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /><strong><LoaderCircle size={14} className="spin" /> {progress}%</strong></span>}
     </button>
     <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden onChange={(event) => { void handleFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />

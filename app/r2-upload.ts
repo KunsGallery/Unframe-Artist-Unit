@@ -28,7 +28,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
   const token = await auth.currentUser.getIdToken();
   const response = await fetch("/api/r2/upload-url", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({
       filename: file.name,
       contentType: file.type,
@@ -37,9 +37,22 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
       entityId: options.entityId,
     }),
   });
-  const payload = await response.json() as { error?: string; uploadUrl?: string; key?: string; publicUrl?: string };
+  const responseText = await response.text();
+  let payload: { error?: string; uploadUrl?: string; key?: string; publicUrl?: string } = {};
+  try {
+    payload = responseText ? JSON.parse(responseText) as typeof payload : {};
+  } catch {
+    const fallback = response.status === 401
+      ? "Please sign in again before uploading an image."
+      : response.status >= 500
+        ? "Image uploads are temporarily unavailable. Please try again shortly."
+        : "We could not prepare this image upload. Please try again.";
+    throw new Error(fallback);
+  }
   if (!response.ok || !payload.uploadUrl || !payload.key || !payload.publicUrl) {
-    throw new Error(payload.error || "Could not prepare the upload.");
+    if (response.status === 401) throw new Error("Please sign in again before uploading an image.");
+    if (response.status >= 500) throw new Error("Image uploads are temporarily unavailable. Please try again shortly.");
+    throw new Error(payload.error || "We could not prepare this image upload. Please try again.");
   }
 
   if (mediaRef && auth.currentUser) {
@@ -66,10 +79,11 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) options.onProgress?.(Math.round((event.loaded / event.total) * 100));
       };
-      xhr.onerror = () => reject(new Error("The file could not reach Cloudflare R2."));
+      xhr.onerror = () => reject(new Error("The image could not be uploaded. Check your connection and try again."));
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Cloudflare R2 rejected the upload (${xhr.status}).`));
+        else if (xhr.status === 403) reject(new Error("This upload link expired. Please choose the image again."));
+        else reject(new Error("The image could not be uploaded. Please try again."));
       };
       xhr.send(file);
     });
@@ -83,7 +97,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
     try {
       await updateDoc(mediaRef, { status: "uploaded", uploadedAt: serverTimestamp() });
     } catch {
-      throw new Error("The file uploaded, but its media record could not be saved. Please try again.");
+      throw new Error("The image uploaded, but the profile could not be updated. Please save again.");
     }
   }
   return { key: payload.key, publicUrl: payload.publicUrl, contentType: file.type, size: file.size, originalName: file.name };
