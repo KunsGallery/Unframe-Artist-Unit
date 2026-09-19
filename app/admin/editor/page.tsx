@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { ArrowUpRight, Check, ExternalLink, LockKeyhole, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { DemoNotice, MetaLine } from "../../components";
+import { R2FontUploader } from "../../components/r2-font-uploader";
 import { useAuth } from "../../auth-provider";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
@@ -138,6 +139,24 @@ export default function AdminEditorPage() {
   }, [previewPageId]);
 
   useEffect(() => {
+    const handleInlineText = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== previewRef.current?.contentWindow || event.data?.type !== "uau-editor-inline-text") return;
+      if (event.data.pageId !== previewPageId || typeof event.data.value !== "string") return;
+      const language = event.data.language === "ko" ? "ko" : event.data.language === "en" ? "en" : null;
+      const key = typeof event.data.key === "string" ? event.data.key : "";
+      if (!language || !key) return;
+      if (event.data.scope === "pageContent" && ["eyebrow", "title", "emphasis", "description", "primaryLabel", "secondaryLabel"].includes(key)) {
+        updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description" | "primaryLabel" | "secondaryLabel", language, event.data.value);
+      }
+      if (event.data.scope === "siteContent" && isHome && /^home\.[a-z]+\.[a-z]+$/.test(key)) {
+        updateContent(`${key}.${language}`, event.data.value);
+      }
+    };
+    window.addEventListener("message", handleInlineText);
+    return () => window.removeEventListener("message", handleInlineText);
+  }, [isHome, previewPageId]);
+
+  useEffect(() => {
     previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft, pageId: previewPageId }, window.location.origin);
   }, [draft, previewPageId]);
 
@@ -234,8 +253,7 @@ export default function AdminEditorPage() {
       <label className="editor-range"><span>{tx(locale, "Font scale", "폰트 전체 크기")}<output>{Math.round(draft.fontScale * 100)}%</output></span><input type="range" min="0.7" max="1.45" step="0.01" value={draft.fontScale} onChange={(event) => updateSetting("fontScale", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Heading weight", "제목 굵기")}<output>{draft.headingWeight}</output></span><input type="range" min="300" max="700" step="100" value={draft.headingWeight} onChange={(event) => updateSetting("headingWeight", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Heading tracking", "제목 자간")}<output>{draft.letterSpacing.toFixed(3)}em</output></span><input type="range" min="-0.09" max="0.08" step="0.005" value={draft.letterSpacing} onChange={(event) => updateSetting("letterSpacing", Number(event.target.value))} /></label>
-      <label className="editor-copy-field"><span>{tx(locale, "Heading font URL · Cloudflare R2", "제목 폰트 URL · Cloudflare R2")}</span><input value={draft.headingFontUrl} onChange={(event) => updateSetting("headingFontUrl", event.target.value)} placeholder="https://assets.uau.unframe.kr/fonts/heading.woff2" /></label>
-      <label className="editor-copy-field"><span>{tx(locale, "Body font URL · Cloudflare R2", "본문 폰트 URL · Cloudflare R2")}</span><input value={draft.bodyFontUrl} onChange={(event) => updateSetting("bodyFontUrl", event.target.value)} placeholder="https://assets.uau.unframe.kr/fonts/body.woff2" /></label>
+      <div className="editor-font-upload-grid"><R2FontUploader value={draft.headingFontUrl} label={tx(locale, "Heading font", "제목 폰트")} description={tx(locale, "Used for large editorial headings.", "큰 에디토리얼 제목에 적용됩니다.")} chooseLabel={tx(locale, "Choose heading font", "제목 폰트 선택")} onChange={(url) => updateSetting("headingFontUrl", url)} /><R2FontUploader value={draft.bodyFontUrl} label={tx(locale, "Body font", "본문 폰트")} description={tx(locale, "Used for body copy and interface text.", "본문과 인터페이스 문구에 적용됩니다.")} chooseLabel={tx(locale, "Choose body font", "본문 폰트 선택")} onChange={(url) => updateSetting("bodyFontUrl", url)} /></div>
       <div className="editor-subhead"><MetaLine>{tx(locale, "PAGE CONTENT", "페이지 콘텐츠")}</MetaLine><span>{tx(locale, "Edit the shared page introduction, actions, and section behavior for this route.", "이 페이지의 소개 문구와 액션, 섹션 동작을 편집하세요.")}</span></div>
       {["eyebrow", "title", "emphasis", "description"].map((key) => <div className="editor-copy-row" key={key}><span>{key === "eyebrow" ? tx(locale, "Eyebrow", "상단 라벨") : key === "title" ? tx(locale, "Title", "제목") : key === "emphasis" ? tx(locale, "Title emphasis", "제목 강조") : tx(locale, "Description", "설명")}</span><textarea value={pageContentDraft[key as "eyebrow" | "title" | "emphasis" | "description"].en} onChange={(event) => updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description", "en", event.target.value)} placeholder="English" /><textarea value={pageContentDraft[key as "eyebrow" | "title" | "emphasis" | "description"].ko} onChange={(event) => updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description", "ko", event.target.value)} placeholder="한국어" /></div>)}
       <div className="editor-copy-row"><span>{tx(locale, "Primary action", "첫 번째 액션")}</span><input value={pageContentDraft.primaryLabel.en} onChange={(event) => updatePageCopy("primaryLabel", "en", event.target.value)} placeholder="English label" /><input value={pageContentDraft.primaryLabel.ko} onChange={(event) => updatePageCopy("primaryLabel", "ko", event.target.value)} placeholder="한국어 라벨" /><input value={pageContentDraft.primaryHref} onChange={(event) => updatePageField("primaryHref", event.target.value)} placeholder="/artists" /></div>

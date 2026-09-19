@@ -103,7 +103,7 @@ export function SiteCopy({ contentKey, fallback, className }: { contentKey: stri
   const { locale } = useLanguage();
   const { content } = useSiteContent();
   const value = content[`${contentKey}.${locale}`] ?? fallback;
-  return className ? <span className={className}>{String(value)}</span> : <>{String(value)}</>;
+  return <span className={className} data-uau-editable="true" data-uau-edit-scope="siteContent" data-uau-edit-key={contentKey} data-uau-edit-language={locale}>{String(value)}</span>;
 }
 
 export function SiteSection({ contentKey, children }: { contentKey: string; children: React.ReactNode }) {

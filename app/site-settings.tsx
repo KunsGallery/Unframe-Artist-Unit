@@ -120,6 +120,19 @@ function isAllowedStylesheetUrl(value: string) {
   }
 }
 
+function fontFormatForUrl(value: string) {
+  try {
+    const extension = new URL(value).pathname.split(".").pop()?.toLowerCase();
+    if (extension === "woff2") return "woff2";
+    if (extension === "woff") return "woff";
+    if (extension === "ttf") return "truetype";
+    if (extension === "otf") return "opentype";
+  } catch {
+    // The URL has already been validated by isAllowedFontUrl.
+  }
+  return "woff2";
+}
+
 export function applySiteSettings(settings: SiteSettings) {
   const root = document.documentElement;
   root.style.setProperty("--site-display-scale", String(settings.displayScale));
@@ -156,8 +169,8 @@ export function applySiteSettings(settings: SiteSettings) {
   const bodyFontUrl = isAllowedFontUrl(settings.bodyFontUrl) ? settings.bodyFontUrl : "";
   if (headingFontUrl || bodyFontUrl) {
     fontStyle ??= Object.assign(document.createElement("style"), { id: styleId });
-    const heading = headingFontUrl ? `@font-face{font-family:uau-r2-heading;src:url("${headingFontUrl}") format("woff2");font-display:swap;}` : "";
-    const body = bodyFontUrl ? `@font-face{font-family:uau-r2-body;src:url("${bodyFontUrl}") format("woff2");font-display:swap;}` : "";
+    const heading = headingFontUrl ? `@font-face{font-family:uau-r2-heading;src:url(${JSON.stringify(headingFontUrl)}) format("${fontFormatForUrl(headingFontUrl)}");font-display:swap;}` : "";
+    const body = bodyFontUrl ? `@font-face{font-family:uau-r2-body;src:url(${JSON.stringify(bodyFontUrl)}) format("${fontFormatForUrl(bodyFontUrl)}");font-display:swap;}` : "";
     fontStyle.textContent = `${heading}${body}`;
     if (!fontStyle.parentNode) document.head.appendChild(fontStyle);
     root.style.setProperty("--site-heading-font", headingFontUrl ? "uau-r2-heading, var(--serif)" : preset.heading);

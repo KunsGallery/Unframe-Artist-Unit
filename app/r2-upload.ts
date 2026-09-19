@@ -19,9 +19,27 @@ type UploadOptions = {
   onProgress?: (percent: number) => void;
 };
 
+function contentTypeForFile(file: File) {
+  if (file.type) return file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  const fallbackTypes: Record<string, string> = {
+    avif: "image/avif",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    otf: "font/otf",
+    ttf: "font/ttf",
+    woff: "font/woff",
+    woff2: "font/woff2",
+  };
+  return extension ? fallbackTypes[extension] || "" : "";
+}
+
 export async function uploadToR2(file: File, options: UploadOptions): Promise<R2UploadResult> {
   if (!auth?.currentUser) throw new Error("Sign in before uploading a file.");
-  if (!file.type) throw new Error("This file does not have a readable type.");
+  const contentType = contentTypeForFile(file);
+  if (!contentType) throw new Error("This file does not have a readable type.");
 
   const mediaRef = db && auth.currentUser ? doc(collection(db, "media_assets")) : null;
 
@@ -31,7 +49,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
     headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({
       filename: file.name,
-      contentType: file.type,
+      contentType,
       size: file.size,
       assetType: options.assetType,
       entityId: options.entityId,
@@ -60,7 +78,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
       ownerUid: auth.currentUser.uid,
       key: payload.key,
       publicUrl: payload.publicUrl,
-      contentType: file.type,
+      contentType,
       size: file.size,
       originalName: file.name,
       assetType: options.assetType,
@@ -75,7 +93,7 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", payload.uploadUrl as string);
-      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.setRequestHeader("Content-Type", contentType);
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) options.onProgress?.(Math.round((event.loaded / event.total) * 100));
       };
@@ -100,5 +118,5 @@ export async function uploadToR2(file: File, options: UploadOptions): Promise<R2
       throw new Error("The image uploaded, but the profile could not be updated. Please save again.");
     }
   }
-  return { key: payload.key, publicUrl: payload.publicUrl, contentType: file.type, size: file.size, originalName: file.name };
+  return { key: payload.key, publicUrl: payload.publicUrl, contentType, size: file.size, originalName: file.name };
 }

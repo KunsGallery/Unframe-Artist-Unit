@@ -138,10 +138,17 @@ export function SectionHeading({ title, action, href = "#" }: { title: string; a
 
 export function PageIntro({ className = "", split = false, bare = false, showActions = true }: { className?: string; split?: boolean; bare?: boolean; showActions?: boolean }) {
   const { locale } = useLanguage();
-  const { content } = useSitePageContent();
+  const { content, pageId } = useSitePageContent();
   const localize = (value: { en: string; ko: string }) => value[locale];
+  const editable = (key: "eyebrow" | "title" | "emphasis" | "description" | "primaryLabel" | "secondaryLabel") => ({
+    "data-uau-editable": "true",
+    "data-uau-edit-scope": "pageContent",
+    "data-uau-edit-key": key,
+    "data-uau-edit-language": locale,
+    "data-uau-edit-page-id": pageId,
+  });
   const rootClassName = [bare ? "" : "page-intro", split ? "split-intro" : "", className].filter(Boolean).join(" ");
-  return <div className={rootClassName}><div><MetaLine>{localize(content.eyebrow)}</MetaLine><h1><span className="site-copy-preline">{localize(content.title)}</span><br /><em><span className="site-copy-preline">{localize(content.emphasis)}</span></em></h1></div><p>{localize(content.description)}</p>{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{localize(content.primaryLabel)} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{localize(content.secondaryLabel)} <ArrowUpRight size={14} /></Link></div>}</div>;
+  return <div className={rootClassName}><div><MetaLine><span {...editable("eyebrow")}>{localize(content.eyebrow)}</span></MetaLine><h1><span className="site-copy-preline" {...editable("title")}>{localize(content.title)}</span><br /><em><span className="site-copy-preline" {...editable("emphasis")}>{localize(content.emphasis)}</span></em></h1></div><p {...editable("description")}>{localize(content.description)}</p>{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{<span {...editable("primaryLabel")}>{localize(content.primaryLabel)}</span>} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{<span {...editable("secondaryLabel")}>{localize(content.secondaryLabel)}</span>} <ArrowUpRight size={14} /></Link></div>}</div>;
 }
 
 export function PageSection({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {

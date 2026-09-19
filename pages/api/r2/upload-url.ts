@@ -20,8 +20,12 @@ const allowedContentTypes = new Set([
   "font/woff2",
   "font/ttf",
   "font/otf",
+  "font/sfnt",
   "application/font-woff",
   "application/font-woff2",
+  "application/x-font-ttf",
+  "application/x-font-opentype",
+  "application/octet-stream",
 ]);
 
 const allowedAssetTypes = new Set(["profile", "cover", "work", "font", "spatial-preview"]);
@@ -41,10 +45,29 @@ function extensionFor(contentType: string, filename: string) {
     "font/woff2": "woff2",
     "font/ttf": "ttf",
     "font/otf": "otf",
+    "font/sfnt": "ttf",
     "application/font-woff": "woff",
     "application/font-woff2": "woff2",
+    "application/x-font-ttf": "ttf",
+    "application/x-font-opentype": "otf",
   };
   return known[contentType] || filename.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+}
+
+function contentTypeForFilename(filename: string) {
+  const extension = filename.split(".").pop()?.toLowerCase();
+  const types: Record<string, string> = {
+    avif: "image/avif",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    otf: "font/otf",
+    ttf: "font/ttf",
+    woff: "font/woff",
+    woff2: "font/woff2",
+  };
+  return extension ? types[extension] || "" : "";
 }
 
 function messageForError(error: unknown, stage: "identity" | "upload") {
@@ -103,10 +126,14 @@ export default async function handler(request: NextApiRequest, response: NextApi
       entityId?: string;
     };
     const filename = typeof payload.filename === "string" ? payload.filename : "upload";
-    const contentType = typeof payload.contentType === "string" ? payload.contentType.toLowerCase() : "";
+    const requestedContentType = typeof payload.contentType === "string" ? payload.contentType.toLowerCase() : "";
+    const contentType = allowedContentTypes.has(requestedContentType) && requestedContentType !== "application/octet-stream"
+      ? requestedContentType
+      : contentTypeForFilename(filename) || requestedContentType;
     const size = typeof payload.size === "number" ? payload.size : 0;
     const assetType = typeof payload.assetType === "string" ? payload.assetType : "work";
-    const maxBytes = Number(process.env.R2_MAX_UPLOAD_BYTES || 50 * 1024 * 1024);
+    const configuredMaxBytes = Number(process.env.R2_MAX_UPLOAD_BYTES || 50 * 1024 * 1024);
+    const maxBytes = assetType === "font" ? Math.min(configuredMaxBytes, 10 * 1024 * 1024) : configuredMaxBytes;
 
     if (!allowedContentTypes.has(contentType)) {
       return response.status(415).json({ error: "This file type is not supported." });
