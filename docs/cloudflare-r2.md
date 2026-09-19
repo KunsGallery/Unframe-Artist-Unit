@@ -21,10 +21,13 @@ R2_BUCKET_NAME=uau-media
 R2_PUBLIC_URL=https://assets.uau.unframe.kr
 R2_MAX_UPLOAD_BYTES=52428800
 
-FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_PROJECT_ID=unframe-uau
+# 아래 두 값은 서버에서 Firebase Admin 쓰기 권한이 필요할 때만 등록합니다.
 FIREBASE_ADMIN_CLIENT_EMAIL=
 FIREBASE_ADMIN_PRIVATE_KEY=
 ```
+
+이미지 업로드의 로그인 토큰 검증에는 `FIREBASE_ADMIN_PROJECT_ID`만 필요합니다. 조직 정책으로 서비스 계정 키 생성을 제한한 Firebase/Google Cloud 프로젝트에서도 업로드 기능을 사용할 수 있습니다. `FIREBASE_ADMIN_CLIENT_EMAIL`과 `FIREBASE_ADMIN_PRIVATE_KEY`는 향후 서버가 Firebase Admin 쓰기 권한을 직접 써야 할 때만 추가하세요.
 
 `FIREBASE_ADMIN_PRIVATE_KEY`는 줄바꿈을 실제 줄바꿈으로 넣거나 `\\n` 형태로 넣을 수 있습니다. 서버 코드가 두 형식을 모두 처리합니다. R2 비밀키와 Firebase Admin 비밀키에는 `NEXT_PUBLIC_` 접두사를 사용하면 안 됩니다.
 

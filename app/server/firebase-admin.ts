@@ -9,9 +9,13 @@ function getFirebaseAdminApp() {
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error("Firebase Admin credentials are not configured.");
+  if (!projectId) {
+    throw new Error("Firebase project ID is not configured.");
   }
+
+  // ID-token verification only needs the project ID and Firebase's public signing keys.
+  // A service-account key remains optional for future server-side Firebase writes.
+  if (!clientEmail || !privateKey) return initializeApp({ projectId });
 
   return initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),
