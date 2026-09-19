@@ -19,21 +19,9 @@ type ConnectionNode = {
   className: string;
 };
 
-const nodes: ConnectionNode[] = [
-  { id: "seo", type: "artist", name: "Seo Yujin", detail: "Painter · Seoul", href: "/seo-yujin", initials: "SY", tone: "tone-blue", className: "node-seo" },
-  { id: "han", type: "artist", name: "Han Mira", detail: "Textile · Berlin", href: "/han-mira", initials: "HM", tone: "tone-ink", className: "node-han" },
-  { id: "yoon", type: "artist", name: "Yoon Doyun", detail: "Sound · Busan", href: "/yoon-doyun", initials: "YD", tone: "tone-clay", className: "node-yoon" },
-  { id: "salon", type: "exhibition", name: "UNFRAME Salon 04", detail: "Exhibition · Seoul", href: "/projects/after-the-salon", tone: "tone-blue", className: "node-salon" },
-  { id: "maria", type: "artist", name: "Maria Novak", detail: "Sculptor · Prague", href: "/maria-novak", initials: "MN", tone: "tone-sand", className: "node-maria" },
-];
-
-const edges = [
-  ["seo", "han"],
-  ["seo", "salon"],
-  ["han", "salon"],
-  ["yoon", "salon"],
-  ["maria", "salon"],
-] as const;
+// Live relationship records will be added here when they are published.
+const nodes: ConnectionNode[] = [];
+const edges: ReadonlyArray<readonly [string, string]> = [];
 
 function edgePath(from: string, to: string) {
   const paths: Record<string, string> = {
@@ -56,6 +44,10 @@ export function ConnectionMap({ locale }: { locale: Locale }) {
     ["artist", "Artists", "아티스트"],
     ["exhibition", "Exhibitions", "전시"],
   ];
+
+  if (nodes.length === 0) {
+    return <div className="empty-state"><h3>{tx(locale, "No public connections yet.", "아직 공개된 연결이 없습니다.")}</h3><p>{tx(locale, "The map will grow as artists and projects publish their relationships.", "아티스트와 프로젝트가 관계를 공개하면 이 지도가 채워집니다.")}</p></div>;
+  }
 
   return <>
     <div className="connection-toolbar"><span><i className="legend-dot" /> {tx(locale, `${visibleEdges.length} visible connections`, `보이는 연결 ${visibleEdges.length}개`)}</span><div className="connection-filters" role="group" aria-label={tx(locale, "Filter connections", "연결 필터")}>

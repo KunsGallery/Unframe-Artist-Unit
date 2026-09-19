@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { ArrowUpRight, Bookmark, Check, ChevronDown, ChevronRight, ChevronUp, CircleUserRound, Globe2, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useLanguage } from "./i18n-provider";
 import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
 import { setSavedEngagement } from "./engagements";
-import { RadarNetwork } from "./radar/radar-network";
 import { useSitePageContent } from "./site-page-content";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
@@ -131,7 +129,7 @@ export function Nav() {
 
 export function Footer() {
   const { locale } = useLanguage();
-  return <footer className="site-footer"><div><p>{tx(locale, <>A relationship that starts in an exhibition<br />and keeps going after.</>, <>전시에서 시작된 관계가<br />그 이후에도 이어집니다.</>)}</p></div><div className="footer-links"><div><span>{tx(locale, "Explore", "둘러보기")}</span><Link href="/artists">{tx(locale, "Artists", "아티스트")}</Link><Link href="/works">{tx(locale, "Works", "작품")}</Link><Link href="/connections">{tx(locale, "Connections", "연결")}</Link><Link href="/recap">Connected 2027</Link></div><div><span>{tx(locale, "About", "소개")}</span><Link href="/about">{tx(locale, "Philosophy", "철학")}</Link><Link href="/projects">{tx(locale, "Projects", "프로젝트")}</Link><Link href="/join">{tx(locale, "Join", "함께하기")}</Link></div><div><span>{tx(locale, "Stay close", "가까이 머물기")}</span><a href="mailto:hello@uau.unframe.kr">hello@uau.unframe.kr</a><a href="#newsletter">U.A.U Radar ↗</a></div></div><small>© 2026 u.a.u / UNFRAME ARTIST UNIT <em>{tx(locale, "Demonstration archive", "데모 아카이브")}</em></small></footer>;
+  return <footer className="site-footer"><div><p>{tx(locale, <>A relationship that starts in an exhibition<br />and keeps going after.</>, <>전시에서 시작된 관계가<br />그 이후에도 이어집니다.</>)}</p></div><div className="footer-links"><div><span>{tx(locale, "Explore", "둘러보기")}</span><Link href="/artists">{tx(locale, "Artists", "아티스트")}</Link><Link href="/works">{tx(locale, "Works", "작품")}</Link><Link href="/connections">{tx(locale, "Connections", "연결")}</Link><Link href="/recap">Connected</Link></div><div><span>{tx(locale, "About", "소개")}</span><Link href="/about">{tx(locale, "Philosophy", "철학")}</Link><Link href="/projects">{tx(locale, "Projects", "프로젝트")}</Link><Link href="/join">{tx(locale, "Join", "함께하기")}</Link></div><div><span>{tx(locale, "Stay close", "가까이 머물기")}</span><a href="mailto:hello@uau.unframe.kr">hello@uau.unframe.kr</a><Link href="/radar">U.A.U Radar ↗</Link></div></div><small>© 2026 u.a.u / UNFRAME ARTIST UNIT</small></footer>;
 }
 
 export function SectionHeading({ title, action, href = "#" }: { title: string; action?: string; href?: string }) {
@@ -171,12 +169,12 @@ export function BookmarkButton({ label = "Save", targetType, targetId }: { label
   return <button className={saved ? "save-button saved" : "save-button"} onClick={() => void toggleSaved()} aria-pressed={saved} aria-label={saved ? tx(locale, "Remove from saved", "저장 목록에서 제거") : saveText}><Bookmark size={15} fill={saved ? "currentColor" : "none"} />{saved ? tx(locale, "Saved", "저장됨") : label === "" ? "" : saveText}</button>;
 }
 
-export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy" }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy" }) {
-  return <div className={`art-image ${className}`}><img src="/assets/uau-hero.png" alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} /><span className="art-image-glow" /></div>;
+export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy", src }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy"; src?: string }) {
+  return <div className={`art-image ${className}`}><img src={src || "/assets/uau-hero.png"} alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} /><span className="art-image-glow" /></div>;
 }
 
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }
 export function StatusDot({ children }: { children: React.ReactNode }) { return <span className="status-dot"><i />{children}</span>; }
 export function Breadcrumb({ current }: { current: string }) { return <div className="breadcrumb"><Link href="/">u.a.u</Link><ChevronRight size={14} /><span>{current}</span></div>; }
-export function DemoNotice() { const { locale } = useLanguage(); const pathname = usePathname(); return <><div className="demo-notice"><span><i /> {tx(locale, "Demonstration archive", "데모 아카이브")}</span><span>{tx(locale, "Sample content · production data will connect here", "샘플 콘텐츠 · 운영 데이터가 연결될 예정입니다")}</span></div>{pathname === "/radar" && <RadarNetwork />}</>; }
+export function DemoNotice() { return null; }
 export function VerifiedMark({ compact = false }: { compact?: boolean }) { const { locale } = useLanguage(); return <span className={compact ? "verified-mark verified-compact" : "verified-mark"} title={tx(locale, "Verified u.a.u Artist", "u.a.u 인증 아티스트")}><Check size={compact ? 12 : 13} aria-hidden="true" />{!compact && <small>{tx(locale, "verified", "인증")}</small>}</span>; }
