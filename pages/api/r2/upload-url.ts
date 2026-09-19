@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { verifyFirebaseIdToken } from "../../../app/server/firebase-token";
 
 type UploadResponse = {
   error?: string;
@@ -53,7 +54,13 @@ function messageForError(error: unknown, stage: "identity" | "upload") {
     return { status: 503, error: "Image uploads are not configured yet." };
   }
   if (stage === "identity") {
-    if (code.startsWith("auth/") || message.includes("auth/id-token") || message.includes("verifyIdToken")) {
+    if (
+      code.startsWith("auth/") ||
+      message.includes("auth/id-token") ||
+      message.includes("verifyIdToken") ||
+      message.includes("Invalid Firebase ID token") ||
+      message.includes("Firebase signing key was rotated")
+    ) {
       return { status: 401, error: "Please sign in again before uploading an image." };
     }
     return { status: 503, error: "Account verification is temporarily unavailable. Please try again shortly." };
@@ -82,8 +89,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
 
     let decodedToken;
     try {
-      const { getFirebaseAdminAuth } = await import("../../../app/server/firebase-admin");
-      decodedToken = await getFirebaseAdminAuth().verifyIdToken(authorization.slice("Bearer ".length));
+      decodedToken = await verifyFirebaseIdToken(authorization.slice("Bearer ".length), "unframe-uau");
     } catch (error) {
       console.error("Image upload identity verification error", error);
       const result = messageForError(error, "identity");
