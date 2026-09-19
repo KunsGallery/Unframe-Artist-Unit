@@ -188,7 +188,7 @@ const SitePageContentContext = createContext<{ content: SitePageContent; pageId:
 
 export function SitePageContentProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const pageId = getSitePageId(pathname);
+  const pageId = getSitePageId(pathname || "/");
   const [content, setContent] = useState(() => defaultSitePageContent[pageId]);
   const [previewContent, setPreviewContent] = useState<{ pageId: SitePageId; content: SitePageContent } | null>(null);
   const [loading, setLoading] = useState(Boolean(db));

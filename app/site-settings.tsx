@@ -169,7 +169,7 @@ export function applySiteSettings(settings: SiteSettings) {
 
 export function SiteSettingsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const pageId = getSitePageId(pathname);
+  const pageId = getSitePageId(pathname || "/");
   const [baseSettings, setBaseSettings] = useState(defaultSiteSettings);
   const [pageSettings, setPageSettings] = useState<SiteSettings | null>(null);
   const [previewSettings, setPreviewSettings] = useState<{ pageId?: SitePageId; settings: SiteSettings } | null>(null);
