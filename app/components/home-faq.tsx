@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown, MoveUpRight } from "lucide-react";
 import { useState } from "react";
 import type { Locale } from "../i18n-shared";
+import { SiteCopy } from "../site-content";
 
 type FaqItem = { question: string; answer: string };
 
@@ -119,8 +120,8 @@ export function HomeFaq({ locale }: { locale: Locale }) {
     <section className="home-faq page-wrap" id="faq" aria-labelledby="home-faq-title">
       <div className="home-faq-heading">
         <span className="home-faq-kicker">{copy.kicker}</span>
-        <h2 id="home-faq-title">{copy.title}</h2>
-        <p>{copy.intro}</p>
+        <h2 id="home-faq-title"><SiteCopy contentKey="home.faq.title" fallback={copy.title} /></h2>
+        <p><SiteCopy contentKey="home.faq.intro" fallback={copy.intro} /></p>
       </div>
       <div className="home-faq-layout">
         <div className="home-faq-categories" role="tablist" aria-label={locale === "ko" ? "FAQ 카테고리" : "FAQ categories"}>
@@ -162,10 +163,10 @@ export function HomeFaq({ locale }: { locale: Locale }) {
         </div>
       </div>
       <div className="home-faq-cta">
-        <strong>{copy.ctaTitle}</strong>
-        <p>{copy.ctaCopy}</p>
+        <strong><SiteCopy contentKey="home.faq.ctaTitle" fallback={copy.ctaTitle} /></strong>
+        <p><SiteCopy contentKey="home.faq.ctaCopy" fallback={copy.ctaCopy} /></p>
         <Link className="button button-blue" href="/join">
-          {copy.ctaLink} <MoveUpRight size={16} />
+          <SiteCopy contentKey="home.faq.ctaLink" fallback={copy.ctaLink} /> <MoveUpRight size={16} />
         </Link>
       </div>
     </section>

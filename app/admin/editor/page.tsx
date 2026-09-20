@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
-import { ArrowUpRight, Check, ExternalLink, LockKeyhole, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { ArrowUpRight, Check, ExternalLink, ImagePlus, LockKeyhole, Monitor, RotateCcw, Smartphone, SlidersHorizontal, Tablet } from "lucide-react";
 import { DemoNotice, MetaLine } from "../../components";
 import { R2FontUploader } from "../../components/r2-font-uploader";
 import { useAuth } from "../../auth-provider";
@@ -13,6 +13,7 @@ import { defaultSiteSettings, fontPresets, normalizeSiteSettings, useSiteSetting
 import { defaultSiteContent, useSiteContent, type SiteContentRecord } from "../../site-content";
 import { sitePageById, sitePages, type SitePageId } from "../../site-pages";
 import { getDefaultSitePageContent, normalizeSitePageContent, type SitePageContent } from "../../site-page-content";
+import { uploadToR2 } from "../../r2-upload";
 
 const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
 const sectionLabels: Record<string, { en: string; ko: string }> = {
@@ -65,7 +66,11 @@ export default function AdminEditorPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [imageTarget, setImageTarget] = useState<{ key: string; label: string } | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const previewRef = useRef<HTMLIFrameElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const currentPage = sitePageById[previewPageId];
   const isHome = previewPageId === "home";
 
@@ -148,13 +153,23 @@ export default function AdminEditorPage() {
       if (event.data.scope === "pageContent" && ["eyebrow", "title", "emphasis", "description", "primaryLabel", "secondaryLabel"].includes(key)) {
         updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description" | "primaryLabel" | "secondaryLabel", language, event.data.value);
       }
-      if (event.data.scope === "siteContent" && isHome && /^home\.[a-z]+\.[a-z]+$/.test(key)) {
+      if (event.data.scope === "siteContent" && isHome && /^home\.[a-z-]+\.[a-z-]+$/i.test(key)) {
         updateContent(`${key}.${language}`, event.data.value);
       }
     };
+    const handlePreviewImage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== previewRef.current?.contentWindow || event.data?.type !== "uau-editor-inline-image") return;
+      if (typeof event.data.key !== "string" || !event.data.key) return;
+      setImageTarget({ key: event.data.key, label: typeof event.data.label === "string" ? event.data.label : tx(locale, "Image", "이미지") });
+      window.setTimeout(() => imageInputRef.current?.click(), 0);
+    };
     window.addEventListener("message", handleInlineText);
-    return () => window.removeEventListener("message", handleInlineText);
-  }, [isHome, previewPageId]);
+    window.addEventListener("message", handlePreviewImage);
+    return () => {
+      window.removeEventListener("message", handleInlineText);
+      window.removeEventListener("message", handlePreviewImage);
+    };
+  }, [isHome, locale, previewPageId]);
 
   useEffect(() => {
     previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft, pageId: previewPageId }, window.location.origin);
@@ -186,6 +201,31 @@ export default function AdminEditorPage() {
   function updatePageField(key: "primaryHref" | "secondaryHref", value: string) {
     setSaved(false);
     setPageContentDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  async function handlePreviewImage(file?: File) {
+    if (!file || !imageTarget) return;
+    const accepted = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    if (!accepted.includes(file.type)) {
+      setError(tx(locale, "Choose a JPG, PNG, WebP, or AVIF image.", "JPG, PNG, WebP 또는 AVIF 이미지를 선택해 주세요."));
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setError(tx(locale, "This image must be smaller than 50MB.", "이미지는 50MB보다 작아야 합니다."));
+      return;
+    }
+    setImageUploading(true);
+    setError(null);
+    try {
+      const uploaded = await uploadToR2(file, { assetType: "cover", entityId: `site-${previewPageId}` });
+      setDraft((current) => ({ ...current, imageOverrides: { ...current.imageOverrides, [imageTarget.key]: uploaded.publicUrl } }));
+      setSaved(false);
+      setImageTarget(null);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : tx(locale, "The image could not be uploaded.", "이미지를 업로드하지 못했습니다."));
+    } finally {
+      setImageUploading(false);
+    }
   }
 
   function openPreviewPage(pageId: SitePageId) {
@@ -272,6 +312,6 @@ export default function AdminEditorPage() {
       <button className="editor-reset" type="button" onClick={resetDraft}><RotateCcw size={13} /> {tx(locale, "Discard unsaved changes", "저장하지 않은 변경사항 버리기")}</button>
       {error && <p className="admin-editor-error" role="alert">{error}</p>}
       <div className="admin-editor-note"><strong>{tx(locale, "Structured editing", "구조화된 편집")}</strong><span>{tx(locale, "This first layer keeps the editorial layout intact while giving you live control over rhythm, copy, and visibility.", "첫 편집 레이어는 에디토리얼 레이아웃을 지키면서 리듬, 문구, 섹션 노출을 실시간으로 제어합니다.")}</span></div>
-    </aside><section className="admin-editor-preview"><div className="admin-editor-preview-bar"><span><i /> {tx(locale, "Live preview", "실시간 미리보기")} · {locale === "ko" ? currentPage.labelKo : currentPage.label}</span><small>{pageSettingsLoading ? tx(locale, "Loading page settings…", "페이지 설정을 불러오는 중…") : tx(locale, "Changes are local until published", "발행 전까지는 미리보기에만 적용")}</small></div><iframe ref={previewRef} title={tx(locale, "u.a.u public site live preview", "u.a.u 공개 사이트 실시간 미리보기")} src="/?uauSitePreview=1" onLoad={() => { previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft, pageId: previewPageId }, window.location.origin); previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-page-content", content: pageContentDraft, pageId: previewPageId }, window.location.origin); previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-content", content: contentDraft }, window.location.origin); }} /></section></div>
+      </aside><section className="admin-editor-preview"><div className="admin-editor-preview-bar"><div><span><i /> {tx(locale, "Live preview", "실시간 미리보기")} · {locale === "ko" ? currentPage.labelKo : currentPage.label}</span><small>{tx(locale, "Click text to edit · click an image to replace it", "텍스트를 클릭해 수정 · 이미지를 클릭해 교체")}</small></div><div className="editor-viewport-switcher" role="group" aria-label={tx(locale, "Preview size", "미리보기 크기")}>{([["desktop", Monitor, "Desktop", "데스크톱"], ["tablet", Tablet, "Tablet", "태블릿"], ["mobile", Smartphone, "Mobile", "모바일"]] as const).map(([mode, Icon, en, ko]) => <button key={mode} type="button" className={previewMode === mode ? "is-active" : ""} aria-pressed={previewMode === mode} onClick={() => setPreviewMode(mode)}><Icon size={14} /> {tx(locale, en, ko)}</button>)}</div></div><div className={`admin-editor-preview-canvas is-${previewMode}`}><iframe className="admin-editor-preview-frame" ref={previewRef} title={tx(locale, "u.a.u public site live preview", "u.a.u 공개 사이트 실시간 미리보기")} src="/?uauSitePreview=1" onLoad={() => { previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-settings", settings: draft, pageId: previewPageId }, window.location.origin); previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-page-content", content: pageContentDraft, pageId: previewPageId }, window.location.origin); previewRef.current?.contentWindow?.postMessage({ type: "uau-site-preview-content", content: contentDraft }, window.location.origin); }} /></div><input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden onChange={(event) => { void handlePreviewImage(event.target.files?.[0]); event.currentTarget.value = ""; }} />{imageUploading && <p className="editor-image-upload-status" role="status" aria-live="polite"><ImagePlus size={14} /> {tx(locale, "Replacing image…", "이미지를 교체하는 중…")}</p>}</section></div>
   </div></main>;
 }

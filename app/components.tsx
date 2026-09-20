@@ -8,6 +8,8 @@ import { tx } from "./i18n-shared";
 import { useAuth } from "./auth-provider";
 import { setSavedEngagement } from "./engagements";
 import { useSitePageContent } from "./site-page-content";
+import { sanitizeRichText } from "./rich-text";
+import { useSiteSettings } from "./site-settings";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return <Link href="/" className={compact ? "brand brand-compact" : "brand"} aria-label="u.a.u home"><img className="logo-image" src={compact ? "/assets/uau-logo-mark.png" : "/assets/uau-logo-lockup.png"} alt="u.a.u" /></Link>;
@@ -148,7 +150,7 @@ export function PageIntro({ className = "", split = false, bare = false, showAct
     "data-uau-edit-page-id": pageId,
   });
   const rootClassName = [bare ? "" : "page-intro", split ? "split-intro" : "", className].filter(Boolean).join(" ");
-  return <div className={rootClassName}><div><MetaLine><span {...editable("eyebrow")}>{localize(content.eyebrow)}</span></MetaLine><h1><span className="site-copy-preline" {...editable("title")}>{localize(content.title)}</span><br /><em><span className="site-copy-preline" {...editable("emphasis")}>{localize(content.emphasis)}</span></em></h1></div><p {...editable("description")}>{localize(content.description)}</p>{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{<span {...editable("primaryLabel")}>{localize(content.primaryLabel)}</span>} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{<span {...editable("secondaryLabel")}>{localize(content.secondaryLabel)}</span>} <ArrowUpRight size={14} /></Link></div>}</div>;
+  return <div className={rootClassName}><div><MetaLine><span {...editable("eyebrow")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.eyebrow)) }} /></MetaLine><h1><span className="site-copy-preline" {...editable("title")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.title)) }} /><br /><em><span className="site-copy-preline" {...editable("emphasis")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.emphasis)) }} /></em></h1></div><p {...editable("description")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.description)) }} />{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{<span {...editable("primaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.primaryLabel)) }} />} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{<span {...editable("secondaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.secondaryLabel)) }} />} <ArrowUpRight size={14} /></Link></div>}</div>;
 }
 
 export function PageSection({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
@@ -177,7 +179,10 @@ export function BookmarkButton({ label = "Save", targetType, targetId }: { label
 }
 
 export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy", src }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy"; src?: string }) {
-  return <div className={`art-image ${className}`}><img src={src || "/assets/uau-hero.png"} alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} /><span className="art-image-glow" /></div>;
+  const { settings } = useSiteSettings();
+  const imageKey = "art-image:" + label.toLowerCase().replace(/[^a-z0-9가-힣]+/gi, "-").replace(/^-|-$/g, "");
+  const resolvedSrc = settings.imageOverrides[imageKey] || src || "/assets/uau-hero.png";
+  return <div className={`art-image ${className}`}><img src={resolvedSrc} alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} data-uau-image-key={imageKey} /><span className="art-image-glow" /></div>;
 }
 
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }

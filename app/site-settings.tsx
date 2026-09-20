@@ -52,6 +52,7 @@ export type SiteSettings = {
   letterSpacing: number;
   headingFontUrl: string;
   bodyFontUrl: string;
+  imageOverrides: Record<string, string>;
 };
 
 export const defaultSiteSettings: SiteSettings = {
@@ -73,6 +74,7 @@ export const defaultSiteSettings: SiteSettings = {
   letterSpacing: -0.045,
   headingFontUrl: "",
   bodyFontUrl: "",
+  imageOverrides: {},
 };
 
 const SiteSettingsContext = createContext<{ settings: SiteSettings; loading: boolean }>({ settings: defaultSiteSettings, loading: true });
@@ -97,6 +99,12 @@ function normalizeSettings(data?: DocumentData): SiteSettings {
     letterSpacing: typeof data?.letterSpacing === "number" ? data.letterSpacing : defaultSiteSettings.letterSpacing,
     headingFontUrl: typeof data?.headingFontUrl === "string" ? data.headingFontUrl : defaultSiteSettings.headingFontUrl,
     bodyFontUrl: typeof data?.bodyFontUrl === "string" ? data.bodyFontUrl : defaultSiteSettings.bodyFontUrl,
+    imageOverrides: data?.imageOverrides && typeof data.imageOverrides === "object"
+      ? Object.entries(data.imageOverrides).reduce<Record<string, string>>((result, [key, value]) => {
+        if (typeof value === "string" && value.startsWith("https://")) result[key] = value;
+        return result;
+      }, {})
+      : defaultSiteSettings.imageOverrides,
   };
 }
 

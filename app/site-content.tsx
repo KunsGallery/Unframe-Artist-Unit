@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { doc, onSnapshot, type DocumentData } from "firebase/firestore";
 import { useLanguage } from "./i18n-provider";
 import { db } from "./firebase-client";
+import { sanitizeRichText } from "./rich-text";
 
 export type SiteContentRecord = Record<string, string | boolean>;
 
@@ -32,8 +33,20 @@ export const defaultSiteContent: SiteContentRecord = {
   "home.radar.title.ko": "따라가 볼 만한 신호.",
   "home.radar.cta.en": "Enter Radar",
   "home.radar.cta.ko": "Radar 들어가기",
+  "home.faq.title.en": "Frequently asked.",
+  "home.faq.title.ko": "자주 묻는 질문.",
+  "home.faq.intro.en": "A few useful starting points for finding your way into the unit.",
+  "home.faq.intro.ko": "유닛에 들어오는 방법을 찾을 때 도움이 되는 몇 가지 시작점입니다.",
+  "home.faq.ctaTitle.en": "Still looking for an answer?",
+  "home.faq.ctaTitle.ko": "아직 답을 찾지 못했나요?",
+  "home.faq.ctaCopy.en": "Tell us what you are trying to make. We will help you find the next thread.",
+  "home.faq.ctaCopy.ko": "무엇을 만들고 있는지 알려주세요. 다음 연결을 함께 찾아볼게요.",
+  "home.faq.ctaLink.en": "Find your way in",
+  "home.faq.ctaLink.ko": "나의 방식으로 들어오기",
   "home.join.title.en": "There is room for",
   "home.join.title.ko": "여기에는 자리가 있습니다",
+  "home.join.subtitle.en": "what comes next.",
+  "home.join.subtitle.ko": "다음에 올 것.",
   "home.join.cta.en": "Find your way in",
   "home.join.cta.ko": "당신의 방식으로 들어오기",
   "home.section.radar": true,
@@ -103,7 +116,7 @@ export function SiteCopy({ contentKey, fallback, className }: { contentKey: stri
   const { locale } = useLanguage();
   const { content } = useSiteContent();
   const value = content[`${contentKey}.${locale}`] ?? fallback;
-  return <span className={className} data-uau-editable="true" data-uau-edit-scope="siteContent" data-uau-edit-key={contentKey} data-uau-edit-language={locale}>{String(value)}</span>;
+  return <span className={className} data-uau-editable="true" data-uau-edit-scope="siteContent" data-uau-edit-key={contentKey} data-uau-edit-language={locale} dangerouslySetInnerHTML={{ __html: sanitizeRichText(String(value)) }} />;
 }
 
 export function SiteSection({ contentKey, children }: { contentKey: string; children: React.ReactNode }) {

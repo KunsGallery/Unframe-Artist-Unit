@@ -25,6 +25,6 @@ export default function Home() {
 
     <HomeFaq locale={locale} />
 
-    <section className="join-band page-wrap"><div><MetaLine>{tx(locale, "OPEN TO / ARTISTS · CURATORS · COLLECTORS", "열려 있는 대상 / 아티스트 · 큐레이터 · 컬렉터")}</MetaLine><h2>{tx(locale, "There is room for", "여기에는 자리가 있습니다")}<br /><span>{tx(locale, "what comes next.", "다음에 올 것.")}</span></h2></div><Link className="button button-blue" href="/join">{tx(locale, "Find your way in", "당신의 방식으로 들어오기")} <MoveUpRight size={16} /></Link></section>
+    <section className="join-band page-wrap"><div><MetaLine>{tx(locale, "OPEN TO / ARTISTS · CURATORS · COLLECTORS", "열려 있는 대상 / 아티스트 · 큐레이터 · 컬렉터")}</MetaLine><h2><SiteCopy contentKey="home.join.title" fallback={locale === "ko" ? "여기에는 자리가 있습니다" : "There is room for"} /><br /><span><SiteCopy contentKey="home.join.subtitle" fallback={locale === "ko" ? "다음에 올 것." : "what comes next."} /></span></h2></div><Link className="button button-blue" href="/join"><SiteCopy contentKey="home.join.cta" fallback={locale === "ko" ? "당신의 방식으로 들어오기" : "Find your way in"} /> <MoveUpRight size={16} /></Link></section>
   </main>;
 }
