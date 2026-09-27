@@ -96,7 +96,10 @@ export function PreviewInlineEditor() {
     const finish = (commit: boolean) => {
       if (!active) return;
       const { element, original } = active;
-      if (!commit) element.innerHTML = original;
+      if (!commit && element.innerHTML !== original) {
+        element.innerHTML = original;
+        postValue(true);
+      }
       if (commit && element.innerHTML !== original) postValue(true);
       element.contentEditable = "false";
       delete element.dataset.uauEditing;

@@ -2,22 +2,22 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { collection, limit, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { tx, type Locale } from "../i18n-shared";
 import { db } from "../firebase-client";
 import { VerifiedMark } from "../components";
 import type { PublicProfile } from "../profile";
 import { useEffect, useState } from "react";
 
-type ConnectedArtist = { slug: string; displayName: string; artistName?: string; practice?: string; basedInCity?: string; country?: string; verificationStatus?: string; uauArtistId?: string };
+type ConnectedArtist = { slug: string; displayName: string; artistName?: string; practice?: string; basedInCity?: string; country?: string; verificationStatus?: string; uauArtistId?: string; accountType?: string };
 
 export function NewlyConnected({ locale }: { locale: Locale }) {
   const [liveArtists, setLiveArtists] = useState<ConnectedArtist[]>([]);
 
   useEffect(() => {
     if (!db) return;
-    return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true), limit(4)), (snapshot) => {
-      setLiveArtists(snapshot.docs.map((item) => ({ slug: item.id, ...(item.data() as Omit<PublicProfile, "slug">) })));
+    return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => {
+      setLiveArtists(snapshot.docs.map((item) => ({ slug: item.id, ...(item.data() as Omit<PublicProfile, "slug">) })).filter((item) => !item.accountType || item.accountType === "artist").slice(0, 4));
     }, () => setLiveArtists([]));
   }, []);
 

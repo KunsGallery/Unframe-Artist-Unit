@@ -1,0 +1,93 @@
+.intro-backdrop {
+  background: rgba(23, 24, 27, .68);
+}
+
+.intro-modal {
+  width: min(100%, 500px);
+  padding: 38px 38px 30px;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .24);
+}
+
+.intro-modal h2 {
+  margin: 9px 0 5px;
+  font-size: 29px;
+}
+
+.intro-modal > p {
+  margin: 0;
+  color: #625e57;
+}
+
+.intro-controls {
+  list-style: none;
+  margin: 22px 0 14px;
+  padding: 0;
+  border-top: 1px solid #dedbd5;
+}
+
+.intro-controls li {
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  gap: 3px 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #dedbd5;
+}
+
+.intro-controls li > span {
+  grid-row: span 2;
+  align-self: center;
+  color: #5869a8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.intro-controls strong {
+  color: #282723;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.intro-controls small {
+  color: #625e57;
+  font-size: 11px;
+}
+
+.intro-modal .intro-floor-hint {
+  color: #625e57;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.intro-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.intro-actions .primary-button {
+  margin: 0;
+  padding: 13px 19px;
+}
+
+.intro-skip {
+  border: 0;
+  padding: 9px 0;
+  background: transparent;
+  color: #625e57;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.intro-skip:hover {
+  color: #252421;
+}
+
+@media (max-width: 560px) {
+  .modal-backdrop { padding: 16px; }
+  .intro-modal { padding: 34px 22px 22px; }
+  .intro-modal h2 { font-size: 25px; }
+  .intro-controls li { grid-template-columns: 54px 1fr; gap: 3px 8px; }
+  .intro-actions .primary-button { padding: 12px 14px; }
+}

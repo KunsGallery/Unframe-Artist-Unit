@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { ArrowUpRight, Check, LockKeyhole, Send } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { addDoc, collection, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, query, serverTimestamp, where } from "firebase/firestore";
 import { DemoNotice, MetaLine } from "../../components";
-import { artists } from "../../data";
 import { db } from "../../firebase-client";
 import { useAuth } from "../../auth-provider";
 import { useLanguage } from "../../i18n-provider";
@@ -13,7 +12,7 @@ import { tx } from "../../i18n-shared";
 import { useUserProfile } from "../../profile";
 import { DashboardSidebar } from "../dashboard-sidebar";
 
-type PublicCandidate = { slug: string; displayName?: string; artistName?: string; practice?: string; basedInCity?: string; sitePublished?: boolean; siteWorks?: Array<{ medium?: string }> };
+type PublicCandidate = { slug: string; displayName?: string; artistName?: string; practice?: string; basedInCity?: string; accountType?: string; siteWorks?: Array<{ medium?: string }> };
 
 export default function CuratorialBriefPage() {
   const { locale } = useLanguage();
@@ -23,13 +22,12 @@ export default function CuratorialBriefPage() {
   const [keywords, setKeywords] = useState("");
   const [brief, setBrief] = useState("");
   const [sent, setSent] = useState<string | null>(null);
-  useEffect(() => { if (!db) return; return onSnapshot(collection(db, "public_profiles"), (snapshot) => setLiveProfiles(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicCandidate)).filter((item) => item.sitePublished !== false))); }, []);
+  useEffect(() => { if (!db) return; return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => setLiveProfiles(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicCandidate)).filter((item) => !item.accountType || item.accountType === "artist"))); }, []);
   const roleAllowed = profile?.accountType === "curator" || profile?.accountType === "gallery" || profile?.accountType === "director" || profile?.accountType === "institution";
   const approved = profile?.accessStatus === "approved";
   const candidates = useMemo(() => {
     const live = liveProfiles.map((item) => ({ slug: item.slug, name: item.artistName || item.displayName || item.slug, practice: item.practice || "Artist practice", city: item.basedInCity || "—" }));
-    const fallback = artists.map((item) => ({ slug: item.slug, name: item.name, practice: item.discipline, city: item.city }));
-    const source = live.length ? live : fallback;
+    const source = live;
     const terms = keywords.toLowerCase().split(",").map((term) => term.trim()).filter(Boolean);
     return source.map((item) => ({ ...item, score: terms.reduce((score, term) => score + ([item.name, item.practice, item.city].join(" ").toLowerCase().includes(term) ? 1 : 0), 0) })).sort((a, b) => b.score - a.score);
   }, [keywords, liveProfiles]);

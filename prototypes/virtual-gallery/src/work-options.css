@@ -1,0 +1,29 @@
+.work-options{display:grid;gap:11px;padding:14px 12px 12px;background:#f6f4ef;border:1px solid #e2ded6}
+.work-options-heading{display:grid;gap:4px;padding-bottom:8px;border-bottom:1px solid #dedad2}
+.work-options-heading strong{font-size:12px;color:#34322e}
+.work-options-heading span{font-size:10px;line-height:1.45;color:#77736c}
+.beam-heading{margin-top:3px;padding-top:11px}
+.range-control,.option-control{display:grid;gap:6px}
+.range-control>span,.option-control>span{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#5e5a53}
+.range-control output{font-variant-numeric:tabular-nums;color:#37352f;font-weight:600}
+.range-control input[type=range]{width:100%;height:22px;margin:0;accent-color:#3150f5;cursor:pointer}
+.range-control input[type=range]:disabled{opacity:.4;cursor:not-allowed}
+.choice-switch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.choice-switch button{min-height:35px;border:1px solid #d8d4cb;background:#fffdfa;color:#56524b;font-size:11px}
+.choice-switch button.selected{border-color:#3150f5;background:#e9edff;color:#1d3fc6;box-shadow:inset 0 0 0 1px #3150f5}
+.presentation-switch,.edge-switch{grid-template-columns:repeat(3,minmax(0,1fr))}
+.canvas-options{display:grid;gap:12px;padding:11px;background:#eeece6;border:1px solid #dedad2}
+.canvas-options small{font-size:10px;line-height:1.45;color:#77736c}
+.spot-editor{padding-top:4px;border-top:1px solid #d5d0c6}
+.beam-choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.beam-choice{display:flex;align-items:center;gap:9px;min-height:66px;padding:8px;border:1px solid #d8d4cb;background:#fffdfa;text-align:left;color:#514e47}
+.beam-choice.selected{border-color:#3150f5;background:#eef0ff;box-shadow:inset 0 0 0 1px #3150f5}
+.beam-swatch{position:relative;display:grid;flex:none;width:31px;height:31px;place-items:center;background:#e7e4dc;border:1px solid #d3cfc6}
+.beam-swatch::before{content:"";width:21px;height:21px;background:#fffdfa;box-shadow:0 0 8px 2px #fff;}
+.beam-swatch.circle,.beam-swatch.circle::before{border-radius:50%}
+.beam-swatch.square::before{border-radius:1px;box-shadow:0 0 5px 1px #fff}
+.beam-choice>span:last-child{display:grid;gap:3px}
+.beam-choice strong{font-size:11px}
+.beam-choice small,.spot-preview-note{font-size:10px;line-height:1.45;color:#77736c}
+.spot-preview-note{margin:8px 0}
+@media(max-width:580px){.work-options{gap:8px;padding:11px}.range-control input[type=range]{height:26px}}

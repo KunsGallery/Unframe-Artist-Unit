@@ -37,7 +37,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     hiddenSections: [],
   },
   artists: {
-    eyebrow: copy("THE UNIT / 06 ARTISTS", "유닛 / 아티스트 06명"),
+    eyebrow: copy("THE UNIT / ARTISTS", "유닛 / 아티스트"),
     title: copy("Artists, in their", "아티스트는 각자의"),
     emphasis: copy("own rhythm.", "리듬으로."),
     description: copy("Independent practices connected through UNFRAME, each with their own pace, place, and way of working.", "UNFRAME을 통해 연결된 독립적인 실천들. 각자의 속도와 장소, 작업 방식으로 움직입니다."),
@@ -61,7 +61,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     hiddenSections: [],
   },
   works: {
-    eyebrow: copy("THE ARCHIVE / 08 WORKS", "아카이브 / 작품 08점"),
+    eyebrow: copy("THE ARCHIVE / WORKS", "아카이브 / 작품"),
     title: copy("Works to", "천천히"),
     emphasis: copy("spend time with.", "머물러 볼 작품."),
     description: copy("Images, objects, moving images, and the stories that gather around them. Discover by attention, not only by outcome.", "이미지와 오브제, 영상, 그리고 그 주변에 모이는 이야기들. 결과만이 아니라 주의 깊게 바라보며 발견하세요."),

@@ -1,18 +1,50 @@
-import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Mail } from "lucide-react";
-import { ArtImage, Breadcrumb, DemoNotice, BookmarkButton, MetaLine } from "../../components";
-import { artists, artworks } from "../../data";
-import { artworkText, tx } from "../../i18n-shared";
-import { getServerLocale } from "../../server-locale";
-import { notFound } from "next/navigation";
+"use client";
 
-export default async function WorkDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const locale = getServerLocale();
-  const work = artworks.find(w => w.id === id);
-  if (!work) notFound();
-  const copy = artworkText(locale, work.id)!;
-  const artist = artists.find(a => a.slug === work.artistSlug);
-  if (!artist) notFound();
-  return <main><DemoNotice /><div className="page-wrap inner-page work-detail"><Breadcrumb current={work.title} /><Link className="back-link" href="/works"><ArrowLeft size={15} /> {tx(locale, "All works", "모든 작품")}</Link><section className="work-detail-grid"><div className={`detail-work-art ${work.accent}`}><ArtImage className="detail-work-image" position={work.imagePosition} label={work.title} /></div><div className="work-detail-copy"><MetaLine>{copy.medium} · {work.year}</MetaLine><h1>{work.title}</h1><Link href={`/${artist.slug}`} className="work-artist-link">{artist.name} <ArrowUpRight size={15} /></Link><div className="work-detail-rule" /><div className="work-facts"><div><span>{tx(locale, "Status", "상태")}</span><strong>{copy.status}</strong></div><div><span>{tx(locale, "Dimensions", "규격")}</span><strong>120 × 90 cm</strong></div><div><span>{tx(locale, "Price", "가격")}</span><strong>{locale === "ko" && work.price === "Price on request" ? "가격 문의" : work.price}</strong></div></div><p>{tx(locale, "This work is part of the artist's ongoing research into the distance between an image and the body that remembers it.", "이 작품은 이미지와 그것을 기억하는 몸 사이의 거리를 탐구하는 아티스트의 지속적인 리서치의 일부입니다.")}</p><div className="work-detail-actions"><BookmarkButton label={tx(locale, "Save work", "작품 저장")} /><a className="button button-blue" href={`mailto:hello@uau.unframe.kr?subject=Inquiry about ${work.title}`}><Mail size={15} /> {tx(locale, "Ask about this work", "이 작품 문의하기")}</a></div></div></section><section className="work-detail-footer"><span>{tx(locale, "Part of the u.a.u demonstration archive", "u.a.u 데모 아카이브의 일부")}</span><Link href={`/${artist.slug}`} className="text-link">{tx(locale, "Visit artist profile", "아티스트 프로필 보기")} <ArrowUpRight size={14} /></Link></section></div></main>;
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { ArtImage, Breadcrumb, DemoNotice, MetaLine } from "../../components";
+import { db } from "../../firebase-client";
+import { useLanguage } from "../../i18n-provider";
+import { tx } from "../../i18n-shared";
+import type { ArtistSiteWork, PublicProfile } from "../../profile";
+import { WorkInquiry } from "./work-inquiry";
+
+type WorkRecord = { work: ArtistSiteWork; profile: PublicProfile };
+
+export default function WorkDetail() {
+  const { locale } = useLanguage();
+  const params = useParams<{ id: string }>();
+  const [record, setRecord] = useState<WorkRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const id = params?.id;
+
+  useEffect(() => {
+    if (!id || !db || !id.includes("~")) {
+      setLoading(false);
+      return;
+    }
+    const separator = id.indexOf("~");
+    const slug = id.slice(0, separator);
+    const workId = id.slice(separator + 1);
+    return onSnapshot(doc(db, "public_profiles", slug), (snapshot) => {
+      const profile = snapshot.exists() ? ({ slug: snapshot.id, ...snapshot.data() } as PublicProfile) : null;
+      const work = profile?.published ? profile.siteWorks?.find((item) => item.id === workId && item.title && item.imageUrl) : null;
+      setRecord(profile && work ? { profile, work } : null);
+      setLoading(false);
+      setError(null);
+    }, (snapshotError) => {
+      setError(snapshotError.message);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening work…", "작품을 불러오는 중…")}</p></main>;
+  if (!record) return <main className="page-wrap inner-page"><Breadcrumb current={tx(locale, "Work", "작품")} /><div className="empty-state"><h1>{error ? tx(locale, "This work could not be loaded.", "작품을 불러오지 못했습니다.") : tx(locale, "This work is not available.", "이 작품은 현재 공개되어 있지 않습니다.")}</h1><Link href="/works" className="text-link">{tx(locale, "Browse works", "작품 둘러보기")}</Link></div></main>;
+
+  const { work, profile } = record;
+  return <main><DemoNotice /><div className="page-wrap inner-page work-detail"><Breadcrumb current={work.title} /><Link className="back-link" href="/works"><ArrowLeft size={15} /> {tx(locale, "All works", "모든 작품")}</Link><section className="work-detail-grid"><div className="detail-work-art"><ArtImage className="detail-work-image" src={work.imageUrl} label={work.title} /></div><div className="work-detail-copy"><MetaLine>{work.medium || tx(locale, "Work", "작품")}{work.year ? ` · ${work.year}` : ""}</MetaLine><h1>{work.title}</h1><Link href={`/artist/${profile.slug}`} className="work-artist-link">{profile.artistName || profile.displayName} <ArrowUpRight size={15} /></Link><div className="work-detail-rule" /><div className="work-facts"><div><span>{tx(locale, "Year", "제작연도")}</span><strong>{work.year || "—"}</strong></div><div><span>{tx(locale, "Medium", "재료 / 매체")}</span><strong>{work.medium || "—"}</strong></div></div><WorkInquiry work={work} profile={profile} locale={locale} /></div></section><section className="work-detail-footer"><span>u.a.u / UNFRAME ARTIST UNIT</span><Link href={`/artist/${profile.slug}`} className="text-link">{tx(locale, "Visit artist profile", "아티스트 프로필 보기")} <ArrowUpRight size={14} /></Link></section></div></main>;
 }

@@ -93,6 +93,7 @@ export function Nav() {
         <MegaLink href="/artists" label={tx(locale, "Artists", "아티스트")} detail={tx(locale, "The people behind the practice", "작업을 만드는 사람들")} />
         <MegaLink href="/works" label={tx(locale, "Works", "작품")} detail={tx(locale, "A living archive of practice", "계속 움직이는 작업의 아카이브")} />
         <MegaLink href="/projects" label={tx(locale, "Projects", "프로젝트")} detail={tx(locale, "Where separate practices meet", "서로 다른 실천이 만나는 곳")} />
+        <MegaLink href="/galleries" label={tx(locale, "Galleries", "갤러리")} detail={tx(locale, "Spaces behind the exhibitions", "전시를 만드는 공간들")} />
       </MegaColumn>
       <MegaColumn eyebrow={tx(locale, "Signals & context", "신호와 맥락")} title={tx(locale, "Stay with the thread.", "실마리를 놓치지 마세요.")}>
         <MegaLink href="/radar" label={tx(locale, "Radar", "Radar")} detail={tx(locale, "Open calls, salons, and next moves", "공모, 살롱, 다음 움직임")} />
@@ -108,6 +109,7 @@ export function Nav() {
     <Link href="/artists" onClick={closeMenus}>{tx(locale, "Artists", "아티스트")}</Link>
     <Link href="/works" onClick={closeMenus}>{tx(locale, "Works", "작품")}</Link>
     <Link href="/projects" onClick={closeMenus}>{tx(locale, "Projects", "프로젝트")}</Link>
+    <Link href="/galleries" onClick={closeMenus}>{tx(locale, "Galleries", "갤러리")}</Link>
     <NavMenu id="nav-participate" label={tx(locale, "Make room", "함께 만들기")} open={openMenu === "participate"} onToggle={() => toggleMenu("participate")} onNavigate={closeMenus}>
       <MegaColumn eyebrow={tx(locale, "For artists", "아티스트를 위한 것")} title={tx(locale, "Make your practice visible.", "당신의 작업을 드러내세요.")}>
         <MegaLink href="/dashboard/profile" label={tx(locale, "Artist profile", "아티스트 프로필")} detail={tx(locale, "Build a page that sounds like you", "당신의 언어로 만드는 페이지")} />

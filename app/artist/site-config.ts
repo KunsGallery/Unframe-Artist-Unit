@@ -7,6 +7,8 @@ export const artistSiteSectionLabels: Record<ArtistSiteSection, { en: string; ko
   exhibitions: { en: "Exhibitions", ko: "전시" },
   cv: { en: "CV", ko: "CV" },
   about: { en: "About", ko: "소개" },
+  studioArchive: { en: "Studio Archive", ko: "작업 아카이브" },
+  inspiration: { en: "Influences", ko: "영감의 서재" },
 };
 
 export const artistSiteAccentLabels: Record<ArtistSiteAccent, { en: string; ko: string }> = {
@@ -18,7 +20,7 @@ export const artistSiteAccentLabels: Record<ArtistSiteAccent, { en: string; ko: 
 export function normalizeArtistSiteSections(value: unknown): ArtistSiteSection[] {
   if (!Array.isArray(value)) return [...defaultArtistSiteSections];
   const sections = value.filter((section): section is ArtistSiteSection =>
-    section === "works" || section === "exhibitions" || section === "cv" || section === "about",
+    section === "works" || section === "exhibitions" || section === "cv" || section === "about" || section === "studioArchive" || section === "inspiration",
   );
   return sections.length ? Array.from(new Set(sections)) : [...defaultArtistSiteSections];
 }

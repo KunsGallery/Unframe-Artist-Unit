@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase-client";
 
 type AuthContextValue = {
@@ -27,15 +27,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(nextUser);
       setLoading(false);
       if (nextUser && db) {
-        void setDoc(
-          doc(db, "users", nextUser.uid),
-          {
-            email: nextUser.email ?? "",
-            displayName: nextUser.displayName ?? "",
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        ).catch(() => undefined);
+        const userRef = doc(db, "users", nextUser.uid);
+        void runTransaction(db, async (transaction) => {
+          const existing = await transaction.get(userRef);
+          if (!existing.exists()) {
+            transaction.set(userRef, {
+              email: nextUser.email ?? "",
+              displayName: nextUser.displayName ?? "",
+              accessStatus: "open",
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+          } else if (existing.data().email !== (nextUser.email ?? "") || !existing.data().displayName) {
+            transaction.update(userRef, {
+              email: nextUser.email ?? "",
+              displayName: existing.data().displayName || nextUser.displayName || "",
+              updatedAt: serverTimestamp(),
+            });
+          }
+        }).catch(() => undefined);
       }
     });
   }, []);

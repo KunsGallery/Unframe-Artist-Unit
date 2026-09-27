@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
 import { db } from "./firebase-client";
 
 export type UauAccountType = "artist" | "curator" | "gallery" | "collector" | "director" | "institution";
 export type UauAccessStatus = "open" | "pending" | "approved" | "rejected";
 export type RecommendationDigest = "realtime" | "weekly" | "monthly" | "off";
 export type ArtistSiteTemplate = "gallery" | "editorial" | "archive";
-export type ArtistSiteSection = "works" | "exhibitions" | "cv" | "about";
+export type ArtistSiteSection = "works" | "exhibitions" | "cv" | "about" | "studioArchive" | "inspiration";
 export type ArtistSiteAccent = "blue" | "ink" | "clay";
 
 export type ArtistVerificationStatus = "pending" | "approved" | "rejected";
@@ -30,6 +30,9 @@ export type ArtistSiteExhibition = {
   location?: string;
 };
 
+export type ArtistSiteArchiveEntry = { id: string; title: string; note: string; imageUrl?: string };
+export type ArtistInspiration = { id: string; title: string; creator?: string; kind?: string; url?: string; note?: string };
+
 export type UauUserProfile = {
   uid: string;
   email?: string;
@@ -49,6 +52,13 @@ export type UauUserProfile = {
   country?: string;
   basedInCity?: string;
   bio?: string;
+  artistStatement?: string;
+  artistCv?: string;
+  artistAudioUrl?: string;
+  siteArchive?: ArtistSiteArchiveEntry[];
+  siteInspirations?: ArtistInspiration[];
+  collaborationOpen?: boolean;
+  contactPurposes?: string[];
   practice?: string;
   websiteUrl?: string;
   profileImageUrl?: string;
@@ -122,6 +132,13 @@ export type PublicProfile = {
   verifiedAt?: Timestamp | null;
   siteWorks?: ArtistSiteWork[];
   siteExhibitions?: ArtistSiteExhibition[];
+  artistStatement?: string;
+  artistCv?: string;
+  artistAudioUrl?: string;
+  siteArchive?: ArtistSiteArchiveEntry[];
+  siteInspirations?: ArtistInspiration[];
+  collaborationOpen?: boolean;
+  contactPurposes?: string[];
 };
 
 export const accountTypes: Array<{ value: UauAccountType; en: string; ko: string }> = [
@@ -230,6 +247,24 @@ export async function savePublicProfile(uid: string, slug: string, values: Omit<
   );
 }
 
+export async function saveProfileAndPublicSite(uid: string, slug: string, profileValues: Partial<Omit<UauUserProfile, "uid">>, publicValues: Omit<PublicProfile, "slug" | "ownerUid">) {
+  if (!db) throw new Error("Firebase is not configured.");
+  const firestore = db;
+  const userRef = doc(firestore, "users", uid);
+  const publicRef = doc(firestore, "public_profiles", slug);
+  await runTransaction(firestore, async (transaction) => {
+    const userSnapshot = await transaction.get(userRef);
+    const previousSlug = userSnapshot.exists() && typeof userSnapshot.data().publicSlug === "string" ? userSnapshot.data().publicSlug as string : "";
+    const previousRef = previousSlug && previousSlug !== slug ? doc(firestore, "public_profiles", previousSlug) : null;
+    const currentPublic = await transaction.get(publicRef);
+    const previousPublic = previousRef ? await transaction.get(previousRef) : null;
+    if (currentPublic.exists() && currentPublic.data().ownerUid !== uid) throw new Error("This page address is already in use.");
+    transaction.set(userRef, { ...profileValues, publicSlug: slug, updatedAt: serverTimestamp() }, { merge: true });
+    transaction.set(publicRef, { ...publicValues, slug, ownerUid: uid, updatedAt: serverTimestamp() }, { merge: true });
+    if (previousRef && previousPublic?.exists() && previousPublic.data().ownerUid === uid) transaction.delete(previousRef);
+  });
+}
+
 export async function createArtistApplication(uid: string, values: {
   name: string;
   artistName?: string;
@@ -237,7 +272,6 @@ export async function createArtistApplication(uid: string, values: {
   basedInCity: string;
   practice: string;
   bio?: string;
-  invitationNumber?: number;
 }) {
   if (!db) throw new Error("Firebase is not configured.");
   return addDoc(collection(db, "artists"), {
@@ -248,7 +282,6 @@ export async function createArtistApplication(uid: string, values: {
     basedInCity: values.basedInCity,
     practice: values.practice,
     bio: values.bio || "",
-    invitationNumber: values.invitationNumber ?? null,
     verified: false,
     applicationStatus: "pending",
     published: false,

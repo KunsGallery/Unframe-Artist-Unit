@@ -1,0 +1,4 @@
+.growth-progress-track i,
+.milestone-meter i {
+  transition: none;
+}

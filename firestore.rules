@@ -20,6 +20,37 @@ service cloud.firestore {
           in ['super_admin', 'editor', 'curator', 'support', 'finance', 'moderator'];
     }
 
+    function isSuperAdmin() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
+    function isReviewer() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'moderator', 'support'];
+    }
+
+    function canManageContent() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'editor', 'curator'];
+    }
+
+    function canEditSite() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role
+          in ['super_admin', 'editor'];
+    }
+
+    function isApprovedProfessional() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accessStatus == 'approved'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accountType
+          in ['curator', 'gallery', 'director', 'institution'];
+    }
+
     function ownsArtist(artistId) {
       return signedIn()
         && get(/databases/$(database)/documents/artists/$(artistId)).data.ownerUid == request.auth.uid;
@@ -41,6 +72,12 @@ service cloud.firestore {
 
       allow create: if isOwner(uid)
         && request.resource.data.email == request.auth.token.email
+        && request.resource.data.accessStatus in ['open', 'pending']
+        && !request.resource.data.keys().hasAny([
+          'uauArtistId', 'foundingNumber', 'foundingStatus',
+          'verificationStatus', 'invitationNumber', 'verifiedAt',
+          'approvedAt', 'connectedAt'
+        ])
         && request.resource.data.keys().hasOnly([
           'email',
           'displayName',
@@ -56,6 +93,13 @@ service cloud.firestore {
           'timezone',
           'basedInCity',
           'bio',
+          'artistStatement',
+          'artistCv',
+          'artistAudioUrl',
+          'siteArchive',
+          'siteInspirations',
+          'collaborationOpen',
+          'contactPurposes',
           'practice',
           'artistName',
           'websiteUrl',
@@ -85,9 +129,14 @@ service cloud.firestore {
           'updatedAt'
         ]);
 
-      allow update: if isAdmin()
+      allow update: if isReviewer()
         || (isOwner(uid)
           && request.resource.data.email == request.auth.token.email
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['accountType', 'accessStatus'])
+            || (request.resource.data.diff(resource.data).affectedKeys().hasAny(['accountType'])
+              && (request.resource.data.accessStatus == 'pending'
+                || (!resource.data.keys().hasAny(['accountType'])
+                  && request.resource.data.accessStatus == 'open'))))
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'email',
             'displayName',
@@ -103,6 +152,13 @@ service cloud.firestore {
             'timezone',
             'basedInCity',
             'bio',
+            'artistStatement',
+            'artistCv',
+            'artistAudioUrl',
+            'siteArchive',
+            'siteInspirations',
+            'collaborationOpen',
+            'contactPurposes',
             'practice',
             'artistName',
             'websiteUrl',
@@ -114,15 +170,7 @@ service cloud.firestore {
             'siteSections',
             'siteAccent',
             'sitePublished',
-            'uauArtistId',
-            'foundingNumber',
-            'foundingStatus',
-            'verificationStatus',
-            'invitationNumber',
             'invitationAcceptedAt',
-            'verifiedAt',
-            'approvedAt',
-            'connectedAt',
             'siteWorks',
             'siteExhibitions',
             'showExhibitions',
@@ -131,7 +179,7 @@ service cloud.firestore {
             'updatedAt'
           ]));
 
-      allow delete: if isOwner(uid) || isAdmin();
+      allow delete: if isOwner(uid) || isSuperAdmin();
     }
 
     // Public artist sites contain only the fields the owner chose to publish.
@@ -140,11 +188,16 @@ service cloud.firestore {
         || resource.data.published == true
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
 
-      allow create: if signedIn()
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.slug == slug;
+      allow create: if isReviewer()
+        || (signedIn()
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.slug == slug
+          && !request.resource.data.keys().hasAny([
+            'uauArtistId', 'foundingNumber', 'foundingStatus',
+            'verificationStatus', 'invitationNumber', 'verifiedAt'
+          ]));
 
-      allow update: if isAdmin()
+      allow update: if isReviewer()
         || (signedIn()
           && resource.data.ownerUid == request.auth.uid
           && request.resource.data.ownerUid == resource.data.ownerUid
@@ -159,18 +212,19 @@ service cloud.firestore {
             'basedInCity',
             'practice',
             'bio',
+            'artistStatement',
+            'artistCv',
+            'artistAudioUrl',
+            'siteArchive',
+            'siteInspirations',
+            'collaborationOpen',
+            'contactPurposes',
             'websiteUrl',
             'profileImageUrl',
             'siteCoverImageUrl',
             'siteTemplate',
             'siteSections',
             'siteAccent',
-            'uauArtistId',
-            'foundingNumber',
-            'foundingStatus',
-            'verificationStatus',
-            'invitationNumber',
-            'verifiedAt',
             'siteWorks',
             'siteExhibitions',
             'showExhibitions',
@@ -180,7 +234,7 @@ service cloud.firestore {
             'updatedAt'
           ]));
 
-      allow delete: if isAdmin()
+      allow delete: if isReviewer()
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
@@ -210,14 +264,14 @@ service cloud.firestore {
         || resource.data.published == true
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
 
-      allow create: if isAdmin()
+      allow create: if isReviewer()
         || (signedIn()
           && request.resource.data.ownerUid == request.auth.uid
           && request.resource.data.verified == false
           && request.resource.data.applicationStatus == 'pending'
           && request.resource.data.published == false);
 
-      allow update: if isAdmin()
+      allow update: if isReviewer()
         || (signedIn()
           && resource.data.ownerUid == request.auth.uid
           && request.resource.data.ownerUid == resource.data.ownerUid
@@ -239,19 +293,12 @@ service cloud.firestore {
             'mediums',
             'practiceTags',
             'visualTags',
-            'invitationNumber',
-            'uauArtistId',
-            'foundingNumber',
-            'foundingStatus',
-            'verificationStatus',
-            'verifiedAt',
-            'approvedAt',
             'availableFor',
             'careerStage',
             'updatedAt'
           ]));
 
-      allow delete: if isAdmin()
+      allow delete: if isReviewer()
         || (signedIn()
           && resource.data.ownerUid == request.auth.uid
           && resource.data.applicationStatus == 'pending');
@@ -277,19 +324,45 @@ service cloud.firestore {
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
+    match /work_inquiries/{inquiryId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.requesterUid == request.auth.uid)
+        || (signedIn() && resource.data.recipientUid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'requesterUid', 'requesterName', 'requesterEmail', 'recipientUid',
+          'artistSlug', 'workId', 'workTitle', 'message', 'status', 'createdAt'
+        ])
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.requesterEmail == request.auth.token.email
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.status == 'new'
+        && exists(/databases/$(database)/documents/public_profiles/$(request.resource.data.artistSlug))
+        && get(/databases/$(database)/documents/public_profiles/$(request.resource.data.artistSlug)).data.published == true
+        && get(/databases/$(database)/documents/public_profiles/$(request.resource.data.artistSlug)).data.ownerUid == request.resource.data.recipientUid;
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.recipientUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['new', 'in_progress', 'answered', 'closed']);
+      allow delete: if isSuperAdmin();
+    }
+
     match /projects/{projectId} {
       allow read: if isAdmin() || resource.data.public == true;
-      allow write: if isAdmin();
+      allow write: if canManageContent();
     }
 
     match /connections/{connectionId} {
       allow read: if isAdmin() || resource.data.public == true;
-      allow write: if isAdmin();
+      allow write: if canManageContent();
     }
 
     match /units/{unitId} {
       allow read: if isAdmin() || resource.data.public == true;
-      allow write: if isAdmin();
+      allow write: if canManageContent();
     }
 
     match /opportunities/{opportunityId} {
@@ -306,9 +379,17 @@ service cloud.firestore {
       allow read: if isAdmin()
         || resource.data.published == true
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
-      allow write: if isAdmin()
+      allow create: if canManageContent()
         || (signedIn()
-          && request.resource.data.ownerUid == request.auth.uid);
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.published == false);
+      allow update: if canManageContent()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.published == resource.data.published);
+      allow delete: if canManageContent()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
     match /threads/{threadId} {
@@ -323,7 +404,10 @@ service cloud.firestore {
       allow update: if isAdmin()
         || (signedIn()
           && resource.data.ownerUid == request.auth.uid
-          && request.resource.data.ownerUid == resource.data.ownerUid);
+          && request.resource.data.ownerUid == resource.data.ownerUid)
+        || (signedIn()
+          && request.auth.uid in resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt']));
 
       allow delete: if isAdmin()
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
@@ -335,6 +419,22 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/threads/$(resource.data.threadId))
           && request.auth.uid in get(/databases/$(database)/documents/threads/$(resource.data.threadId)).data.members);
       allow write: if isAdmin();
+    }
+
+    match /thread_messages/{messageId} {
+      allow read: if isAdmin()
+        || (signedIn()
+          && exists(/databases/$(database)/documents/threads/$(resource.data.threadId))
+          && request.auth.uid in get(/databases/$(database)/documents/threads/$(resource.data.threadId)).data.members);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['threadId', 'senderUid', 'body', 'createdAt'])
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.body.size() <= 4000
+        && exists(/databases/$(database)/documents/threads/$(request.resource.data.threadId))
+        && request.auth.uid in get(/databases/$(database)/documents/threads/$(request.resource.data.threadId)).data.members;
+      allow update, delete: if false;
     }
 
     match /applications/{applicationId} {
@@ -470,7 +570,11 @@ service cloud.firestore {
 
     match /galleries/{galleryId} {
       allow read: if isAdmin() || resource.data.published == true;
-      allow write: if isAdmin();
+      allow create: if canManageContent()
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if canManageContent()
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isSuperAdmin();
     }
 
     match /collector_profiles/{collectorUid} {
@@ -479,8 +583,12 @@ service cloud.firestore {
 
     match /curatorial_briefs/{briefId} {
       allow read: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isApprovedProfessional() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if canManageContent() || (isApprovedProfessional()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if canManageContent() || (isApprovedProfessional()
+        && resource.data.ownerUid == request.auth.uid);
     }
 
     match /curatorial_proposals/{proposalId} {
@@ -489,25 +597,36 @@ service cloud.firestore {
         || (signedIn()
           && exists(/databases/$(database)/documents/public_profiles/$(resource.data.recipientSlug))
           && get(/databases/$(database)/documents/public_profiles/$(resource.data.recipientSlug)).data.ownerUid == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.senderUid == request.auth.uid;
-      allow update, delete: if isAdmin() || (signedIn() && resource.data.senderUid == request.auth.uid);
+      allow create: if isApprovedProfessional() && request.resource.data.senderUid == request.auth.uid;
+      allow update: if canManageContent() || (isApprovedProfessional()
+        && resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderUid == resource.data.senderUid);
+      allow delete: if canManageContent() || (isApprovedProfessional()
+        && resource.data.senderUid == request.auth.uid);
     }
 
     match /site_settings/{settingId} {
       allow read: if settingId == 'public';
-      allow write: if isAdmin();
+      allow write: if canEditSite();
     }
 
     // Each public route can carry its own visual system. The editor writes these
     // documents; the public site only needs to read them.
     match /site_page_settings/{pageId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if canEditSite();
     }
 
     match /site_content/{contentId} {
       allow read: if contentId == 'home';
-      allow write: if isAdmin();
+      allow write: if canEditSite();
+    }
+
+    match /site_revisions/{revisionId} {
+      allow read: if canEditSite();
+      allow create: if canEditSite()
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /admins/{uid} {
@@ -515,15 +634,16 @@ service cloud.firestore {
       // isAdmin() itself uses this document, so restricting this read to isAdmin()
       // can create a circular permission check for the initial access lookup.
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin();
     }
 
     match /admin_logs/{logId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
     }
 
     match /counters/{counterId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isReviewer();
     }
 
     // Every collection not explicitly listed above is denied by default.

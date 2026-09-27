@@ -88,6 +88,7 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const handlePreviewMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent || window.parent === window || new URLSearchParams(window.location.search).get("uauSitePreview") !== "1") return;
       if (event.data?.type === "uau-site-preview-content") setPreviewContent(normalizeContent(event.data.content));
       if (event.data?.type === "uau-site-preview-content-clear") setPreviewContent(null);
     };

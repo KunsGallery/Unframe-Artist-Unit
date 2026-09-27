@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bell, Bookmark, Boxes, FolderKanban, LogOut, Plus, ShieldCheck, UserRound, WandSparkles } from "lucide-react";
+import { ArrowUpRight, Bell, BookOpen, Bookmark, Boxes, FolderKanban, LogOut, Mail, Plus, ShieldCheck, UserRound, WandSparkles, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,7 @@ import { tx } from "../i18n-shared";
 import { useNotifications } from "../notifications";
 import { db } from "../firebase-client";
 
-type DashboardSection = "overview" | "profile" | "threads" | "space" | "notifications" | "recommendations" | "brief";
+type DashboardSection = "overview" | "profile" | "progress" | "threads" | "space" | "notifications" | "recommendations" | "brief" | "inquiries";
 const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
@@ -51,9 +51,11 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
           <Link className={active === "profile" ? "active" : ""} href="/dashboard/profile">
             <UserRound size={16} /> {tx(locale, "Profile", "프로필")}
           </Link>
+          <Link className={active === "progress" ? "active" : ""} href="/dashboard/progress"><Sparkles size={16} /> {tx(locale, "Growth & unlocks", "성장과 해금")}</Link>
           <Link className={active === "notifications" ? "active" : ""} href="/dashboard/notifications">
             <Bell size={16} /> {tx(locale, "Notifications", "알림")} {unreadCount > 0 && <b>{unreadCount}</b>}
           </Link>
+          <Link className={active === "inquiries" ? "active" : ""} href="/dashboard/inquiries"><Mail size={16} /> {tx(locale, "Work inquiries", "작품 문의")}</Link>
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Make", "만들기")}</span>
@@ -61,7 +63,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
             <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
           </Link>
           <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
-            <WandSparkles size={16} /> {tx(locale, "Your space", "나의 공간")}
+            <BookOpen size={16} /> {tx(locale, "Public page", "공개 페이지")}
           </Link>
         </div>
         <div className="dashboard-nav-group">
@@ -70,7 +72,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
             <WandSparkles size={16} /> {tx(locale, "For you", "당신을 위한 추천")}
           </Link>
           <Link href="/works">
-            <Bookmark size={16} /> {tx(locale, "Saved works", "저장한 작품")}
+            <Bookmark size={16} /> {tx(locale, "Explore works", "작품 둘러보기")}
           </Link>
           <Link href="/projects">
             <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}

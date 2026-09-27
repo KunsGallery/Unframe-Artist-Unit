@@ -26,9 +26,14 @@ const allowedContentTypes = new Set([
   "application/x-font-ttf",
   "application/x-font-opentype",
   "application/octet-stream",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/aac",
+  "audio/wav",
+  "audio/x-wav",
 ]);
 
-const allowedAssetTypes = new Set(["profile", "cover", "work", "font", "spatial-preview"]);
+const allowedAssetTypes = new Set(["profile", "cover", "work", "font", "spatial-preview", "audio-guide"]);
 
 function cleanSegment(value: string, fallback: string) {
   const cleaned = value.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
@@ -133,7 +138,7 @@ export default async function handler(request: NextApiRequest, response: NextApi
     const size = typeof payload.size === "number" ? payload.size : 0;
     const assetType = typeof payload.assetType === "string" ? payload.assetType : "work";
     const configuredMaxBytes = Number(process.env.R2_MAX_UPLOAD_BYTES || 50 * 1024 * 1024);
-    const maxBytes = assetType === "font" ? Math.min(configuredMaxBytes, 10 * 1024 * 1024) : configuredMaxBytes;
+    const maxBytes = assetType === "font" ? Math.min(configuredMaxBytes, 10 * 1024 * 1024) : assetType === "audio-guide" ? Math.min(configuredMaxBytes, 30 * 1024 * 1024) : configuredMaxBytes;
 
     if (!allowedContentTypes.has(contentType)) {
       return response.status(415).json({ error: "This file type is not supported." });
