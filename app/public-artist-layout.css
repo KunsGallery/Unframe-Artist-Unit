@@ -1,0 +1,93 @@
+/* A U.A.U artist page reads as a digital monograph: name, image, voice, record. */
+.public-artist-index { display: none !important; }
+.public-artist-shell { width: min(1280px, calc(100% - clamp(36px, 8vw, 128px))); }
+.public-template { padding-top: 0; }
+.public-site-header nav { gap: clamp(14px, 2vw, 28px); font-size: 12px; }
+.public-site-header nav a { padding-block: 8px; }
+.public-personal-hero { grid-template-columns: minmax(270px, .72fr) minmax(0, 1.28fr); gap: clamp(34px, 6vw, 82px); min-height: min(650px, calc(100svh - 80px)); padding: 48px 0 62px; }
+.public-personal-identity { max-width: 520px; }
+.public-personal-identity h1 { max-width: 9ch; margin: 14px 0 12px; font-size: clamp(48px, 6vw, 78px); line-height: .94; letter-spacing: -.035em; }
+.public-personal-identity > p:not(.public-personal-bio) { font-size: 14px; }
+.public-personal-bio { max-width: 52ch; margin-top: 22px; font-size: 16px; line-height: 1.75; }
+.public-personal-identity .public-artist-id { flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+.public-personal-identity .public-artist-id strong { font-size: 10px; }
+.public-personal-identity .public-artist-id small { font-size: 9px; }
+.public-personal-cover { min-height: 390px; max-height: 650px; aspect-ratio: 1.16 / 1; }
+.public-personal-cover figcaption { display: grid; gap: 3px; font-size: 12px; }
+.public-personal-cover figcaption span { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.public-editorial-hero { grid-template-columns: minmax(0, 1fr) minmax(300px, .85fr); gap: clamp(36px, 7vw, 96px); padding: 48px 0 58px; }
+.public-editorial-statement > p { max-width: 17ch; font-size: clamp(30px, 3.5vw, 46px); line-height: 1.08; letter-spacing: -.035em; }
+.public-artist-works { padding: 58px 0 68px; }
+.public-artist-section { grid-template-columns: minmax(190px, .7fr) minmax(0, 1.55fr); gap: clamp(24px, 5vw, 64px); padding: 48px 0 56px; }
+.public-section-label { margin-bottom: 12px; font-size: 10px; letter-spacing: .12em; }
+.public-section-title { max-width: 15ch; margin: 0; font-family: var(--serif); font-size: clamp(27px, 3vw, 39px); font-weight: 400; line-height: 1.03; letter-spacing: -.025em; }
+.public-record-list > div { grid-template-columns: minmax(95px, .35fr) minmax(0, 1fr) minmax(110px, .45fr); gap: 16px; min-height: 62px; padding: 13px 0; }
+.public-record-list span, .public-record-list small { font-size: 12px; }
+.public-record-list strong { font-size: 20px; line-height: 1.2; }
+.public-cv-content { gap: clamp(24px, 4vw, 48px); }
+.public-cv-content > div:last-child { gap: 22px; }
+.public-cv-content > div:last-child > h2 { margin: 0; font-family: var(--serif); font-size: clamp(26px, 3vw, 38px); font-weight: 400; }
+.public-site-work-copy { display: grid; gap: 6px; padding-top: 11px; }
+.public-site-work-copy > span { font-size: 11px; letter-spacing: .03em; }
+.public-site-work-copy strong { font-size: 23px; line-height: 1.18; }
+.public-works-heading p, .public-work-copy p, .public-about p, .public-cv-content > div:last-child > p { font-size: 14px; line-height: 1.75; }
+.public-works-heading { align-items: end; }
+.public-works-heading .public-section-title { max-width: none; font-size: clamp(34px, 4.2vw, 54px); }
+.public-about > div:last-child { display: block; }
+.public-about .public-artist-statement-copy { max-width: 66ch; margin: 0; color: var(--ink); font-family: var(--serif); font-size: clamp(23px, 2.4vw, 32px); line-height: 1.55; white-space: pre-line; }
+.public-about .public-artist-bio-copy { max-width: 64ch; margin: 22px 0 0; color: var(--muted); white-space: pre-line; }
+.public-about .public-artist-links { margin-top: 22px; }
+.public-about .artist-audio-guide { display: block; width: min(100%, 360px); height: 38px; margin-top: 22px; }
+.public-cv .public-cv-content { display: grid; }
+.public-cv .public-cv-content > div:last-child { display: grid; }
+.public-cv .public-cv-content > div:last-child > p { font-family: inherit; font-size: 13px; line-height: 1.7; }
+.public-template-gallery .public-gallery-hero-copy { padding: clamp(34px, 5vw, 72px); }
+.public-template-gallery .public-gallery-hero-copy h1 { line-height: .98; letter-spacing: -.03em; }
+.public-template-gallery .public-artist-statement { max-width: 38ch; margin-top: 20px; font-family: var(--serif); font-size: clamp(19px, 2vw, 27px); line-height: 1.45; white-space: pre-line; }
+.public-template-archive .public-archive-intro { grid-template-columns: minmax(0, .95fr) minmax(280px, .75fr); align-items: end; padding: 54px 0 60px; }
+.public-template-archive .public-archive-intro > p { max-width: 38ch; font-size: clamp(22px, 2.5vw, 34px); line-height: 1.3; white-space: pre-line; }
+.public-template-archive .public-archive-intro > .public-artist-links { grid-column: 2; }
+.public-template-archive .public-archive-intro > .artist-audio-guide { grid-column: 2; }
+.public-artist-mobile-dock { backdrop-filter: blur(12px); }
+.public-artist-footer { margin-top: 12px; }
+.uau-artist-bridge { gap: clamp(28px, 5vw, 64px); padding: 48px 0; }
+.uau-artist-bridge h2 { font-size: clamp(30px, 3.4vw, 44px); line-height: 1.05; }
+.uau-artist-bridge p { font-size: 14px; line-height: 1.7; }
+.uau-artist-bridge nav a strong { font-size: 19px; }
+.public-artist-top-anchor, .public-artist-section, .public-artist-works, #contact { scroll-margin-top: 96px; }
+
+@media (max-width: 860px) {
+  .public-artist-shell { width: min(calc(100% - 40px), 700px); }
+  .public-site-header { position: sticky; top: 0; }
+  .public-site-header nav { overflow-x: auto; justify-content: flex-start; gap: 18px; padding-bottom: 10px; }
+  .public-personal-hero { min-height: 0; gap: 26px; padding: 30px 0 42px; }
+  .public-personal-identity h1 { max-width: none; font-size: clamp(46px, 10vw, 70px); }
+  .public-personal-bio { margin-top: 16px; font-size: 15px; }
+  .public-editorial-hero { gap: 26px; padding: 34px 0 42px; }
+  .public-editorial-statement > p { max-width: 24ch; font-size: clamp(28px, 7vw, 40px); }
+  .public-artist-works { padding: 38px 0 44px; }
+  .public-artist-section { grid-template-columns: 1fr; gap: 15px; padding: 34px 0 40px; }
+  .public-section-label { margin-bottom: 8px; }
+}
+
+@media (max-width: 520px) {
+  .public-artist-shell { width: calc(100% - 32px); }
+  .public-site-header { grid-template-columns: 1fr; gap: 0; min-height: 0; padding-inline: 16px; }
+  .public-site-header nav { grid-column: auto; grid-row: auto; width: 100%; font-size: 11px; }
+  .public-site-brand img { width: 84px; height: 40px; }
+  .public-personal-cover { min-height: 220px; }
+  .public-personal-identity h1 { font-size: clamp(42px, 13vw, 58px); }
+  .public-record-list > div { grid-template-columns: 76px minmax(0, 1fr); gap: 7px 12px; }
+  .public-record-list small { grid-column: 2; text-align: left; }
+  .public-record-list strong { font-size: 18px; }
+  .public-artist-section { padding: 28px 0 34px; }
+  .public-section-title { max-width: 22ch; font-size: 28px; }
+  .public-about .public-artist-statement-copy { font-size: 22px; line-height: 1.5; }
+  .public-works-heading .public-section-title { font-size: 35px; }
+  .public-template-archive .public-archive-intro { gap: 24px; padding: 34px 0 40px; }
+  .public-template-archive .public-archive-intro > .public-artist-links,
+  .public-template-archive .public-archive-intro > .artist-audio-guide { grid-column: auto; }
+  .public-personal-cover { aspect-ratio: 1 / .86; }
+  .public-site-work-copy strong { font-size: 20px; }
+  .uau-artist-bridge { padding: 36px 0; }
+}

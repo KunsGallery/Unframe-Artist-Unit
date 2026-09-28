@@ -1,6 +1,7 @@
 import type { ArtistSiteAccent, ArtistSiteSection, PublicProfile } from "../profile";
 
-export const defaultArtistSiteSections: ArtistSiteSection[] = ["works", "exhibitions", "cv", "about"];
+// Lead with the work, then the artist's own words, before formal records.
+export const defaultArtistSiteSections: ArtistSiteSection[] = ["works", "about", "exhibitions", "cv", "studioArchive", "inspiration"];
 
 export const artistSiteSectionLabels: Record<ArtistSiteSection, { en: string; ko: string }> = {
   works: { en: "Artworks", ko: "작품" },
