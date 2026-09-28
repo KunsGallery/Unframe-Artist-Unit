@@ -62,7 +62,7 @@ export const defaultSiteContent: SiteContentRecord = {
 
 const SiteContentContext = createContext<{ content: SiteContentRecord; loading: boolean }>({ content: defaultSiteContent, loading: true });
 
-function normalizeContent(data?: DocumentData): SiteContentRecord {
+export function normalizeSiteContent(data?: DocumentData): SiteContentRecord {
   return Object.entries(defaultSiteContent).reduce<SiteContentRecord>((result, [key, fallback]) => {
     const value = data?.[key];
     result[key] = typeof value === typeof fallback ? value as string | boolean : fallback;
@@ -81,7 +81,7 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
       return;
     }
     return onSnapshot(doc(db, "site_content", "home"), (snapshot) => {
-      setContent(normalizeContent(snapshot.data()));
+      setContent(normalizeSiteContent(snapshot.data()));
       setLoading(false);
     }, () => setLoading(false));
   }, []);
@@ -89,7 +89,7 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     const handlePreviewMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent || window.parent === window || new URLSearchParams(window.location.search).get("uauSitePreview") !== "1") return;
-      if (event.data?.type === "uau-site-preview-content") setPreviewContent(normalizeContent(event.data.content));
+      if (event.data?.type === "uau-site-preview-content") setPreviewContent(normalizeSiteContent(event.data.content));
       if (event.data?.type === "uau-site-preview-content-clear") setPreviewContent(null);
     };
     window.addEventListener("message", handlePreviewMessage);

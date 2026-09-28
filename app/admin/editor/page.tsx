@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { collection, doc, onSnapshot, query, serverTimestamp, where, writeBatch, type Timestamp } from "firebase/firestore";
-import { ArrowUpRight, Check, ExternalLink, ImagePlus, LockKeyhole, Monitor, RotateCcw, Smartphone, SlidersHorizontal, Tablet } from "lucide-react";
+import { collection, doc, getDocFromServer, onSnapshot, query, serverTimestamp, where, writeBatch, type Timestamp } from "firebase/firestore";
+import { ArrowUpRight, Check, ExternalLink, ImagePlus, LockKeyhole, Monitor, RotateCcw, Smartphone, SlidersHorizontal, Tablet, Users } from "lucide-react";
 import { DemoNotice, MetaLine } from "../../components";
 import { R2FontUploader } from "../../components/r2-font-uploader";
 import { useAuth } from "../../auth-provider";
@@ -10,7 +10,7 @@ import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
 import { defaultSiteSettings, fontPresets, normalizeSiteSettings, useSiteSettings, type SiteSettings } from "../../site-settings";
-import { defaultSiteContent, useSiteContent, type SiteContentRecord } from "../../site-content";
+import { defaultSiteContent, normalizeSiteContent, useSiteContent, type SiteContentRecord } from "../../site-content";
 import { sitePageById, sitePages, type SitePageId } from "../../site-pages";
 import { getDefaultSitePageContent, normalizeSitePageContent, type SitePageContent } from "../../site-page-content";
 import { uploadToR2 } from "../../r2-upload";
@@ -47,6 +47,14 @@ const sectionLabels: Record<string, { en: string; ko: string }> = {
 function getSectionLabel(sectionId: string | null, locale: "en" | "ko") {
   if (!sectionId) return locale === "ko" ? "전체 페이지" : "Whole page";
   return sectionLabels[sectionId]?.[locale] || sectionId.replace(/[-_]/g, " ");
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 export default function AdminEditorPage() {
@@ -301,11 +309,27 @@ export default function AdminEditorPage() {
       }
       batch.set(doc(collection(db, "site_revisions")), { pageId: previewPageId, settings: draft, pageContent: pageContentDraft, ...(isHome ? { homeContent: contentDraft } : {}), createdAt: serverTimestamp(), createdBy: user?.uid || "" });
       await batch.commit();
+      const [pageSnapshot, baseSnapshot, homeSnapshot] = await Promise.all([
+        getDocFromServer(doc(db, "site_page_settings", previewPageId)),
+        isHome ? getDocFromServer(doc(db, "site_settings", "public")) : Promise.resolve(null),
+        isHome ? getDocFromServer(doc(db, "site_content", "home")) : Promise.resolve(null),
+      ]);
+      const persistedSettings = normalizeSiteSettings(pageSnapshot.data());
+      const persistedPageContent = normalizeSitePageContent(pageSnapshot.data(), previewPageId);
+      const matches = stableJson(persistedSettings) === stableJson(normalizeSiteSettings(draft))
+        && stableJson(persistedPageContent) === stableJson(normalizeSitePageContent({ content: pageContentDraft }, previewPageId))
+        && (!baseSnapshot || stableJson(normalizeSiteSettings(baseSnapshot.data())) === stableJson(normalizeSiteSettings(draft)));
+      const persistedHomeContent = homeSnapshot ? normalizeSiteContent(homeSnapshot.data()) : contentDraft;
+      const homeMatches = !homeSnapshot || stableJson(persistedHomeContent) === stableJson(normalizeSiteContent(contentDraft));
+      if (!matches || !homeMatches) throw new Error(tx(locale, "The server did not retain all published changes. Your local draft is safe; try publishing again or contact an administrator.", "서버에서 발행한 변경사항 일부를 확인하지 못했습니다. 이 기기의 초안은 유지됩니다. 다시 발행하거나 관리자에게 문의해 주세요."));
       window.localStorage.removeItem(`uau-editor-draft:${previewPageId}`);
       dirtyRef.current = false;
       setDirty(false);
-      setLoadedDraft(draft);
-      setLoadedPageContent(pageContentDraft);
+      setDraft(persistedSettings);
+      setLoadedDraft(persistedSettings);
+      setPageContentDraft(persistedPageContent);
+      setLoadedPageContent(persistedPageContent);
+      if (homeSnapshot) setContentDraft(persistedHomeContent);
       setSaved(true);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : tx(locale, "The site settings could not be saved.", "사이트 설정을 저장하지 못했습니다."));
@@ -344,7 +368,7 @@ export default function AdminEditorPage() {
   if (!allowed) return <main className="admin-page"><DemoNotice /><section className="access-page page-wrap"><LockKeyhole size={25} /><MetaLine>{tx(locale, "ADMIN / PRIVATE", "관리자 / 비공개")}</MetaLine><h1>{tx(locale, <>This room is<br /><em>private.</em></>, <>이 공간은<br /><em>비공개입니다.</em></>)}</h1><p>{tx(locale, "Your account does not have an active u.a.u admin role.", "계정에 활성화된 u.a.u 관리자 권한이 없습니다.")}</p><div className="admin-access-actions"><a className="button button-blue" href="/login">{tx(locale, "Sign in to continue", "로그인하고 계속하기")} <ArrowUpRight size={15} /></a><a className="text-link" href="/">{tx(locale, "Return to public archive", "공개 아카이브로 돌아가기")}</a></div></section></main>;
 
   return <main className="admin-editor-page"><DemoNotice /><div className="admin-editor-shell">
-    <header className="admin-editor-top"><div><a className="admin-editor-back" href="/admin">← {tx(locale, "Admin overview", "관리자 개요")}</a><MetaLine>{tx(locale, "ADMIN / SITE EDITOR", "관리자 / 사이트 편집기")}</MetaLine><h1>{tx(locale, "Site editor", "사이트 편집")}</h1><p className="editor-save-state" role="status">{dirty ? tx(locale, "Draft saved on this device · not published", "이 기기에 임시저장됨 · 아직 발행 전") : saved ? tx(locale, "Published successfully", "발행 완료") : tx(locale, "Choose text or an image in the preview to edit.", "미리보기의 글이나 이미지를 눌러 수정하세요.")}</p></div><div className="admin-editor-actions"><a className="button button-quiet" href={currentPage.previewPath} target="_blank" rel="noreferrer">{tx(locale, "Open current page", "현재 페이지 열기")} <ExternalLink size={14} /></a><button className="button button-blue" type="button" onClick={() => void saveSettings()} disabled={saving || pageSettingsLoading || !dirty}>{saved ? <Check size={14} /> : <ArrowUpRight size={14} />} {saving ? tx(locale, "Publishing…", "발행 중…") : saved ? tx(locale, "Published", "발행됨") : tx(locale, "Publish changes", "변경사항 발행")}</button></div></header>
+    <header className="admin-editor-top"><div><a className="admin-editor-back" href="/admin">← {tx(locale, "Admin overview", "관리자 개요")}</a><MetaLine>{tx(locale, "ADMIN / SITE EDITOR", "관리자 / 사이트 편집기")}</MetaLine><h1>{tx(locale, "Site editor", "사이트 편집")}</h1><p className="editor-save-state" role="status">{dirty ? tx(locale, "Draft saved on this device · not published", "이 기기에 임시저장됨 · 아직 발행 전") : saved ? tx(locale, "Published · server copy verified", "발행 완료 · 서버 저장 확인됨") : tx(locale, "Choose text or an image in the preview to edit.", "미리보기의 글이나 이미지를 눌러 수정하세요.")}</p></div><div className="admin-editor-actions"><a className="button button-quiet" href="/admin/artists"><Users size={14} />{tx(locale, "Artist pages", "작가 페이지 관리")}</a><a className="button button-quiet" href={currentPage.previewPath} target="_blank" rel="noreferrer">{tx(locale, "Open current page", "현재 페이지 열기")} <ExternalLink size={14} /></a><button className="button button-blue" type="button" onClick={() => void saveSettings()} disabled={saving || pageSettingsLoading || !dirty}>{saved ? <Check size={14} /> : <ArrowUpRight size={14} />} {saving ? tx(locale, "Publishing…", "발행 중…") : saved ? tx(locale, "Published", "발행됨") : tx(locale, "Publish changes", "변경사항 발행")}</button></div></header>
     <div className="admin-editor-layout"><aside className="admin-editor-controls"><div className="admin-editor-control-head"><div><MetaLine>{tx(locale, "LIVE CONTROLS", "실시간 컨트롤")}</MetaLine><h2>{tx(locale, "Tune this room.", "이 공간을 조절하세요.")}</h2></div><SlidersHorizontal size={18} /></div><p className="admin-editor-copy">{tx(locale, "The preview and this control room follow the same page. Change the page in the preview or here, then publish only when it feels right.", "미리보기와 이 컨트롤 룸은 같은 페이지를 바라봅니다. 미리보기나 여기서 페이지를 바꾸고, 마음에 들 때만 발행하세요.")}</p><div className="editor-page-switcher"><label className="editor-select-field"><span>{tx(locale, "Editing page", "편집 중인 페이지")}</span><select value={previewPageId} onChange={(event) => openPreviewPage(event.target.value as SitePageId)}>{sitePages.map((page) => <option key={page.id} value={page.id}>{locale === "ko" ? page.labelKo : page.label}</option>)}</select></label><p>{locale === "ko" ? currentPage.descriptionKo : currentPage.description}</p></div>
       <div className="editor-active-section" aria-live="polite"><span>{tx(locale, "EDITING FOCUS", "현재 편집 초점")}</span><strong>{getSectionLabel(activeSection, locale)}</strong><small>{tx(locale, "Click text or images in the preview to edit.", "미리보기의 글이나 이미지를 눌러 편집하세요.")}</small></div><details className="editor-advanced"><summary>{tx(locale, "Advanced design settings", "고급 디자인 설정")}</summary><label className="editor-range"><span>{tx(locale, "Display scale", "디스플레이 크기")}<output>{Math.round(draft.displayScale * 100)}%</output></span><input type="range" min="0.55" max="1.65" step="0.01" value={draft.displayScale} onChange={(event) => updateSetting("displayScale", Number(event.target.value))} /></label>
       <label className="editor-range"><span>{tx(locale, "Body scale", "본문 크기")}<output>{Math.round(draft.bodyScale * 100)}%</output></span><input type="range" min="0.55" max="1.6" step="0.01" value={draft.bodyScale} onChange={(event) => updateSetting("bodyScale", Number(event.target.value))} /></label>
@@ -380,7 +404,7 @@ export default function AdminEditorPage() {
       <label className="editor-copy-field"><span>{tx(locale, "Intro body", "소개 본문")}</span><textarea value={String(contentDraft[`home.intro.body.${locale}`])} onChange={(event) => updateContent(`home.intro.body.${locale}`, event.target.value)} /></label>
       <label className="editor-copy-field"><span>{tx(locale, "Join title", "참여 제목")}</span><textarea value={String(contentDraft[`home.join.title.${locale}`])} onChange={(event) => updateContent(`home.join.title.${locale}`, event.target.value)} /></label>
       <div className="editor-subhead"><MetaLine>{tx(locale, "SECTION VISIBILITY", "섹션 노출")}</MetaLine><span>{tx(locale, "Hide a section without changing its content.", "내용을 지우지 않고 섹션을 숨길 수 있습니다.")}</span></div>
-      <div className="editor-toggle-list">{[["radar", "Radar"], ["connection", "Current connection"], ["recap", "Annual recap"], ["selection", "Selection"], ["artists", "Artists"], ["works", "Works"], ["journal", "Journal"], ["faq", "FAQ"], ["join", "Join"]].map(([key, label]) => { const contentKey = `home.section.${key}`; return <label key={key}><input type="checkbox" checked={contentDraft[contentKey] !== false} onChange={(event) => updateContent(contentKey, event.target.checked)} /><span>{label}</span></label>; })}</div></> : <div className="editor-page-note"><MetaLine>{tx(locale, "PAGE-SPECIFIC SETTINGS", "페이지별 설정")}</MetaLine><p>{tx(locale, "Copy and section visibility stay in the homepage editor for now. This page already has its own saved design settings, ready for the next content layer.", "문구와 섹션 노출은 현재 홈페이지 편집기에 유지됩니다. 이 페이지는 이미 독립적인 디자인 설정을 저장하며, 다음 콘텐츠 편집 레이어를 확장할 수 있습니다.")}</p></div>}
+      <div className="editor-toggle-list">{[["radar", "Radar"], ["connection", "Current connection"], ["recap", "Annual recap"], ["selection", "Selection"], ["artists", "Artists"], ["works", "Works"], ["journal", "Journal"], ["faq", "FAQ"], ["join", "Join"]].map(([key, label]) => { const contentKey = `home.section.${key}`; return <label key={key}><input type="checkbox" checked={contentDraft[contentKey] !== false} onChange={(event) => updateContent(contentKey, event.target.checked)} /><span>{label}</span></label>; })}</div></> : <div className="editor-page-note"><MetaLine>{tx(locale, "ARTIST PAGE EDITING", "작가 페이지 편집")}</MetaLine><p>{tx(locale, "Artist names, biography, works, CV and page layout are managed in the artist profile studio. Choose an artist there to open the profile editor.", "작가명, 소개, 작품, CV, 페이지 구성은 작가 프로필 스튜디오에서 관리합니다. 작가를 선택하면 해당 작가의 프로필 편집 화면이 열립니다.")}</p><a className="button button-quiet" href="/admin/artists"><Users size={14} />{tx(locale, "Choose an artist to edit", "작가 선택 후 편집하기")} <ArrowUpRight size={14} /></a></div>}
       <button className="editor-reset" type="button" onClick={resetDraft}><RotateCcw size={13} /> {tx(locale, "Discard unsaved changes", "저장하지 않은 변경사항 버리기")}</button>
       <div className="editor-revisions"><label className="editor-select-field"><span>{tx(locale, "Previous published versions", "이전 발행 버전")}</span><select value={selectedRevision} onChange={(event) => setSelectedRevision(event.target.value)}><option value="">{tx(locale, "Select a version", "버전 선택")}</option>{revisions.map((revision) => <option value={revision.id} key={revision.id}>{revision.createdAt?.toDate().toLocaleString(locale === "ko" ? "ko-KR" : "en-US") || revision.id.slice(0, 8)}</option>)}</select></label><button type="button" className="button button-quiet" disabled={!selectedRevision} onClick={restoreRevision}>{tx(locale, "Load into draft", "초안으로 불러오기")}</button></div>
       {error && <p className="admin-editor-error" role="alert">{error}</p>}
