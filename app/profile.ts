@@ -20,17 +20,21 @@ export type ArtistSiteWork = {
   year?: string;
   medium?: string;
   imageUrl?: string;
+  dimensions?: string;
 };
 
 export type ArtistSiteExhibition = {
   id: string;
   year: string;
+  category?: "solo" | "group" | "art-fair" | "award";
+  eventDate?: string;
   title: string;
   venue?: string;
   location?: string;
+  externalUrl?: string;
 };
 
-export type ArtistSiteArchiveEntry = { id: string; title: string; note: string; imageUrl?: string };
+export type ArtistSiteArchiveEntry = { id: string; title: string; note: string; imageUrl?: string; videoUrl?: string };
 export type ArtistInspiration = { id: string; title: string; creator?: string; kind?: string; url?: string; note?: string };
 
 export type UauUserProfile = {

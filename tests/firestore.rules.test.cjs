@@ -2,7 +2,7 @@ const { readFile } = require("node:fs/promises");
 const { after, before, beforeEach, test } = require("node:test");
 const assert = require("node:assert/strict");
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require("@firebase/rules-unit-testing");
-const { doc, getDoc, setDoc, updateDoc } = require("firebase/firestore");
+const { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } = require("firebase/firestore");
 
 let testEnv;
 const projectId = "demo-uau-rules-tests";
@@ -48,6 +48,7 @@ beforeEach(async () => {
       title: "Draft",
       published: false,
     });
+    await setDoc(doc(firestore, "public_profiles", "owner-profile"), { ownerUid: "owner", published: true });
   });
 });
 
@@ -101,4 +102,28 @@ test("published profiles are public while private profiles remain owner-only", a
   });
   await assertSucceeds(getDoc(doc(stranger, "public_profiles", "public-artist")));
   await assertFails(getDoc(doc(stranger, "public_profiles", "private-artist")));
+});
+
+test("invitation viewing rooms are readable by link but not listable, and only the artist can manage them", async () => {
+  const owner = testEnv.authenticatedContext("owner", { email: "owner@example.com" }).firestore();
+  const stranger = testEnv.authenticatedContext("stranger").firestore();
+  const guest = testEnv.unauthenticatedContext().firestore();
+  const roomRef = doc(owner, "private_viewing_rooms", "high-entropy-invitation-token");
+  const room = {
+    ownerUid: "owner",
+    artistSlug: "owner-profile",
+    artistName: "Owner",
+    title: "Unpublished studies",
+    intro: "For invited viewers",
+    works: [{ id: "work-1", title: "Study", year: "2026", medium: "Oil", dimensions: "40 × 40 cm", imageUrl: "https://media.example/preview.jpg" }],
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  await assertSucceeds(setDoc(roomRef, room));
+  await assertSucceeds(getDoc(doc(guest, "private_viewing_rooms", "high-entropy-invitation-token")));
+  await assertFails(getDocs(query(collection(stranger, "private_viewing_rooms"), where("ownerUid", "==", "owner"))));
+  await assertFails(updateDoc(doc(stranger, "private_viewing_rooms", "high-entropy-invitation-token"), { title: "Changed" }));
+  await assertSucceeds(updateDoc(roomRef, { active: false }));
+  await assertFails(getDoc(doc(guest, "private_viewing_rooms", "high-entropy-invitation-token")));
 });

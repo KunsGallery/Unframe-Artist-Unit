@@ -3,7 +3,7 @@
 import { collection, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./firebase-client";
 
-export type R2AssetType = "profile" | "cover" | "work" | "font" | "spatial-preview" | "audio-guide";
+export type R2AssetType = "profile" | "cover" | "work" | "font" | "spatial-preview" | "audio-guide" | "studio-process";
 
 export type R2UploadResult = {
   key: string;
@@ -36,6 +36,8 @@ function contentTypeForFile(file: File) {
     m4a: "audio/mp4",
     aac: "audio/aac",
     wav: "audio/wav",
+    mp4: "video/mp4",
+    webm: "video/webm",
   };
   return extension ? fallbackTypes[extension] || "" : "";
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, FileDown, Globe2, Mail } from "lucide-react";
+import { ArrowUpRight, ExternalLink, FileDown, Globe2, Mail } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, doc, limit, onSnapshot, query, where } from "firebase/firestore";
 import { useLanguage } from "./i18n-provider";
@@ -14,6 +14,7 @@ import type { ArtistSiteWork } from "./profile";
 import { ArtistContact } from "./components/artist-contact";
 import "./artist-growth.css";
 import { artistSiteSectionLabels, getArtistSiteSections } from "./artist/site-config";
+import { artistCvCategories, artistCvCategoryLabels, formatArtistCvDate, safeExternalUrl, sortArtistCvEntries } from "./artist/cv";
 
 function getInitials(value: string) {
   return value.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "U";
@@ -96,17 +97,20 @@ function WorksSection({ profile, locale }: { profile: PublicProfile; locale: "en
 }
 
 function ExhibitionsSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  const exhibitions = profile.siteExhibitions || [];
-  return <section id="exhibitions" className="public-artist-section"><div className="public-section-label">{tx(locale, "Exhibitions", "전시")}</div>{exhibitions.length ? <div className="public-record-list">{exhibitions.map((exhibition) => <div key={exhibition.id}><span>{exhibition.year}</span><strong>{exhibition.title}</strong><small>{[exhibition.venue, exhibition.location].filter(Boolean).join(" · ") || tx(locale, "Location to be added", "장소 준비 중")}</small></div>)}</div> : <div className="public-empty-record"><strong>{tx(locale, "The next room is open.", "다음 방이 열려 있습니다.")}</strong><span>{tx(locale, "Exhibition records will appear here as the practice continues.", "작업이 계속되면 전시 기록이 이곳에 남습니다.")}</span></div>}</section>;
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = sortArtistCvEntries((profile.siteExhibitions || []).filter((entry) => (entry.category === "solo" || entry.category === "group" || !entry.category) && entry.eventDate && entry.eventDate >= today));
+  return <section id="exhibitions" className="public-artist-section"><div className="public-section-label">{tx(locale, "Upcoming exhibitions", "예정 전시")}</div>{upcoming.length ? <div className="public-record-list">{upcoming.map((entry) => { const url = safeExternalUrl(entry.externalUrl); return <div key={entry.id}><span>{formatArtistCvDate(entry)}</span><strong>{entry.title}</strong><small>{[entry.venue, entry.location].filter(Boolean).join(" · ")}</small>{url && <a className="cv-entry-link" href={url} target="_blank" rel="noopener noreferrer" aria-label={tx(locale, `Open link for ${entry.title}`, `${entry.title} 링크 새 창에서 열기`)}><ExternalLink size={13}/></a>}</div>; })}</div> : <div className="public-empty-record"><strong>{tx(locale, "The next room is open.", "다음 방이 열려 있습니다.")}</strong><span>{tx(locale, "Future solo and group exhibitions will appear here. Past records are arranged in the CV below.", "예정된 개인전과 단체전이 이곳에 표시됩니다. 지난 이력은 아래 CV에 정리됩니다.")}</span></div>}</section>;
 }
 
 function CvSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  return <section id="cv" className="public-artist-section public-cv"><div className="public-section-label">CV</div><div className="public-cv-content"><div className="public-cv-actions">{profile.profileImageUrl && <img src={profile.profileImageUrl} alt="" loading="lazy"/>}<button type="button" className="public-archive-open" onClick={() => window.print()}><FileDown size={14}/>{tx(locale, "Print / save CV as PDF", "CV 인쇄 / PDF로 저장")}</button></div><div><p>{profile.artistCv || tx(locale, "The artist has not added a CV yet.", "아직 CV가 등록되지 않았습니다.")}</p>{profile.siteExhibitions?.length ? <div className="public-record-list">{profile.siteExhibitions.map((item) => <div key={item.id}><span>{item.year}</span><strong>{item.title}</strong><small>{[item.venue, item.location].filter(Boolean).join(" · ")}</small></div>)}</div> : null}</div></div></section>;
+  const entries = profile.siteExhibitions || [];
+  const hasLegacy = Boolean(profile.artistCv?.trim());
+  return <section id="cv" className="public-artist-section public-cv"><div className="public-section-label">CV</div><div className="public-cv-content"><div className="public-cv-actions">{profile.profileImageUrl && <img src={profile.profileImageUrl} alt="" loading="lazy"/>}<button type="button" className="public-archive-open" onClick={() => window.print()}><FileDown size={14}/>{tx(locale, "Print / save CV as PDF", "CV 인쇄 / PDF로 저장")}</button></div><div className="artist-cv-public"><h2>{profile.artistName || profile.displayName}</h2>{artistCvCategories.map((category) => { const grouped = sortArtistCvEntries(entries.filter((entry) => (entry.category || "group") === category)); return <section key={category} className="artist-cv-public-group"><h3>{tx(locale, artistCvCategoryLabels[category].en, artistCvCategoryLabels[category].ko)}</h3>{grouped.length ? <div className="artist-cv-public-list">{grouped.map((entry) => { const url = safeExternalUrl(entry.externalUrl); return <article key={entry.id}><time>{formatArtistCvDate(entry)}</time><div><strong>{entry.title}</strong><span>{[entry.venue, entry.location].filter(Boolean).join(" · ")}</span></div>{url && <a className="cv-entry-link" href={url} target="_blank" rel="noopener noreferrer" aria-label={tx(locale, `Open link for ${entry.title}`, `${entry.title} 링크 새 창에서 열기`)}><ExternalLink size={13}/></a>}</article>; })}</div> : <p className="artist-cv-empty-category">{tx(locale, "No records yet", "등록된 이력이 없습니다")}</p>}</section>; })}{!entries.length && <p className="artist-cv-first-record">{tx(locale, hasLegacy ? "This artist's earlier CV is being reorganized into the new format." : "The artist has not added a CV yet.", hasLegacy ? "기존 CV를 새 양식으로 정리하고 있습니다." : "아직 등록된 CV가 없습니다.")}</p>}</div></div></section>;
 }
 
 function StudioArchiveSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
   const entries = profile.siteArchive || [];
-  return <section id="studioArchive" className="public-artist-section public-studio-archive"><div className="public-section-label">STUDIO ARCHIVE <span>/{tx(locale, "process notes", "작업의 뒷면")}</span></div><div>{entries.length ? entries.map((entry) => <article key={entry.id}>{entry.imageUrl && <img src={entry.imageUrl} alt="" loading="lazy"/>}<h2>{entry.title}</h2><p>{entry.note}</p></article>) : <div className="public-empty-record"><strong>{tx(locale, "The archive is taking shape.", "아카이브를 채워가는 중입니다.")}</strong></div>}</div></section>;
+  return <section id="studioArchive" className="public-artist-section public-studio-archive"><div className="public-section-label">STUDIO ARCHIVE <span>/{tx(locale, "process notes", "작업의 뒷면")}</span></div><div>{entries.length ? entries.map((entry) => <article key={entry.id}>{entry.videoUrl && <video src={entry.videoUrl} controls playsInline preload="metadata" aria-label={entry.title || tx(locale, "Studio process video", "작업 과정 영상")} />}{entry.imageUrl && <img src={entry.imageUrl} alt="" loading="lazy"/>}<h2>{entry.title}</h2><p>{entry.note}</p></article>) : <div className="public-empty-record"><strong>{tx(locale, "The archive is taking shape.", "아카이브를 채워가는 중입니다.")}</strong></div>}</div></section>;
 }
 
 function InspirationSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {

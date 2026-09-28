@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bell, BookOpen, Bookmark, Boxes, FolderKanban, LogOut, Mail, Plus, ShieldCheck, UserRound, WandSparkles, Sparkles } from "lucide-react";
+import { ArrowUpRight, Bell, BookOpen, Bookmark, Boxes, FolderKanban, LogOut, Mail, Plus, ShieldCheck, UserRound, WandSparkles, Sparkles, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,7 @@ import { tx } from "../i18n-shared";
 import { useNotifications } from "../notifications";
 import { db } from "../firebase-client";
 
-type DashboardSection = "overview" | "profile" | "progress" | "threads" | "space" | "notifications" | "recommendations" | "brief" | "inquiries";
+type DashboardSection = "overview" | "profile" | "progress" | "threads" | "space" | "notifications" | "recommendations" | "brief" | "inquiries" | "viewing";
 const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "moderator"];
 
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
@@ -65,6 +65,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
           <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
             <BookOpen size={16} /> {tx(locale, "Public page", "공개 페이지")}
           </Link>
+          <Link className={active === "viewing" ? "active" : ""} href="/dashboard/viewing-room"><Eye size={16} /> {tx(locale, "Private viewing room", "프라이빗 뷰잉룸")}</Link>
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Discover", "탐색")}</span>

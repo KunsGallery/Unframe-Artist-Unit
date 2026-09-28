@@ -331,7 +331,8 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           'requesterUid', 'requesterName', 'requesterEmail', 'recipientUid',
-          'artistSlug', 'workId', 'workTitle', 'message', 'status', 'createdAt'
+          'artistSlug', 'workId', 'workTitle', 'message', 'status', 'createdAt',
+          'artworkImageUrl', 'artworkYear', 'artworkMedium', 'artworkDimensions'
         ])
         && request.resource.data.requesterUid == request.auth.uid
         && request.resource.data.requesterEmail == request.auth.token.email
@@ -348,6 +349,42 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
           && request.resource.data.status in ['new', 'in_progress', 'answered', 'closed']);
       allow delete: if isSuperAdmin();
+    }
+
+    // Unlisted invitation rooms: the high-entropy document ID is the bearer link.
+    // Room metadata is not listable by guests; the image URLs themselves may still be copied.
+    match /private_viewing_rooms/{roomId} {
+      allow get: if resource.data.active == true
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || isAdmin();
+      allow list: if isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.artistSlug is string
+        && exists(/databases/$(database)/documents/public_profiles/$(request.resource.data.artistSlug))
+        && get(/databases/$(database)/documents/public_profiles/$(request.resource.data.artistSlug)).data.ownerUid == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.works is list
+        && request.resource.data.works.size() > 0
+        && request.resource.data.works.size() <= 9
+        && request.resource.data.active == true
+        && request.resource.data.keys().hasOnly([
+          'ownerUid', 'artistSlug', 'artistName', 'title', 'intro', 'works', 'active', 'createdAt', 'updatedAt'
+        ]);
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.artistSlug == resource.data.artistSlug
+          && request.resource.data.keys().hasOnly([
+            'ownerUid', 'artistSlug', 'artistName', 'title', 'intro', 'works', 'active', 'createdAt', 'updatedAt'
+          ])
+          && request.resource.data.works is list
+          && request.resource.data.works.size() <= 9);
+      allow delete: if isAdmin() || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
 
     match /projects/{projectId} {
