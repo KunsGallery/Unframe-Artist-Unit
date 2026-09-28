@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Eye, ExternalLink, LayoutTemplate, RefreshCw, Plus, Trash2, FileDown, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,8 @@ import { R2AudioUploader } from "../../components/r2-audio-uploader";
 import "../../artist-growth.css";
 import "../../artist-growth-motion.css";
 import { getArtistProgress } from "../../artist-progress";
+import { db } from "../../firebase-client";
+import type { PublicProfile } from "../../profile";
 
 type ProfileForm = {
   displayName: string;
@@ -100,7 +103,7 @@ function getPublicSlug(value: string, uid: string) {
   return toSlug(value) || `artist-${uid.slice(0, 8).toLowerCase()}`;
 }
 
-export default function DashboardProfilePage() {
+export default function DashboardProfilePage({ managedSlug }: { managedSlug?: string }) {
   const { locale } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile(user?.uid);
@@ -111,6 +114,9 @@ export default function DashboardProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [managedProfile, setManagedProfile] = useState<PublicProfile | null>(null);
+  const [managedLoading, setManagedLoading] = useState(Boolean(managedSlug));
+  const [adminAccess, setAdminAccess] = useState(!managedSlug);
   const formDirtyRef = useRef(false);
 
   useEffect(() => {
@@ -118,6 +124,34 @@ export default function DashboardProfilePage() {
   }, [authLoading, router, user]);
 
   useEffect(() => {
+    if (!managedSlug) return;
+    if (!user || !db) { setAdminAccess(false); setManagedLoading(false); return; }
+    let stopProfile: (() => void) | undefined;
+    const stopAdmin = onSnapshot(doc(db, "admins", user.uid), (admin) => {
+      const allowed = admin.exists() && admin.data()?.active === true && admin.data()?.role === "super_admin";
+      setAdminAccess(allowed);
+      if (!allowed) { setManagedLoading(false); return; }
+      stopProfile?.();
+      stopProfile = onSnapshot(doc(db!, "public_profiles", managedSlug), (snapshot) => {
+        setManagedProfile(snapshot.exists() ? { ...snapshot.data(), slug: snapshot.id } as PublicProfile : null);
+        setManagedLoading(false);
+      }, () => setManagedLoading(false));
+    }, () => { setAdminAccess(false); setManagedLoading(false); });
+    return () => { stopAdmin(); stopProfile?.(); };
+  }, [managedSlug, user]);
+
+  useEffect(() => {
+    if (managedSlug) {
+      if (managedLoading || !adminAccess || formDirtyRef.current) return;
+      if (!managedProfile) {
+        const isFring = managedSlug === "fring-uau";
+        setForm({ ...emptyForm, displayName: isFring ? "프링" : "", artistName: isFring ? "프링" : "", practice: isFring ? "U.A.U. mascot · character" : "", basedInCity: isFring ? "Seoul" : "", country: isFring ? "South Korea" : "", websiteUrl: isFring ? "https://uau.unframe.kr" : "", publicSlug: managedSlug, siteSections: ["works", "about", "cv"], bio: isFring ? "안녕! 나는 프링, U.A.U.의 연결을 안내하는 마스코트예요. 작가의 작업과 전시에서 시작된 이야기가 그 이후에도 이어지는 순간을 좋아해요.\n\n이 페이지는 U.A.U. 작가 프로필을 어떻게 작성하고 보여주는지 소개하기 위해 만든 예시입니다." : "", artistStatement: isFring ? "저는 사람과 작업 사이에 생기는 작은 신호를 모읍니다. 전시장에서 건넨 인사, 오래 바라본 작품, 다음 만남을 향한 마음을 U.A.U. 안에서 이어가고 싶어요." : "", artistCv: isFring ? "U.A.U. 공식 마스코트 · 프로필 예시\n이 페이지의 소개와 구성은 작가 페이지 편집 방법을 보여주기 위한 샘플입니다." : "" });
+        return;
+      }
+      const source = managedProfile;
+      setForm({ ...emptyForm, ...source, displayName: source.displayName || "", artistName: source.artistName || "", accountType: "artist", publicSlug: source.slug || managedSlug, sitePublished: source.published === true, siteSections: normalizeArtistSiteSections(source.siteSections), siteWorks: source.siteWorks || [], siteExhibitions: source.siteExhibitions || [], siteArchive: source.siteArchive || [], siteInspirations: source.siteInspirations || [], contactPurposes: source.contactPurposes || [], collaborationOpen: source.collaborationOpen === true });
+      return;
+    }
     if (!profile && !user) return;
     if (formDirtyRef.current) return;
     setForm({
@@ -149,7 +183,7 @@ export default function DashboardProfilePage() {
       showCV: profile?.showCV !== false,
       showAbout: profile?.showAbout !== false,
     });
-  }, [profile, user]);
+  }, [profile, user, managedSlug, managedLoading, managedProfile, adminAccess]);
 
   const roleLabel = useMemo(() => accountTypes.find((role) => role.value === form.accountType), [form.accountType]);
   const localProgress = useMemo(() => getArtistProgress({ uid: user?.uid || "draft", ...form }), [form, user?.uid]);
@@ -188,7 +222,15 @@ export default function DashboardProfilePage() {
     setError(null);
     try {
       if (!form.displayName.trim()) throw new Error(tx(locale, "Add a display name before publishing your site.", "페이지를 공개하기 전에 표시 이름을 입력해 주세요."));
-      const slug = getPublicSlug(form.publicSlug || form.displayName, user.uid);
+      const slug = managedSlug || getPublicSlug(form.publicSlug || form.displayName, user.uid);
+      if (managedSlug) {
+        if (!db || !adminAccess || (form.publicSlug && form.publicSlug !== managedSlug)) throw new Error(tx(locale, "관리자 권한 또는 페이지 주소를 확인해 주세요.", "관리자 권한 또는 페이지 주소를 확인해 주세요."));
+        await setDoc(doc(db, "public_profiles", managedSlug), { ...form, slug: managedSlug, ownerUid: managedProfile?.ownerUid || user.uid, accountType: "artist", published: form.sitePublished, isDemonstration: managedProfile?.isDemonstration === true || managedSlug === "fring-uau", showExhibitions: form.siteSections.includes("exhibitions"), showCV: form.siteSections.includes("cv"), showAbout: form.siteSections.includes("about"), updatedAt: serverTimestamp(), ...(managedProfile ? {} : { createdAt: serverTimestamp(), createdByAdmin: user.uid }) }, { merge: true });
+        formDirtyRef.current = false;
+        setSaved(true);
+        setSaving(false);
+        return;
+      }
       const profileValues = {
         ...form,
         collaborationOpen: contactFeatureOpen && form.collaborationOpen,
@@ -280,14 +322,16 @@ export default function DashboardProfilePage() {
     popup.document.open(); popup.document.write(html.replace("</body>", "<script>window.onload=()=>setTimeout(()=>window.print(),350)</script></body>")); popup.document.close();
   }
 
-  if (authLoading || !user || profileLoading) {
+  if (authLoading || !user || (managedSlug ? managedLoading : profileLoading)) {
     return <main className="dashboard-page"><DemoNotice /><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your profile…", "프로필을 여는 중…")}</div></main>;
   }
+  if (managedSlug && !adminAccess) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</div></main>;
+  if (managedSlug && !managedProfile && !managedLoading) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Artist page not found.", "작가 페이지를 찾을 수 없습니다.")}</div></main>;
 
   const hasArtistAccess = (artist?.verified === true && artist.applicationStatus === "approved") || membership?.active === true || membership?.status === "active";
   return <main className="dashboard-page"><DemoNotice /><div className="dashboard-wrap"><DashboardSidebar active="profile" /><section className="dashboard-main profile-main">
     <div className="dashboard-top"><div><MetaLine>{tx(locale, "MY U.A.U / PROFILE", "MY U.A.U / 프로필")}</MetaLine><h1>{tx(locale, <>Make your place<br /><em>legible.</em></>, <>당신의 자리를<br /><em>선명하게.</em></>)}</h1></div><div className="profile-role-stamp"><span>{roleLabel?.en}</span><strong>{form.displayName || "u.a.u"}</strong></div></div>
-    <div className="profile-layout"><form className="profile-form" onSubmit={handleSubmit}><div className="profile-form-intro"><MetaLine>{tx(locale, "YOUR IDENTITY", "당신의 정체성")}</MetaLine><p>{tx(locale, "Choose the role that best describes how you enter the unit. You can change it as your practice moves.", "유닛에 들어오는 방식을 가장 잘 설명하는 역할을 선택하세요. 실천의 방향에 따라 언제든 바꿀 수 있습니다.")}</p></div>
+    <div className="profile-layout"><form className="profile-form" onSubmit={handleSubmit}>{managedSlug && <div className="admin-artist-callout"><strong>{tx(locale, "운영자 입력 모드 · 작가 프로필과 동일한 편집 화면", "운영자 입력 모드 · 작가 프로필과 동일한 편집 화면")}</strong><span>{tx(locale, "이 화면은 아티스트가 직접 프로필을 등록할 때 사용하는 화면입니다. 입력 후 저장하면 해당 작가 페이지에 반영됩니다.", "이 화면은 아티스트가 직접 프로필을 등록할 때 사용하는 화면입니다. 입력 후 저장하면 해당 작가 페이지에 반영됩니다.")}</span></div>}<div className="profile-form-intro"><MetaLine>{tx(locale, "YOUR IDENTITY", "당신의 정체성")}</MetaLine><p>{tx(locale, "Choose the role that best describes how you enter the unit. You can change it as your practice moves.", "유닛에 들어오는 방식을 가장 잘 설명하는 역할을 선택하세요. 실천의 방향에 따라 언제든 바꿀 수 있습니다.")}</p></div>
       <label>{tx(locale, "Display name", "표시 이름")}<input value={form.displayName} onChange={(event) => setField("displayName", event.target.value)} placeholder={tx(locale, "Your name", "이름")} /></label>
       {form.accountType === "artist" && <label>{tx(locale, "Public / English name", "공개 이름 / 영문 이름")}<input value={form.artistName} onChange={(event) => setField("artistName", event.target.value)} placeholder={tx(locale, "The name on your artist page", "아티스트 페이지에 표시할 이름")} /></label>}
       <label>{tx(locale, "I enter as", "나는 이렇게 들어옵니다")}<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as UauAccountType)}>{accountTypes.map((role) => <option value={role.value} key={role.value}>{tx(locale, role.en, role.ko)}</option>)}</select></label>

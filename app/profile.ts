@@ -124,6 +124,7 @@ export type PublicProfile = {
   showCV: boolean;
   showAbout: boolean;
   published: boolean;
+  isDemonstration?: boolean;
   uauArtistId?: string;
   foundingNumber?: number;
   foundingStatus?: ArtistFoundingStatus;
