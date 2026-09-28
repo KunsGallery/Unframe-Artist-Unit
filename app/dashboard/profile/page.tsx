@@ -335,7 +335,7 @@ export default function DashboardProfilePage({ managedSlug }: { managedSlug?: st
     return <main className="dashboard-page"><DemoNotice /><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your profile…", "프로필을 여는 중…")}</div></main>;
   }
   if (managedSlug && !adminAccess) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</div></main>;
-  if (managedSlug && !managedProfile && !managedLoading) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Artist page not found.", "작가 페이지를 찾을 수 없습니다.")}</div></main>;
+  if (managedSlug && !managedProfile && !managedLoading && managedSlug !== "fring-uau") return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Artist page not found.", "작가 페이지를 찾을 수 없습니다.")}</div></main>;
 
   const hasArtistAccess = (artist?.verified === true && artist.applicationStatus === "approved") || membership?.active === true || membership?.status === "active";
   return <main className="dashboard-page"><DemoNotice /><div className="dashboard-wrap"><DashboardSidebar active="profile" /><section className="dashboard-main profile-main">
