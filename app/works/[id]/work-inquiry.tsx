@@ -11,7 +11,12 @@ import type { ArtistSiteWork, PublicProfile } from "../../profile";
 
 export function WorkInquiry({ work, profile, locale }: { work: ArtistSiteWork; profile: PublicProfile; locale: Locale }) {
   const { user } = useAuth();
-  const [message, setMessage] = useState("");
+  const inquiryContext = [
+    `${tx(locale, "Work", "문의 작품")}: ${work.title}${work.year ? `, ${work.year}` : ""}`,
+    work.medium ? `${tx(locale, "Medium", "재료 / 매체")}: ${work.medium}` : "",
+    "",
+  ].filter(Boolean).join("\n");
+  const [message, setMessage] = useState(inquiryContext);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +40,7 @@ export function WorkInquiry({ work, profile, locale }: { work: ArtistSiteWork; p
         createdAt: serverTimestamp(),
       });
       setSent(true);
-      setMessage("");
+      setMessage(inquiryContext);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : tx(locale, "Inquiry could not be sent.", "문의를 보내지 못했습니다."));
     } finally {

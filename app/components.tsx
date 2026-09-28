@@ -183,7 +183,7 @@ export function BookmarkButton({ label = "Save", targetType, targetId }: { label
 export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy", src }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy"; src?: string }) {
   const { settings } = useSiteSettings();
   const imageKey = "art-image:" + label.toLowerCase().replace(/[^a-z0-9가-힣]+/gi, "-").replace(/^-|-$/g, "");
-  const resolvedSrc = settings.imageOverrides[imageKey] || src || "/assets/uau-hero.png";
+  const resolvedSrc = settings.imageOverrides[imageKey] || src || "/assets/uau-hero.webp";
   return <div className={`art-image ${className}`}><img src={resolvedSrc} alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} data-uau-image-key={imageKey} /><span className="art-image-glow" /></div>;
 }
 

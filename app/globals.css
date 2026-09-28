@@ -922,6 +922,37 @@ html:lang(ko) .page-intro h1 { line-height: 1.1; letter-spacing: -.045em; word-b
 .public-artist-footer { display: flex; justify-content: space-between; gap: 25px; padding: 20px 0 30px; color: var(--muted); font-size: 9px; letter-spacing: .06em; }
 .public-artist-footer a { color: var(--blue); }
 
+.uau-artist-bridge { display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: start; padding: 64px 0 58px; border-bottom: 1px solid var(--line); }
+.uau-artist-bridge h2 { margin: 0; font: 400 clamp(32px, 4vw, 52px)/.96 var(--serif); letter-spacing: -.035em; }
+.uau-artist-bridge p { max-width: 34ch; margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.uau-artist-bridge nav { display: grid; grid-template-columns: 1fr 1fr; }
+.uau-artist-bridge nav a { min-width: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center; padding: 15px 0; border-top: 1px solid var(--line); }
+.uau-artist-bridge nav a:nth-child(odd) { margin-right: 22px; }
+.uau-artist-bridge nav a span { grid-column: 1; color: var(--muted); font-size: 9px; }
+.uau-artist-bridge nav a strong { grid-column: 1; overflow: hidden; font: 400 22px/1.1 var(--serif); text-overflow: ellipsis; white-space: nowrap; }
+.uau-artist-bridge nav a svg { grid-column: 2; grid-row: 1 / span 2; color: var(--blue); }
+.uau-artist-mobile-dock { display: none; }
+@media (min-width: 861px) and (max-width: 980px) {
+  .site-header .nav-shell { gap: 18px; }
+  .site-header .nav-links { display: none; position: absolute; top: 77px; left: 0; right: 0; z-index: 1; flex-direction: column; align-items: flex-start; gap: 0; padding: 16px max(20px, calc((100% - 680px)/2)) 22px; background: var(--paper); border-bottom: 1px solid var(--ink); box-shadow: 0 18px 30px rgba(23,24,23,.08); }
+  .site-header .nav-links.nav-open { display: flex; }
+  .site-header .nav-links a { width: 100%; padding: 11px 0; }
+  .site-header .menu-button { display: grid; }
+  .site-header .nav-actions { gap: 9px; }
+  .site-header .account-link span { display: none; }
+}
+@media (max-width: 860px) {
+  .uau-artist-bridge { grid-template-columns: 1fr; gap: 28px; padding-block: 45px; }
+  .public-artist-page { padding-bottom: 68px; }
+  .public-artist-mobile-dock { position: fixed; z-index: 20; right: max(14px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); left: max(14px, env(safe-area-inset-left)); display: flex; justify-content: space-around; gap: 6px; padding: 8px 10px; border: 1px solid rgba(23,24,23,.14); background: rgba(244,240,232,.96); box-shadow: 0 8px 28px rgba(23,24,23,.12); backdrop-filter: blur(12px); }
+  .public-artist-mobile-dock a { flex: 1; min-width: 0; display: grid; min-height: 42px; place-items: center; padding: 5px 3px; color: var(--ink); font-size: 10px; text-align: center; }
+  .public-artist-mobile-dock a:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+}
+@media (max-width: 500px) {
+  .uau-artist-bridge nav { grid-template-columns: 1fr; }
+  .uau-artist-bridge nav a:nth-child(odd) { margin-right: 0; }
+}
+
 @media (max-width: 860px) {
   .profile-builder { margin-top: 72px; }
   .builder-template-list { grid-template-columns: 1fr; gap: 0; }
