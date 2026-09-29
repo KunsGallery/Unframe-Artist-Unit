@@ -29,7 +29,7 @@ export function usePublishedWorks() {
     return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => {
       const result = snapshot.docs.flatMap((item) => {
         const profile = { slug: item.id, ...item.data() } as PublicProfile;
-        if (profile.accountType && profile.accountType !== "artist") return [];
+        if (profile.isDemonstration || (profile.accountType && profile.accountType !== "artist")) return [];
         return (profile.siteWorks || []).filter((work) => work.id && work.title && work.imageUrl).map((work) => ({
           ...work,
           artistSlug: item.id,

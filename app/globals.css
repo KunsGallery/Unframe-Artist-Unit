@@ -1490,6 +1490,20 @@ html:lang(ko) .page-intro h1 { line-height: 1.1; letter-spacing: -.045em; word-b
 }
 @media (prefers-reduced-motion: reduce) { .public-site-work-card .public-work-image img { transition: none; } }
 
+/* Artwork gallery: adapt the reference's generous grid and focused viewer to U.A.U data. */
+.public-site-work-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 34px); }
+.public-site-work-card .public-work-image { position: relative; aspect-ratio: 1 / 1; }
+.public-site-work-card .public-work-image::after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg, transparent 48%, rgba(18,18,17,.54)); opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.public-site-work-card:hover .public-work-image::after, .public-site-work-card:focus-visible .public-work-image::after { opacity: 1; }
+.public-work-detail-copy { min-width: 0; }
+.public-work-navigation { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); }
+.public-work-navigation button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 7px 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 10px; }
+.public-work-navigation button:hover { color: var(--blue); }
+.public-work-navigation button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+@media (max-width: 860px) { .public-site-work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .public-site-work-grid { grid-template-columns: 1fr; gap: 24px; } }
+@media (prefers-reduced-motion: reduce) { .public-site-work-card .public-work-image::after { transition: none; } }
+
 /* Super-admin artist profile studio */
 .admin-artist-manager { max-width: 1380px; }
 .admin-artist-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid var(--ink); }

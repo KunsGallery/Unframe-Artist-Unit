@@ -17,7 +17,7 @@ export function NewlyConnected({ locale }: { locale: Locale }) {
   useEffect(() => {
     if (!db) return;
     return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => {
-      setLiveArtists(snapshot.docs.map((item) => ({ slug: item.id, ...(item.data() as Omit<PublicProfile, "slug">) })).filter((item) => !item.accountType || item.accountType === "artist").slice(0, 4));
+      setLiveArtists(snapshot.docs.map((item) => ({ slug: item.id, ...(item.data() as Omit<PublicProfile, "slug">) })).filter((item) => !item.isDemonstration && (!item.accountType || item.accountType === "artist")).slice(0, 4));
     }, () => setLiveArtists([]));
   }, []);
 

@@ -92,7 +92,7 @@ export function usePublishedArtists() {
   useEffect(() => {
     if (!db) { setLoading(false); setError("Artist data is unavailable."); return; }
     return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => {
-      setArtists(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicProfile)).filter((item) => !item.accountType || item.accountType === "artist"));
+      setArtists(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicProfile)).filter((item) => !item.isDemonstration && (!item.accountType || item.accountType === "artist")));
       setLoading(false); setError(null);
     }, (snapshotError) => { setError(snapshotError.message); setLoading(false); });
   }, []);

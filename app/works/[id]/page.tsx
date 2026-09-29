@@ -32,7 +32,7 @@ export default function WorkDetail() {
     const workId = id.slice(separator + 1);
     return onSnapshot(doc(db, "public_profiles", slug), (snapshot) => {
       const profile = snapshot.exists() ? ({ slug: snapshot.id, ...snapshot.data() } as PublicProfile) : null;
-      const work = profile?.published ? profile.siteWorks?.find((item) => item.id === workId && item.title && item.imageUrl) : null;
+      const work = profile?.published && !profile.isDemonstration ? profile.siteWorks?.find((item) => item.id === workId && item.title && item.imageUrl) : null;
       setRecord(profile && work ? { profile, work } : null);
       setLoading(false);
       setError(null);

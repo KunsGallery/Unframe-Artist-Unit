@@ -18,7 +18,7 @@ export function RandomArtistLink({ locale }: { locale: Locale }) {
       const snapshot = await getDocs(query(collection(db, "public_profiles"), where("published", "==", true), limit(100)));
       const slugs = snapshot.docs.filter((item) => {
         const accountType = item.data().accountType;
-        return !accountType || accountType === "artist";
+        return !item.data().isDemonstration && (!accountType || accountType === "artist");
       }).map((item) => item.id);
       if (!slugs.length) {
         setMessage(tx(locale, "No artist pages are open yet.", "아직 공개된 아티스트 페이지가 없습니다."));

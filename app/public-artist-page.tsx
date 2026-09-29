@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, ExternalLink, FileDown, Globe2, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, FileDown, Globe2, Mail } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, doc, limit, onSnapshot, query, where } from "firebase/firestore";
 import { useLanguage } from "./i18n-provider";
@@ -79,6 +79,15 @@ function WorksSection({ profile, locale }: { profile: PublicProfile; locale: "en
     setModalView(null);
   }
 
+  function moveWithinArchive(direction: -1 | 1) {
+    if (modalView?.mode !== "work") return;
+    const source = modalView.fromArchive ? works : selectedWorks;
+    const currentIndex = source.findIndex((work) => work.id === modalView.work.id);
+    if (currentIndex < 0 || source.length < 2) return;
+    const nextWork = source[(currentIndex + direction + source.length) % source.length];
+    setModalView({ ...modalView, work: nextWork });
+  }
+
   function artworkCard(work: ArtistSiteWork, index: number, fromArchive = false) {
     return <button type="button" className="public-site-work-card" key={work.id} onClick={() => setModalView({ mode: "work", work, fromArchive })} aria-label={tx(locale, `Open ${work.title}`, `${work.title} 상세 보기`)}>
       <span className="public-work-image"><img src={work.imageUrl} alt={work.title} loading="lazy" decoding="async" /></span>
@@ -88,11 +97,11 @@ function WorksSection({ profile, locale }: { profile: PublicProfile; locale: "en
 
   return <section id="works" className="public-artist-works"><div className="public-works-heading"><div><div className="public-section-label">{tx(locale, "Selected works", "작품")}</div><h2 className="public-section-title">{tx(locale, "A selection of works", "작업의 장면들")}</h2><p>{tx(locale, `${works.length} works in this artist's public archive`, `공개 아카이브 ${works.length}점`)}</p></div>{works.length > 6 && <button type="button" className="public-archive-open" onClick={() => setModalView({ mode: "archive" })}>{tx(locale, "View full archive", "전체 작품 보기")} <ArrowUpRight size={15}/></button>}</div>
     {works.length > 1 && media.length > 1 && <div className="public-work-filters" role="group" aria-label={tx(locale, "Filter works by medium", "매체별 작품 필터")}><button type="button" aria-pressed={activeMedium === "all"} className={activeMedium === "all" ? "is-active" : ""} onClick={() => setActiveMedium("all")}>{tx(locale, "All", "전체")}</button>{media.map((medium) => <button type="button" key={medium} aria-pressed={activeMedium === medium} className={activeMedium === medium ? "is-active" : ""} onClick={() => setActiveMedium(medium)}>{medium}</button>)}</div>}
-    {works.length ? <div className="public-site-work-grid">{selectedWorks.map((work, index) => artworkCard(work, index))}</div> : <div className="public-empty-record"><strong>{tx(locale, "No selected works yet.", "아직 공개된 작품이 없습니다.")}</strong><span>{tx(locale, "Works will appear here after the artist adds them to this page.", "아티스트가 공개할 작품을 추가하면 이곳에 표시됩니다.")}</span></div>}
+    {works.length ? <div className="public-site-work-grid">{selectedWorks.map((work) => artworkCard(work, works.indexOf(work)))}</div> : <div className="public-empty-record"><strong>{tx(locale, "No selected works yet.", "아직 공개된 작품이 없습니다.")}</strong><span>{tx(locale, "Works will appear here after the artist adds them to this page.", "아티스트가 공개할 작품을 추가하면 이곳에 표시됩니다.")}</span></div>}
     <p className="public-work-filter-status" role="status">{tx(locale, `${filteredWorks.length} works shown`, `${filteredWorks.length}점 표시 중`)}</p>
-    <dialog ref={dialogRef} className="public-artist-dialog" onClose={closeViewer} aria-label={modalView?.mode === "archive" ? tx(locale, "Complete artwork archive", "전체 작품 아카이브") : tx(locale, "Artwork details", "작품 상세 정보")}>
+    <dialog ref={dialogRef} className="public-artist-dialog" onClose={closeViewer} onKeyDown={(event) => { if (event.key === "ArrowLeft") { event.preventDefault(); moveWithinArchive(-1); } if (event.key === "ArrowRight") { event.preventDefault(); moveWithinArchive(1); } }} aria-label={modalView?.mode === "archive" ? tx(locale, "Complete artwork archive", "전체 작품 아카이브") : tx(locale, "Artwork details", "작품 상세 정보")}>
       <div className="public-dialog-toolbar">{modalView?.mode === "work" && modalView.fromArchive ? <button type="button" className="public-dialog-back" onClick={() => setModalView({ mode: "archive" })}>{tx(locale, "Back to archive", "아카이브로 돌아가기")}</button> : <span className="public-section-label">{modalView?.mode === "archive" ? tx(locale, "Complete archive", "전체 작품") : tx(locale, "Artwork", "작품")}</span>}<button type="button" className="public-dialog-close" onClick={closeViewer} aria-label={tx(locale, "Close", "닫기")}>×</button></div>
-      {modalView?.mode === "archive" ? <><h2 className="public-dialog-title">{tx(locale, "Works, gathered over time.", "시간을 따라 쌓인 작품들.")}</h2><div className="public-site-work-grid public-archive-grid">{works.map((work, index) => artworkCard(work, index, true))}</div></> : modalView?.mode === "work" ? <div className="public-work-detail-view"><div className="public-work-detail-image"><img src={modalView.work.imageUrl} alt={modalView.work.title} /></div><div className="public-work-detail-copy"><span>{[modalView.work.year, modalView.work.medium].filter(Boolean).join(" · ")}</span><h2>{modalView.work.title}</h2><Link className="button button-blue" href={`/works/${encodeURIComponent(`${profile.slug}~${modalView.work.id}`)}`}>{tx(locale, "Work details and inquiry", "작품 상세와 문의하기")} <ArrowUpRight size={15}/></Link></div></div> : null}
+      {modalView?.mode === "archive" ? <><h2 className="public-dialog-title">{tx(locale, "Works, gathered over time.", "시간을 따라 쌓인 작품들.")}</h2><div className="public-site-work-grid public-archive-grid">{works.map((work, index) => artworkCard(work, index, true))}</div></> : modalView?.mode === "work" ? <div className="public-work-detail-view"><div className="public-work-detail-image"><img src={modalView.work.imageUrl} alt={modalView.work.title} /></div><div className="public-work-detail-copy"><span>{[modalView.work.year, modalView.work.medium].filter(Boolean).join(" · ")}</span><h2>{modalView.work.title}</h2><Link className="button button-blue" href={`/works/${encodeURIComponent(`${profile.slug}~${modalView.work.id}`)}`}>{tx(locale, "Work details and inquiry", "작품 상세와 문의하기")} <ArrowUpRight size={15}/></Link><div className="public-work-navigation"><button type="button" onClick={() => moveWithinArchive(-1)} aria-label={tx(locale, "Previous artwork", "이전 작품")}><ArrowLeft size={15}/>{tx(locale, "Previous", "이전 작품")}</button><button type="button" onClick={() => moveWithinArchive(1)} aria-label={tx(locale, "Next artwork", "다음 작품")}>{tx(locale, "Next", "다음 작품")}<ArrowRight size={15}/></button></div></div></div> : null}
     </dialog>
   </section>;
 }
@@ -132,7 +141,7 @@ function UauArtistBridge({ currentSlug, locale }: { currentSlug: string; locale:
   useEffect(() => {
     if (!db) return;
     return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true), limit(8)), (snapshot) => {
-      setArtists(snapshot.docs.map((item) => ({ ...item.data(), slug: item.id } as PublicProfile)).filter((item) => item.slug !== currentSlug && (!item.accountType || item.accountType === "artist")));
+      setArtists(snapshot.docs.map((item) => ({ ...item.data(), slug: item.id } as PublicProfile)).filter((item) => item.slug !== currentSlug && !item.isDemonstration && (!item.accountType || item.accountType === "artist")));
     }, () => setArtists([]));
   }, [currentSlug]);
   if (!artists.length) return null;
@@ -202,7 +211,7 @@ export function PublicArtistPage({ slug }: { slug: string }) {
     setLoading(true);
     return onSnapshot(doc(db, "public_profiles", slug), (snapshot) => {
       const next = snapshot.exists() ? ({ ...snapshot.data(), slug } as PublicProfile) : null;
-      const canView = Boolean(next && (next.published || adminAccess));
+      const canView = Boolean(next && !next.isDemonstration && (next.published || adminAccess));
       setProfile(canView ? next : null);
       setPreviewOnly(Boolean(canView && next && !next.published));
       setError(!canView);
@@ -224,5 +233,5 @@ export function PublicArtistPage({ slug }: { slug: string }) {
   if (loading) return <main className="public-artist-page"><div className="public-page-loading">{tx(locale, "Opening the artist's room…", "아티스트의 공간을 여는 중…")}</div></main>;
   if (error || !profile) return <main className="public-artist-page"><div className="public-page-private"><span>u.a.u</span><h1>{tx(locale, "This room is not open yet.", "아직 열리지 않은 공간입니다.")}</h1><p>{tx(locale, "The artist is still shaping this page. Come back when the door is open.", "아티스트가 아직 페이지를 다듬고 있습니다. 문이 열리면 다시 찾아와 주세요.")}</p><Link className="button button-blue" href="/artists">{tx(locale, "Explore artists", "아티스트 둘러보기")} <ArrowUpRight size={16} /></Link></div></main>;
 
-  return <main className="public-artist-page">{previewOnly && <div className="artist-admin-preview" role="status">{tx(locale, "ADMIN PREVIEW · This profile is not public", "관리자 미리보기 · 아직 공개되지 않은 프로필입니다")} <Link href="/admin/artists">{tx(locale, "Edit profile", "프로필 수정")} <ArrowUpRight size={13}/></Link></div>}{profile.isDemonstration && <div className="artist-demo-banner">{tx(locale, "U.A.U. MASCOT · DEMONSTRATION PROFILE", "U.A.U. 마스코트 · 작가 페이지 예시")}</div>}<SiteHeader profile={profile} locale={locale} /><ArtistSectionIndex profile={profile} locale={locale}/><div className="public-artist-shell" data-site-accent={profile.siteAccent || "blue"}><span id="public-artist-content-start" className="public-artist-top-anchor" aria-hidden="true" />{profile.siteTemplate === "gallery" ? <GalleryTemplate profile={profile} locale={locale} /> : profile.siteTemplate === "archive" ? <ArchiveTemplate profile={profile} locale={locale} /> : <EditorialTemplate profile={profile} locale={locale} />}<UauArtistBridge currentSlug={profile.slug} locale={locale}/><footer className="public-artist-footer"><span>u.a.u / UNFRAME ARTIST UNIT</span><span>{profile.uauArtistId || profile.displayName} · {profile.basedInCity}</span><Link href="/">{tx(locale, "Enter u.a.u", "u.a.u 들어가기")} <ArrowUpRight size={13} /></Link></footer></div><ArtistMobileDock profile={profile} locale={locale}/></main>;
+  return <main className="public-artist-page">{previewOnly && <div className="artist-admin-preview" role="status">{tx(locale, "ADMIN PREVIEW · This profile is not public", "관리자 미리보기 · 아직 공개되지 않은 프로필입니다")} <Link href="/admin/artists">{tx(locale, "Edit profile", "프로필 수정")} <ArrowUpRight size={13}/></Link></div>}<SiteHeader profile={profile} locale={locale} /><ArtistSectionIndex profile={profile} locale={locale}/><div className="public-artist-shell" data-site-accent={profile.siteAccent || "blue"}><span id="public-artist-content-start" className="public-artist-top-anchor" aria-hidden="true" />{profile.siteTemplate === "gallery" ? <GalleryTemplate profile={profile} locale={locale} /> : profile.siteTemplate === "archive" ? <ArchiveTemplate profile={profile} locale={locale} /> : <EditorialTemplate profile={profile} locale={locale} />}<UauArtistBridge currentSlug={profile.slug} locale={locale}/><footer className="public-artist-footer"><span>u.a.u / UNFRAME ARTIST UNIT</span><span>{profile.uauArtistId || profile.displayName} · {profile.basedInCity}</span><Link href="/">{tx(locale, "Enter u.a.u", "u.a.u 들어가기")} <ArrowUpRight size={13} /></Link></footer></div><ArtistMobileDock profile={profile} locale={locale}/></main>;
 }

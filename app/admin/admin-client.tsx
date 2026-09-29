@@ -81,7 +81,7 @@ export default function AdminClient() {
   const stats = useMemo(() => ({
     users: collections.users?.length ?? 0,
     artists: collections.artists?.length ?? 0,
-    artworks: (collections.public_profiles ?? []).filter((profile) => profile.published === true && profile.accountType === "artist").reduce((count, profile) => count + (Array.isArray(profile.siteWorks) ? profile.siteWorks.filter((work) => work && typeof work === "object" && Boolean(work.title) && Boolean(work.imageUrl)).length : 0), 0),
+    artworks: (collections.public_profiles ?? []).filter((profile) => profile.published === true && profile.isDemonstration !== true && profile.accountType === "artist").reduce((count, profile) => count + (Array.isArray(profile.siteWorks) ? profile.siteWorks.filter((work) => work && typeof work === "object" && Boolean(work.title) && Boolean(work.imageUrl)).length : 0), 0),
     projects: collections.exhibitions?.filter((item) => item.published === true).length ?? 0,
     notifications: collections.notifications?.length ?? 0,
     views: (collections.engagement_events ?? []).filter((event) => event.action === "view").length,

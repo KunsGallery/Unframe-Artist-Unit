@@ -12,7 +12,7 @@ import { tx } from "../../i18n-shared";
 import { useUserProfile } from "../../profile";
 import { DashboardSidebar } from "../dashboard-sidebar";
 
-type PublicCandidate = { slug: string; displayName?: string; artistName?: string; practice?: string; basedInCity?: string; accountType?: string; siteWorks?: Array<{ medium?: string }> };
+type PublicCandidate = { slug: string; displayName?: string; artistName?: string; practice?: string; basedInCity?: string; accountType?: string; isDemonstration?: boolean; siteWorks?: Array<{ medium?: string }> };
 
 export default function CuratorialBriefPage() {
   const { locale } = useLanguage();
@@ -22,7 +22,7 @@ export default function CuratorialBriefPage() {
   const [keywords, setKeywords] = useState("");
   const [brief, setBrief] = useState("");
   const [sent, setSent] = useState<string | null>(null);
-  useEffect(() => { if (!db) return; return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => setLiveProfiles(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicCandidate)).filter((item) => !item.accountType || item.accountType === "artist"))); }, []);
+  useEffect(() => { if (!db) return; return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => setLiveProfiles(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicCandidate)).filter((item) => !item.isDemonstration && (!item.accountType || item.accountType === "artist")))); }, []);
   const roleAllowed = profile?.accountType === "curator" || profile?.accountType === "gallery" || profile?.accountType === "director" || profile?.accountType === "institution";
   const approved = profile?.accessStatus === "approved";
   const candidates = useMemo(() => {
