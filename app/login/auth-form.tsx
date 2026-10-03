@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
-import { createUserWithEmailAndPassword, getAdditionalUserInfo, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAdditionalUserInfo, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { firebaseConfigured, auth, db } from "../firebase-client";
 import { tx, type Locale } from "../i18n-shared";
@@ -15,6 +15,7 @@ export function AuthForm({ locale }: { locale: Locale }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function routeAfterAuth(uid: string, isNewUser = false) {
@@ -58,11 +59,22 @@ export function AuthForm({ locale }: { locale: Locale }) {
     }
   }
 
+  async function resetPassword() {
+    if (!auth || pending) return;
+    if (!email.trim()) { setError(tx(locale, "Enter your email address first.", "먼저 이메일 주소를 입력해 주세요.")); return; }
+    setPending(true); setError(null); setNotice("");
+    try { await sendPasswordResetEmail(auth, email.trim()); setNotice(tx(locale, "If an account exists, a reset email will arrive. Check your inbox and spam folder.", "해당 이메일로 가입된 계정이 있으면 재설정 메일이 발송됩니다. 받은 편지함과 스팸함을 확인해 주세요.")); }
+    catch { setError(tx(locale, "Unable to send a reset email. Check the address and try again later.", "재설정 메일을 보내지 못했습니다. 주소를 확인하고 잠시 후 다시 시도해 주세요.")); }
+    finally { setPending(false); }
+  }
+
   return <form className="auth-form" onSubmit={submit}>
     <div className="auth-form-heading"><span>{mode === "signin" ? tx(locale, "RETURNING MEMBER", "기존 멤버") : tx(locale, "FIRST ENTRY", "첫 입장")}</span><button type="button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}>{mode === "signin" ? tx(locale, "Create account", "계정 만들기") : tx(locale, "I already have an account", "이미 계정이 있습니다")}</button></div>
     <label>{tx(locale, "Email address", "이메일 주소")}<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" required /></label>
     <label>{tx(locale, "Password", "비밀번호")}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={6} required /></label>
     <button className="button button-blue" type="submit" disabled={pending}>{pending ? tx(locale, "Opening…", "여는 중…") : mode === "signin" ? tx(locale, "Sign in", "로그인") : tx(locale, "Create account", "계정 만들기")} <ArrowRight size={16} /></button>
+    {mode === "signin" && <button type="button" className="text-link" disabled={pending} onClick={resetPassword}>{tx(locale, "Forgot password?", "비밀번호를 잊으셨나요?")}</button>}
+    {notice && <p role="status">{notice}</p>}
     <div className="auth-divider"><span>{tx(locale, "or", "또는")}</span></div>
     <SocialLoginButtons locale={locale} />
     {error && <p className="auth-error" role="alert">{error}</p>}

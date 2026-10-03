@@ -121,6 +121,9 @@ test("invitation viewing rooms are readable by link but not listable, and only t
     updatedAt: new Date(),
   };
   await assertSucceeds(setDoc(roomRef, room));
+  await assertSucceeds(getDocs(query(collection(owner, "private_viewing_rooms"), where("ownerUid", "==", "owner"))));
+  const superAdmin = testEnv.authenticatedContext("super").firestore();
+  await assertSucceeds(getDocs(collection(superAdmin, "private_viewing_rooms")));
   await assertSucceeds(getDoc(doc(guest, "private_viewing_rooms", "high-entropy-invitation-token")));
   await assertFails(getDocs(query(collection(stranger, "private_viewing_rooms"), where("ownerUid", "==", "owner"))));
   await assertFails(updateDoc(doc(stranger, "private_viewing_rooms", "high-entropy-invitation-token"), { title: "Changed" }));

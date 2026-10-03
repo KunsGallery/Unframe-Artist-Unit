@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { firestoreValues } from "../../firestore-values";
 import { collection, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { ArrowLeft, ArrowUpRight, Eye, Plus, Save, ShieldCheck, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +29,7 @@ const defaultForm = (): FormState => ({
   slug: "", ownerUid: "", displayName: "", artistName: "", accountType: "artist", practice: "", basedInCity: "", country: "",
   bio: "", artistStatement: "", artistCv: "", websiteUrl: "", profileImageUrl: "", siteCoverImageUrl: "", artistAudioUrl: "",
   siteTemplate: "editorial", siteSections: ["works", "about", "cv"], siteAccent: "blue", showCV: true, showAbout: true, showExhibitions: true,
-  published: false, verificationStatus: undefined, siteWorks: [], siteExhibitions: [], collaborationOpen: false, contactPurposes: [],
+  published: false, verificationStatus: "pending", siteWorks: [], siteExhibitions: [], collaborationOpen: false, contactPurposes: [],
 });
 
 const sectionOptions: Array<{ id: ArtistSiteSection; en: string; ko: string }> = [
@@ -102,7 +103,7 @@ export default function AdminArtistsPage() {
         siteWorks: (form.siteWorks || []).filter((work) => work.title.trim()), siteExhibitions: form.siteExhibitions || [],
         updatedAt: serverTimestamp(), ...(isNew ? { createdAt: serverTimestamp(), createdByAdmin: user.uid } : {}),
       };
-      await setDoc(reference, payload, { merge: true });
+      await setDoc(reference, firestoreValues(payload), { merge: true });
       setEditingId(slug); setForm((current) => ({ ...current, slug, published: publish }));
       setMessage(publish ? tx(locale, "Profile published. Open the preview link to review the public page.", "프로필을 공개했습니다. 미리보기 링크에서 공개 화면을 확인하세요.") : tx(locale, "Draft saved. Only administrators can preview it.", "초안을 저장했습니다. 관리자만 미리볼 수 있습니다."));
     } catch (saveError) {

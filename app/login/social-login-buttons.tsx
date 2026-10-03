@@ -16,9 +16,6 @@ import { tx, type Locale } from "../i18n-shared";
 
 const providers = [
   { id: "google", name: "Google" },
-  { id: "apple", name: "Apple" },
-  { id: "naver", name: "Naver" },
-  { id: "facebook", name: "Facebook" },
 ] as const;
 
 export function SocialLoginButtons({ locale }: { locale: Locale }) {

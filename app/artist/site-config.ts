@@ -2,6 +2,8 @@ import type { ArtistSiteAccent, ArtistSiteSection, PublicProfile } from "../prof
 
 // Lead with the work, then the artist's own words, before formal records.
 export const defaultArtistSiteSections: ArtistSiteSection[] = ["works", "about", "exhibitions", "cv", "studioArchive", "inspiration"];
+export const commonArtistSiteSections: ArtistSiteSection[] = ["works", "about", "cv"];
+export const optionalArtistSiteSections: ArtistSiteSection[] = ["exhibitions", "studioArchive", "inspiration"];
 
 export const artistSiteSectionLabels: Record<ArtistSiteSection, { en: string; ko: string }> = {
   works: { en: "Artworks", ko: "작품" },
@@ -23,9 +25,16 @@ export function normalizeArtistSiteSections(value: unknown): ArtistSiteSection[]
   const sections = value.filter((section): section is ArtistSiteSection =>
     section === "works" || section === "exhibitions" || section === "cv" || section === "about" || section === "studioArchive" || section === "inspiration",
   );
-  return sections.length ? Array.from(new Set(sections)) : [...defaultArtistSiteSections];
+  return Array.from(new Set([...sections, ...commonArtistSiteSections]));
 }
 
-export function getArtistSiteSections(profile: Pick<PublicProfile, "siteSections">) {
-  return normalizeArtistSiteSections(profile.siteSections);
+export function getArtistSiteSections(profile: PublicProfile) {
+  return normalizeArtistSiteSections(profile.siteSections).filter((section) => {
+    if (section === "exhibitions") return Boolean(profile.siteExhibitions?.some((entry) => (!entry.category || entry.category === "solo" || entry.category === "group") && entry.eventDate && entry.eventDate >= new Date().toISOString().slice(0, 10)));
+    if (section === "cv") return Boolean(profile.siteExhibitions?.length || profile.artistCv?.trim());
+    if (section === "studioArchive") return Boolean(profile.siteArchive?.length);
+    if (section === "inspiration") return Boolean(profile.siteInspirations?.length);
+    if (section === "about") return Boolean(profile.bio?.trim() || profile.artistStatement?.trim());
+    return true;
+  });
 }

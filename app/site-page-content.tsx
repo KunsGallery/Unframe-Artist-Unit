@@ -33,7 +33,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     primaryHref: "/connections",
     secondaryLabel: copy("Meet the artists", "아티스트 만나기"),
     secondaryHref: "/artists",
-    sectionOrder: ["radar", "connection", "recap", "selection", "artists", "works", "journal", "faq", "join"],
+    sectionOrder: ["manifesto", "intro", "spatial", "artists", "works", "faq", "join"],
     hiddenSections: [],
   },
   artists: {
@@ -42,7 +42,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     emphasis: copy("own rhythm.", "리듬으로."),
     description: copy("Independent practices connected through UNFRAME, each with their own pace, place, and way of working.", "UNFRAME을 통해 연결된 독립적인 실천들. 각자의 속도와 장소, 작업 방식으로 움직입니다."),
     primaryLabel: copy("Explore artists", "아티스트 둘러보기"),
-    primaryHref: "/artists",
+    primaryHref: "#directory",
     secondaryLabel: copy("Follow connections", "연결 따라가기"),
     secondaryHref: "/connections",
     sectionOrder: ["directory"],
@@ -66,7 +66,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     emphasis: copy("spend time with.", "머물러 볼 작품."),
     description: copy("Images, objects, moving images, and the stories that gather around them. Discover by attention, not only by outcome.", "이미지와 오브제, 영상, 그리고 그 주변에 모이는 이야기들. 결과만이 아니라 주의 깊게 바라보며 발견하세요."),
     primaryLabel: copy("Discover all works", "모든 작품 보기"),
-    primaryHref: "/works",
+    primaryHref: "#archive",
     secondaryLabel: copy("Meet the artists", "아티스트 만나기"),
     secondaryHref: "/artists",
     sectionOrder: ["filters", "archive"],
@@ -90,7 +90,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     emphasis: copy("becomes a project.", "프로젝트가 되는 곳."),
     description: copy("Projects hold the in-between: why people met, what they are trying, and what remains unresolved.", "프로젝트는 그 사이를 담습니다. 사람들이 만난 이유, 시도하는 것, 아직 풀리지 않은 것."),
     primaryLabel: copy("Explore projects", "프로젝트 둘러보기"),
-    primaryHref: "/projects",
+    primaryHref: "#list",
     secondaryLabel: copy("See connections", "연결 아카이브 보기"),
     secondaryHref: "/connections",
     sectionOrder: ["list", "manifesto"],
@@ -179,8 +179,8 @@ export function normalizeSitePageContent(data: DocumentData | undefined, pageId:
     primaryHref: typeof source.primaryHref === "string" ? source.primaryHref : fallback.primaryHref,
     secondaryLabel: localize("secondaryLabel"),
     secondaryHref: typeof source.secondaryHref === "string" ? source.secondaryHref : fallback.secondaryHref,
-    sectionOrder: Array.isArray(source.sectionOrder) && source.sectionOrder.every((item) => typeof item === "string") ? source.sectionOrder as string[] : fallback.sectionOrder,
-    hiddenSections: Array.isArray(source.hiddenSections) && source.hiddenSections.every((item) => typeof item === "string") ? source.hiddenSections as string[] : fallback.hiddenSections,
+    sectionOrder: Array.isArray(source.sectionOrder) ? Array.from(new Set([...source.sectionOrder.filter((item): item is string => typeof item === "string" && fallback.sectionOrder.includes(item)), ...fallback.sectionOrder])) : fallback.sectionOrder,
+    hiddenSections: Array.isArray(source.hiddenSections) ? source.hiddenSections.filter((item): item is string => typeof item === "string" && fallback.sectionOrder.includes(item)) : fallback.hiddenSections,
   };
 }
 

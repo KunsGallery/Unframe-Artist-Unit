@@ -98,7 +98,6 @@ export function Nav() {
       <MegaColumn eyebrow={tx(locale, "Signals & context", "신호와 맥락")} title={tx(locale, "Stay with the thread.", "실마리를 놓치지 마세요.")}>
         <MegaLink href="/radar" label={tx(locale, "Radar", "Radar")} detail={tx(locale, "Open calls, salons, and next moves", "공모, 살롱, 다음 움직임")} />
         <MegaLink href="/connections" label={tx(locale, "Connections", "연결")} detail={tx(locale, "See what gathers around a work", "작품을 중심으로 모이는 관계")} />
-        <MegaLink href="/recap" label={tx(locale, "Annual recap", "연간 리캡")} detail={tx(locale, "A record of what moved us", "우리를 움직인 장면의 기록")} />
       </MegaColumn>
       <aside className="nav-mega-aside">
         <span>{tx(locale, "01 / archive", "01 / 아카이브")}</span>
@@ -133,7 +132,7 @@ export function Nav() {
 
 export function Footer() {
   const { locale } = useLanguage();
-  return <footer className="site-footer"><div><p>{tx(locale, <>A relationship that starts in an exhibition<br />and keeps going after.</>, <>전시에서 시작된 관계가<br />그 이후에도 이어집니다.</>)}</p></div><div className="footer-links"><div><span>{tx(locale, "Explore", "둘러보기")}</span><Link href="/artists">{tx(locale, "Artists", "아티스트")}</Link><Link href="/works">{tx(locale, "Works", "작품")}</Link><Link href="/connections">{tx(locale, "Connections", "연결")}</Link><Link href="/recap">Connected</Link></div><div><span>{tx(locale, "About", "소개")}</span><Link href="/about">{tx(locale, "Philosophy", "철학")}</Link><Link href="/projects">{tx(locale, "Projects", "프로젝트")}</Link><Link href="/join">{tx(locale, "Join", "함께하기")}</Link></div><div><span>{tx(locale, "Stay close", "가까이 머물기")}</span><a href="mailto:hello@uau.unframe.kr">hello@uau.unframe.kr</a><Link href="/radar">U.A.U Radar ↗</Link></div></div><small>© 2026 u.a.u / UNFRAME ARTIST UNIT</small></footer>;
+  return <footer className="site-footer"><div><p>{tx(locale, <>A relationship that starts in an exhibition<br />and keeps going after.</>, <>전시에서 시작된 관계가<br />그 이후에도 이어집니다.</>)}</p></div><div className="footer-links"><div><span>{tx(locale, "Explore", "둘러보기")}</span><Link href="/artists">{tx(locale, "Artists", "아티스트")}</Link><Link href="/works">{tx(locale, "Works", "작품")}</Link><Link href="/connections">{tx(locale, "Connections", "연결")}</Link></div><div><span>{tx(locale, "About", "소개")}</span><Link href="/about">{tx(locale, "Philosophy", "철학")}</Link><Link href="/projects">{tx(locale, "Projects", "프로젝트")}</Link><Link href="/join">{tx(locale, "Join", "함께하기")}</Link></div><div><span>{tx(locale, "Stay close", "가까이 머물기")}</span><a href="mailto:hello@uau.unframe.kr">hello@uau.unframe.kr</a><Link href="/radar">U.A.U Radar ↗</Link></div></div><small>© 2026 u.a.u / UNFRAME ARTIST UNIT</small></footer>;
 }
 
 export function SectionHeading({ title, action, href = "#" }: { title: string; action?: string; href?: string }) {
@@ -152,7 +151,7 @@ export function PageIntro({ className = "", split = false, bare = false, showAct
     "data-uau-edit-page-id": pageId,
   });
   const rootClassName = [bare ? "" : "page-intro", split ? "split-intro" : "", className].filter(Boolean).join(" ");
-  return <div className={rootClassName}><div><MetaLine><span {...editable("eyebrow")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.eyebrow)) }} /></MetaLine><h1><span className="site-copy-preline" {...editable("title")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.title)) }} /><br /><em><span className="site-copy-preline" {...editable("emphasis")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.emphasis)) }} /></em></h1></div><p {...editable("description")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.description)) }} />{showActions && <div className="page-intro-actions"><Link className="text-link" href={content.primaryHref}>{<span {...editable("primaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.primaryLabel)) }} />} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{<span {...editable("secondaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.secondaryLabel)) }} />} <ArrowUpRight size={14} /></Link></div>}</div>;
+  return <div className={rootClassName}><div><MetaLine><span {...editable("eyebrow")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.eyebrow)) }} /></MetaLine><h1><span className="site-copy-preline" {...editable("title")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.title)) }} /><br /><em><span className="site-copy-preline" {...editable("emphasis")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.emphasis)) }} /></em></h1></div><p {...editable("description")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.description)) }} />{showActions && <div className="page-intro-actions"><Link className="text-link" href={pageId === "artists" && content.primaryHref === "/artists" ? "#directory" : pageId === "works" && content.primaryHref === "/works" ? "#archive" : pageId === "projects" && content.primaryHref === "/projects" ? "#list" : content.primaryHref}>{<span {...editable("primaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.primaryLabel)) }} />} <ArrowUpRight size={14} /></Link><Link className="text-link" href={content.secondaryHref}>{<span {...editable("secondaryLabel")} dangerouslySetInnerHTML={{ __html: sanitizeRichText(localize(content.secondaryLabel)) }} />} <ArrowUpRight size={14} /></Link></div>}</div>;
 }
 
 export function PageSection({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
@@ -164,7 +163,7 @@ export function PageSection({ sectionId, children }: { sectionId: string; childr
       window.parent.postMessage({ type: "uau-editor-section", pageId, sectionId }, window.location.origin);
     }
   }
-  return <div className="page-editable-section" data-page-section={sectionId} style={{ order: order < 0 ? 999 : order }} onMouseEnter={announceFocus} onFocusCapture={announceFocus}>{children}</div>;
+  return <div className="page-editable-section" id={sectionId} data-page-section={sectionId} style={{ order: order < 0 ? 999 : order }} onMouseEnter={announceFocus} onFocusCapture={announceFocus}>{children}</div>;
 }
 
 export function BookmarkButton({ label = "Save", targetType, targetId }: { label?: string; targetType?: "artist" | "work" | "project" | "event" | "opportunity" | "thread"; targetId?: string }) {
@@ -180,11 +179,11 @@ export function BookmarkButton({ label = "Save", targetType, targetId }: { label
   return <button className={saved ? "save-button saved" : "save-button"} onClick={() => void toggleSaved()} aria-pressed={saved} aria-label={saved ? tx(locale, "Remove from saved", "저장 목록에서 제거") : saveText}><Bookmark size={15} fill={saved ? "currentColor" : "none"} />{saved ? tx(locale, "Saved", "저장됨") : label === "" ? "" : saveText}</button>;
 }
 
-export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy", src }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy"; src?: string }) {
+export function ArtImage({ className = "", position = "center", label = "Artwork image", loading = "lazy", src, thumbnailSrc, displayWidth, thumbnailWidth }: { className?: string; position?: string; label?: string; loading?: "eager" | "lazy"; src?: string; thumbnailSrc?: string; displayWidth?: number; thumbnailWidth?: number }) {
   const { settings } = useSiteSettings();
   const imageKey = "art-image:" + label.toLowerCase().replace(/[^a-z0-9가-힣]+/gi, "-").replace(/^-|-$/g, "");
   const resolvedSrc = settings.imageOverrides[imageKey] || src || "/assets/uau-hero.webp";
-  return <div className={`art-image ${className}`}><img src={resolvedSrc} alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} data-uau-image-key={imageKey} /><span className="art-image-glow" /></div>;
+  return <div className={`art-image ${className}`}><img src={resolvedSrc} srcSet={!settings.imageOverrides[imageKey] && thumbnailSrc && displayWidth && thumbnailWidth && displayWidth !== thumbnailWidth ? `${thumbnailSrc} ${thumbnailWidth}w, ${resolvedSrc} ${displayWidth}w` : undefined} sizes="(max-width: 600px) 100vw, 50vw" alt={label} loading={loading} decoding="async" style={{ objectPosition: position }} data-uau-image-key={imageKey} /><span className="art-image-glow" /></div>;
 }
 
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }

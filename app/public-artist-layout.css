@@ -1,4 +1,71 @@
 /* A U.A.U artist page reads as a digital monograph: name, image, voice, record. */
+.artist-gallery-opening, .artist-journal-opening, .artist-archive-opening { padding-block: 32px 42px; border-bottom: 1px solid var(--line); }
+.artist-gallery-feature, .artist-journal-cover { margin: 0; min-width: 0; }
+.artist-gallery-feature > img { display: block; width: 100%; max-height: 620px; object-fit: contain; background: #eeece6; }
+.artist-gallery-feature figcaption, .artist-journal-cover figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.artist-gallery-feature figcaption a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
+.artist-gallery-identity, .artist-archive-opening { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .85fr); align-items: center; gap: 40px; }
+.artist-gallery-identity { padding-top: 32px; }
+.public-template .public-artist-identity { min-width: 0; gap: 20px; }
+.public-template .public-artist-mark { flex-shrink: 0; width: 92px; height: 92px; border-radius: 0; }
+.public-template .public-artist-identity h1 { font-size: clamp(38px, 5vw, 66px); line-height: 1.05; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.public-template .public-artist-identity > div:last-child { min-width: 0; }
+.public-template .public-artist-id { flex-wrap: wrap; gap: 8px; }
+.artist-opening-note { max-width: 54ch; margin: 0 0 16px; font-size: 16px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
+.artist-journal-opening { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(32px, 6vw, 80px); align-items: center; padding-block: 48px; }
+.artist-journal-opening .public-artist-identity { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 24px; margin-block: 20px 24px; }
+.artist-journal-opening .public-artist-mark { width: 136px; height: 136px; }
+.artist-journal-cover img { display: block; width: 100%; max-height: 640px; object-fit: contain; }
+.public-template-gallery .public-site-work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; }
+.public-template-editorial .public-site-work-grid { grid-template-columns: 1.2fr 1fr; align-items: start; gap: 40px; }
+.public-template-editorial .public-site-work-card:nth-child(even) { margin-top: 60px; }
+.public-template-editorial .public-work-image { aspect-ratio: auto; min-height: 0; }
+.public-template-editorial .public-work-image img { height: auto; max-height: 600px; object-fit: contain; }
+.public-template-editorial .public-about { margin-inline: calc(-1 * clamp(18px, 4vw, 64px)); padding: clamp(28px, 5vw, 64px); background: #121212; color: #f6f4ee; border: 0; }
+.public-template-editorial .public-about .public-section-label, .public-template-editorial .public-about .public-artist-bio-copy { color: #c5c3be; }
+.public-template-editorial .public-about .public-artist-statement-copy, .public-template-editorial .public-about a { color: #f6f4ee; }
+.public-template-archive .public-site-work-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 24px; }
+.public-template-archive .public-artist-works { padding-top: 32px; }
+.public-template-archive .public-site-work-copy strong { font-size: 21px; }
+.public-template-archive .public-about .public-artist-statement-copy { font-family: var(--sans); font-size: 18px; line-height: 1.8; }
+.artist-year-filter { display: flex; align-items: center; gap: 12px; margin: 12px 0 24px; font-size: 14px; }
+.artist-year-filter select { min-height: 44px; padding: 8px 34px 8px 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; }
+.public-template .public-site-work-card .public-work-image img { object-fit: contain; mix-blend-mode: normal; }
+.public-template .public-work-image { background: #eeece6; }
+.artist-journal-opening { grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); align-items: start; }
+.artist-journal-lead { margin: 12px 0 28px; font-family: var(--serif); font-size: clamp(32px, 4.2vw, 56px); line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.artist-journal-opening .public-artist-identity { flex-direction: column; }
+.artist-journal-opening .public-artist-identity h1 { font-size: clamp(28px, 3vw, 40px); }
+.public-template-editorial .artist-journal-story { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+.artist-journal-story .public-section-title { margin-bottom: 24px; }
+.artist-journal-story-image { display: block; width: 100%; max-height: 480px; object-fit: contain; }
+.public-template-archive .public-works-heading .public-section-title { font-size: 28px; }
+.public-template-archive .public-works-heading { margin-bottom: 18px; }
+.public-template-archive .public-section-label { margin-bottom: 6px; }
+.public-template-archive .public-artist-works { padding-bottom: 36px; }
+.public-template-archive .public-site-work-copy strong { font-size: 19px; }
+.public-template-archive .artist-archive-records { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; }
+.artist-archive-records .public-artist-section { grid-template-columns: minmax(0, 1fr); gap: 20px; border-bottom: 0; }
+.artist-archive-records .public-cv-actions img { display: none; }
+.artist-archive-records .public-cv-content { grid-template-columns: minmax(0, 1fr); }
+.artist-archive-records .public-section-title { font-size: 28px; }
+.artist-archive-records .artist-cv-public > h2 { display: none; }
+.artist-cv-first-record { white-space: pre-line; }
+.public-template :is(a, button, select):focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+@media (max-width: 860px) {
+  .artist-gallery-identity, .artist-archive-opening, .artist-journal-opening { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .artist-journal-opening .public-artist-identity { flex-direction: row; align-items: center; }
+  .public-template-editorial .artist-journal-story, .public-template-archive .artist-archive-records { grid-template-columns: minmax(0, 1fr); }
+  .public-template-archive .public-site-work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .artist-gallery-opening, .artist-journal-opening, .artist-archive-opening { padding-block: 24px; }
+  .public-template .public-artist-mark { width: 64px; height: 64px; }
+  .public-template .public-artist-identity h1 { font-size: 38px; }
+  .public-template-gallery .public-site-work-grid, .public-template-editorial .public-site-work-grid, .public-template-archive .public-site-work-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .public-template-editorial .public-site-work-card:nth-child(even) { margin-top: 0; }
+  .public-template-editorial .public-about { margin-inline: -16px; padding-inline: 20px; }
+}
 .public-artist-index { display: none !important; }
 .public-artist-shell { width: min(1280px, calc(100% - clamp(36px, 8vw, 128px))); }
 .public-template { padding-top: 0; }
@@ -60,7 +127,7 @@
   .public-artist-shell { width: min(calc(100% - 40px), 700px); }
   .public-site-header { position: sticky; top: 0; }
   .public-site-header nav { overflow-x: auto; justify-content: flex-start; gap: 18px; padding-bottom: 10px; }
-  .public-personal-hero { min-height: 0; gap: 26px; padding: 30px 0 42px; }
+  .public-personal-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 26px; padding: 30px 0 42px; }
   .public-personal-identity h1 { max-width: none; font-size: clamp(46px, 10vw, 70px); }
   .public-personal-bio { margin-top: 16px; font-size: 15px; }
   .public-editorial-hero { gap: 26px; padding: 34px 0 42px; }

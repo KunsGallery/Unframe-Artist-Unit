@@ -1,5 +1,6 @@
 "use client";
 
+import { firestoreValues } from "./firestore-values";
 import { useEffect, useState } from "react";
 import { addDoc, collection, doc, onSnapshot, query, runTransaction, serverTimestamp, setDoc, where, type Timestamp } from "firebase/firestore";
 import { db } from "./firebase-client";
@@ -21,6 +22,10 @@ export type ArtistSiteWork = {
   medium?: string;
   imageUrl?: string;
   dimensions?: string;
+  displayImageUrl?: string;
+  thumbnailImageUrl?: string;
+  displayImageWidth?: number;
+  thumbnailImageWidth?: number;
 };
 
 export type ArtistSiteExhibition = {
@@ -240,14 +245,14 @@ export function useMembership(uid?: string | null) {
 
 export async function saveUserProfile(uid: string, values: Partial<Omit<UauUserProfile, "uid">>) {
   if (!db) throw new Error("Firebase is not configured.");
-  await setDoc(doc(db, "users", uid), { ...values, updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(doc(db, "users", uid), firestoreValues({ ...values, updatedAt: serverTimestamp() }), { merge: true });
 }
 
 export async function savePublicProfile(uid: string, slug: string, values: Omit<PublicProfile, "slug" | "ownerUid">) {
   if (!db) throw new Error("Firebase is not configured.");
   await setDoc(
     doc(db, "public_profiles", slug),
-    { ...values, slug, ownerUid: uid, updatedAt: serverTimestamp() },
+    firestoreValues({ ...values, slug, ownerUid: uid, updatedAt: serverTimestamp() }),
     { merge: true },
   );
 }
@@ -264,8 +269,8 @@ export async function saveProfileAndPublicSite(uid: string, slug: string, profil
     const currentPublic = await transaction.get(publicRef);
     const previousPublic = previousRef ? await transaction.get(previousRef) : null;
     if (currentPublic.exists() && currentPublic.data().ownerUid !== uid) throw new Error("This page address is already in use.");
-    transaction.set(userRef, { ...profileValues, publicSlug: slug, updatedAt: serverTimestamp() }, { merge: true });
-    transaction.set(publicRef, { ...publicValues, slug, ownerUid: uid, updatedAt: serverTimestamp() }, { merge: true });
+    transaction.set(userRef, firestoreValues({ ...profileValues, publicSlug: slug, updatedAt: serverTimestamp() }), { merge: true });
+    transaction.set(publicRef, firestoreValues({ ...publicValues, slug, ownerUid: uid, updatedAt: serverTimestamp() }), { merge: true });
     if (previousRef && previousPublic?.exists() && previousPublic.data().ownerUid === uid) transaction.delete(previousRef);
   });
 }

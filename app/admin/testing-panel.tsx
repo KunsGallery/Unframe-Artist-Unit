@@ -79,6 +79,7 @@ export default function AdminTestingPanel() {
 
   async function applyTestState(action: TestAction) {
     if (!db || !user) return;
+    if (!window.confirm(tx(locale, "This changes your real signed-in profile, not a sandbox account. Continue?", "현재 로그인한 실제 계정의 프로필이 변경됩니다. 테스트용 별도 계정이 아닙니다. 계속할까요?"))) return;
     setBusy(action);
     setMessage(null);
     setError(null);
@@ -158,7 +159,7 @@ export default function AdminTestingPanel() {
   if (allowed !== true) return null;
 
   return (
-    <section className="admin-testing-panel" aria-labelledby="admin-testing-title">
+    <details className="admin-testing-panel"><summary>{tx(locale, "Advanced account tests · changes your real profile", "고급 계정 테스트 · 실제 프로필 변경")}</summary>
       <div className="admin-testing-wrap">
         <div className="admin-testing-heading">
           <div>
@@ -239,6 +240,6 @@ export default function AdminTestingPanel() {
           )}
         </div>
       </div>
-    </section>
+    </details>
   );
 }

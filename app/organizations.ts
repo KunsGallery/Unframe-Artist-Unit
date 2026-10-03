@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
 import { db } from "./firebase-client";
+import { usePublicArchive } from "./public-archive";
 import type { PublicProfile } from "./profile";
 
 export type GalleryRecord = {
@@ -85,16 +86,4 @@ export function usePublishedExhibitions() {
   return { exhibitions, error, loading };
 }
 
-export function usePublishedArtists() {
-  const [artists, setArtists] = useState<PublicProfile[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    if (!db) { setLoading(false); setError("Artist data is unavailable."); return; }
-    return onSnapshot(query(collection(db, "public_profiles"), where("published", "==", true)), (snapshot) => {
-      setArtists(snapshot.docs.map((item) => ({ slug: item.id, ...item.data() } as PublicProfile)).filter((item) => !item.isDemonstration && (!item.accountType || item.accountType === "artist")));
-      setLoading(false); setError(null);
-    }, (snapshotError) => { setError(snapshotError.message); setLoading(false); });
-  }, []);
-  return { artists, error, loading };
-}
+export function usePublishedArtists() { return usePublicArchive(); }

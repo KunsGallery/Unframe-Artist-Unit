@@ -1605,6 +1605,33 @@ html:lang(ko) .page-intro h1 { line-height: 1.1; letter-spacing: -.045em; word-b
 
 .admin-add-artist-action { flex: 0 0 auto; margin-bottom: 32px; }
 .admin-add-artist-action:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.home-sections { display: flex; flex-direction: column; }
+.admin-page .admin-top h1 { font-size: clamp(32px, 4vw, 56px); }
+.admin-page .admin-top { padding-block: 24px; margin-bottom: 24px; }
+.inner-page > .page-intro h1 { font-size: clamp(40px, 5vw, 76px); }
+.inner-page > .page-intro { padding-block: 30px; margin-bottom: 28px; }
+.admin-page .admin-access-heading h1, .admin-page .admin-intro h1, .admin-page .page-intro h1 { font-size: clamp(32px, 4vw, 56px); }
+.admin-page .admin-access-heading, .admin-page .admin-intro, .admin-page .page-intro { padding-block: 32px; margin-bottom: 24px; }
+.admin-workspace-nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px clamp(16px, 4vw, 60px); border-bottom: 1px solid var(--line); background: #f4f0e8; }
+.admin-workspace-nav a { display: flex; align-items: center; padding: 10px 14px; min-height: 44px; font-size: 14px; border: 1px solid transparent; }
+.admin-workspace-nav a[aria-current="page"] { border-color: var(--ink); color: #1438ee; }
+.r2-uploader-remove { min-width: 44px; min-height: 44px; }
+.page-section { min-width: 0; }
+.profile-preview-dialog { width: min(1280px, 96vw); height: 90dvh; max-width: none; max-height: 94dvh; padding: 0; border: 1px solid var(--line); background: #f4f0e8; overflow-y: auto; }
+.profile-preview-dialog::backdrop { background: #171817b3; }
+.profile-preview-toolbar { position: sticky; top: 0; z-index: 100; background: #f4f0e8; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
+.profile-preview-dialog .artist-admin-preview { display: none; }
+.profile-preview-dialog .public-artist-mobile-dock { position: sticky; bottom: 0; }
+.profile-jump-nav { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 16px 0; border-block: 1px solid var(--line); margin-bottom: 24px; }
+.profile-jump-nav a { min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; }
+.profile-main { padding-bottom: 110px; }
+.profile-main #identity, .profile-main #artist-cv, .profile-main #artist-works, .profile-main #builder-title { scroll-margin-top: 110px; }
+.profile-save-dock { position: fixed; z-index: 80; bottom: 0; right: 0; left: 0; display: flex; align-items: center; justify-content: flex-end; gap: 20px; padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); background: var(--paper, #f4f0e8); border-top: 1px solid var(--line); box-shadow: 0 -4px 20px #1718170a; }
+.profile-save-dock span { font-size: 14px; max-width: 60ch; }
+.profile-save-dock button { flex-shrink: 0; }
+.profile-main .dashboard-top h1 { font-size: clamp(32px, 4vw, 54px); }
+.dashboard-page .profile-builder-heading h2 { font-size: clamp(28px, 3vw, 40px); }
+@media (max-width: 600px) { .profile-save-dock { padding-inline: 14px; gap: 12px; } .profile-save-dock span { font-size: 12px; } }
 @media (max-width: 500px) {
   .admin-add-artist-action { margin: 0 0 18px; }
 }

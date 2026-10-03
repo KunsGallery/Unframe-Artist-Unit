@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserProfile } from "../profile";
 import Link from "next/link";
 import { ArrowUpRight, Bell, BookOpen, Bookmark, Boxes, FolderKanban, LogOut, Mail, Plus, ShieldCheck, UserRound, WandSparkles, Sparkles, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -17,6 +18,9 @@ const adminRoles = ["super_admin", "editor", "curator", "support", "finance", "m
 export function DashboardSidebar({ active }: { active: DashboardSection }) {
   const { locale } = useLanguage();
   const { user, logout } = useAuth();
+  const { profile } = useUserProfile(user?.uid);
+  const isArtist = profile?.accountType === "artist";
+  const canBriefRole = ["curator", "gallery", "director", "institution"].includes(profile?.accountType || "");
   const { unreadCount } = useNotifications(user?.uid);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
@@ -51,21 +55,21 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
           <Link className={active === "profile" ? "active" : ""} href="/dashboard/profile">
             <UserRound size={16} /> {tx(locale, "Profile", "프로필")}
           </Link>
-          <Link className={active === "progress" ? "active" : ""} href="/dashboard/progress"><Sparkles size={16} /> {tx(locale, "Growth & unlocks", "성장과 해금")}</Link>
+          {isArtist && <Link className={active === "progress" ? "active" : ""} href="/dashboard/progress"><Sparkles size={16} /> {tx(locale, "Growth & unlocks", "성장과 해금")}</Link>}
           <Link className={active === "notifications" ? "active" : ""} href="/dashboard/notifications">
             <Bell size={16} /> {tx(locale, "Notifications", "알림")} {unreadCount > 0 && <b>{unreadCount}</b>}
           </Link>
-          <Link className={active === "inquiries" ? "active" : ""} href="/dashboard/inquiries"><Mail size={16} /> {tx(locale, "Work inquiries", "작품 문의")}</Link>
+          {isArtist && <Link className={active === "inquiries" ? "active" : ""} href="/dashboard/inquiries"><Mail size={16} /> {tx(locale, "Work inquiries", "작품 문의")}</Link>}
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Make", "만들기")}</span>
           <Link className={active === "threads" ? "active" : ""} href="/dashboard/threads">
             <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
           </Link>
-          <Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
+          {isArtist && <><Link className={active === "space" ? "active" : ""} href="/dashboard/virtual-gallery">
             <BookOpen size={16} /> {tx(locale, "Public page", "공개 페이지")}
           </Link>
-          <Link className={active === "viewing" ? "active" : ""} href="/dashboard/viewing-room"><Eye size={16} /> {tx(locale, "Private viewing room", "프라이빗 뷰잉룸")}</Link>
+          <Link className={active === "viewing" ? "active" : ""} href="/dashboard/viewing-room"><Eye size={16} /> {tx(locale, "Private viewing room", "비공개 링크 전시")}</Link></>}
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Discover", "탐색")}</span>
@@ -78,9 +82,9 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
           <Link href="/projects">
             <Plus size={16} /> {tx(locale, "Projects", "프로젝트")}
           </Link>
-          <Link className={active === "brief" ? "active" : ""} href="/dashboard/brief">
+          {(isAdmin || canBriefRole) && <Link className={active === "brief" ? "active" : ""} href="/dashboard/brief">
             <ArrowUpRight size={16} /> {tx(locale, "Curatorial brief", "기획 브리프")}
-          </Link>
+          </Link>}
           {isAdmin && <Link href="/admin"><ShieldCheck size={16} /> {tx(locale, "Admin", "관리자")}</Link>}
         </div>
       </nav>
