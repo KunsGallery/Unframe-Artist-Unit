@@ -5,7 +5,29 @@ const { initializeTestEnvironment, assertFails, assertSucceeds } = require("@fir
 const { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } = require("firebase/firestore");
 
 let testEnv;
+test("banner settings remain owner-scoped for approved gallery and project operators", async () => {
+  const db = testEnv.authenticatedContext("approved-professional").firestore();
+  const other = testEnv.authenticatedContext("pending-professional").firestore();
+  const banner = { enabled: true, placement: "hero", textKo: "모집 안내", textEn: "Open call", href: "https://example.com", speed: "normal", direction: "left" };
+  await assertSucceeds(setDoc(doc(db, "galleries", "operator-space"), { name: "Space", ownerUid: "approved-professional", published: true, movingBanner: banner }));
+  await assertSucceeds(updateDoc(doc(db, "galleries", "operator-space"), { movingBanner: { ...banner, enabled: false } }));
+  await assertFails(updateDoc(doc(other, "galleries", "operator-space"), { movingBanner: banner }));
+  await assertFails(updateDoc(doc(db, "galleries", "operator-space"), { ownerUid: "pending-professional" }));
+  await assertSucceeds(setDoc(doc(db, "exhibitions", "operator-call"), { ownerUid: "approved-professional", galleryId: "operator-space", title: "Call", kind: "opencall", published: true, movingBanner: banner }));
+  await assertFails(updateDoc(doc(other, "exhibitions", "operator-call"), { movingBanner: banner }));
+});
 const projectId = "demo-uau-rules-tests";
+test("artists can save their own banner without editing another artist", async () => {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await updateDoc(doc(context.firestore(), "public_profiles", "owner-profile"), { slug: "owner-profile" });
+  });
+  const owner = testEnv.authenticatedContext("owner", { email: "owner@example.com" }).firestore();
+  const other = testEnv.authenticatedContext("pending-professional").firestore();
+  const movingBanner = { enabled: true, placement: "works", textKo: "작가의 문장", textEn: "Artist message", href: "", speed: "slow", direction: "left" };
+  await assertSucceeds(updateDoc(doc(owner, "users", "owner"), { movingBanner }));
+  await assertSucceeds(updateDoc(doc(owner, "public_profiles", "owner-profile"), { movingBanner }));
+  await assertFails(updateDoc(doc(other, "public_profiles", "owner-profile"), { movingBanner }));
+});
 
 before(async () => {
   const rules = await readFile("firestore.rules", "utf8");

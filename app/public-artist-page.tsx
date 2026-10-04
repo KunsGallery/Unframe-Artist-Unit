@@ -1,4 +1,7 @@
 "use client";
+import { Fragment } from "react";
+import { MovingBanner } from "./components/moving-banner";
+import { normalizeMovingBanner } from "./moving-banner";
 
 import Link from "next/link";
 import { ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, FileDown, Globe2, Mail } from "lucide-react";
@@ -141,12 +144,15 @@ function AboutSection({ profile, locale }: { profile: PublicProfile; locale: "en
 
 function PublicSiteSections({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
   const sections = getArtistSiteSections(profile);
+  const banner = normalizeMovingBanner(profile.movingBanner);
+  const anchor = banner.placement === "about" ? "about" : banner.placement === "works" ? "works" : null;
+  const showAfter = (section: string) => anchor === section ? <MovingBanner value={banner} locale={locale}/> : null;
   const renderSection = (section: typeof sections[number]) => section === "works" ? <WorksSection key={section} profile={profile} locale={locale} /> : section === "exhibitions" ? <ExhibitionsSection key={section} profile={profile} locale={locale} /> : section === "cv" ? <CvSection key={section} profile={profile} locale={locale} /> : section === "studioArchive" ? <StudioArchiveSection key={section} profile={profile} locale={locale}/> : section === "inspiration" ? <InspirationSection key={section} profile={profile} locale={locale}/> : <AboutSection key={section} profile={profile} locale={locale}/>;
-  return <>{sections.map((section, index) => {
-    if (profile.siteTemplate === "archive" && section === "about" && sections[index + 1] === "cv") return <div className="artist-archive-records" key="about-cv">{renderSection("about")}{renderSection("cv")}</div>;
-    if (profile.siteTemplate === "archive" && section === "cv" && sections[index - 1] === "about") return null;
-    return renderSection(section);
-  })}{profile.contactPurposes?.length || profile.collaborationOpen ? <div id="contact"><ArtistContact profile={profile} locale={locale}/></div> : null}</>;
+  return <><MovingBanner value={banner} locale={locale} placement="hero"/>{sections.map((section, index) => {
+    if (profile.siteTemplate === "archive" && section === "about" && sections[index + 1] === "cv" && banner.placement !== "about") return <div className="artist-archive-records" key="about-cv">{renderSection("about")}{renderSection("cv")}</div>;
+    if (profile.siteTemplate === "archive" && section === "cv" && sections[index - 1] === "about" && banner.placement !== "about") return null;
+    return <Fragment key={section}>{renderSection(section)}{showAfter(section)}</Fragment>;
+  })}{(banner.placement === "contact" || (anchor && !sections.includes(anchor))) && <MovingBanner value={banner} locale={locale}/ >}{profile.contactPurposes?.length || profile.collaborationOpen ? <div id="contact"><ArtistContact profile={profile} locale={locale}/></div> : null}</>;
 }
 
 function UauArtistBridge({ currentSlug, locale }: { currentSlug: string; locale: "en" | "ko" }) {

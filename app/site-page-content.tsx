@@ -19,6 +19,7 @@ export type SitePageContent = {
   secondaryHref: string;
   sectionOrder: string[];
   hiddenSections: string[];
+  layoutVersion?: number;
 };
 
 const copy = (en: string, ko: string): LocalizedPageCopy => ({ en, ko });
@@ -33,7 +34,7 @@ export const defaultSitePageContent: Record<SitePageId, SitePageContent> = {
     primaryHref: "/connections",
     secondaryLabel: copy("Meet the artists", "아티스트 만나기"),
     secondaryHref: "/artists",
-    sectionOrder: ["manifesto", "intro", "spatial", "artists", "works", "faq", "join"],
+    sectionOrder: ["manifesto", "works", "artists", "spatial", "intro", "join", "faq"],
     hiddenSections: [],
   },
   artists: {
@@ -169,6 +170,8 @@ export function getDefaultSitePageContent(pageId: SitePageId) {
 export function normalizeSitePageContent(data: DocumentData | undefined, pageId: SitePageId): SitePageContent {
   const fallback = defaultSitePageContent[pageId];
   const source = data?.content && typeof data.content === "object" ? data.content as Record<string, unknown> : {};
+  // The approved catalogue replaces legacy composition once; subsequent editor ordering is preserved.
+  const upgradeHomeOrder = pageId === "home" && source.layoutVersion !== 2;
   const localize = (key: keyof Pick<SitePageContent, "eyebrow" | "title" | "emphasis" | "description" | "primaryLabel" | "secondaryLabel">) => isLocalizedPageCopy(source[key]) ? source[key] : fallback[key];
   return {
     eyebrow: localize("eyebrow"),
@@ -179,8 +182,9 @@ export function normalizeSitePageContent(data: DocumentData | undefined, pageId:
     primaryHref: typeof source.primaryHref === "string" ? source.primaryHref : fallback.primaryHref,
     secondaryLabel: localize("secondaryLabel"),
     secondaryHref: typeof source.secondaryHref === "string" ? source.secondaryHref : fallback.secondaryHref,
-    sectionOrder: Array.isArray(source.sectionOrder) ? Array.from(new Set([...source.sectionOrder.filter((item): item is string => typeof item === "string" && fallback.sectionOrder.includes(item)), ...fallback.sectionOrder])) : fallback.sectionOrder,
+    sectionOrder: upgradeHomeOrder ? fallback.sectionOrder : Array.isArray(source.sectionOrder) ? Array.from(new Set([...source.sectionOrder.filter((item): item is string => typeof item === "string" && fallback.sectionOrder.includes(item)), ...fallback.sectionOrder])) : fallback.sectionOrder,
     hiddenSections: Array.isArray(source.hiddenSections) ? source.hiddenSections.filter((item): item is string => typeof item === "string" && fallback.sectionOrder.includes(item)) : fallback.hiddenSections,
+    ...(pageId === "home" ? { layoutVersion: 2 } : {}),
   };
 }
 

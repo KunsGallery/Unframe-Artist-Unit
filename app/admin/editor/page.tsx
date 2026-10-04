@@ -14,6 +14,7 @@ import { defaultSiteContent, normalizeSiteContent, useSiteContent, type SiteCont
 import { sitePageById, sitePages, type SitePageId } from "../../site-pages";
 import { getDefaultSitePageContent, normalizeSitePageContent, type SitePageContent } from "../../site-page-content";
 import { uploadToR2 } from "../../r2-upload";
+import "../../home.css";
 
 const adminRoles = ["super_admin", "editor"];
 const sectionLabels: Record<string, { en: string; ko: string }> = {
@@ -32,7 +33,7 @@ const sectionLabels: Record<string, { en: string; ko: string }> = {
   filters: { en: "Filters", ko: "필터" },
   archive: { en: "Archive", ko: "아카이브" },
   list: { en: "Project list", ko: "프로젝트 목록" },
-  manifesto: { en: "Manifesto", ko: "매니페스토" },
+  manifesto: { en: "Moving text", ko: "흐르는 문구" },
   map: { en: "Connection map", ko: "연결 지도" },
   call: { en: "Open call", ko: "오픈 콜" },
   calendar: { en: "Calendar", ko: "캘린더" },
@@ -400,7 +401,12 @@ export default function AdminEditorPage() {
       <div className="editor-section-list">{pageContentDraft.sectionOrder.map((sectionId, index) => <div className="editor-section-row" key={sectionId}><label><input type="checkbox" checked={!pageContentDraft.hiddenSections.includes(sectionId)} onChange={(event) => { markDirty(); setPageContentDraft((current) => ({ ...current, hiddenSections: event.target.checked ? current.hiddenSections.filter((item) => item !== sectionId) : [...current.hiddenSections, sectionId] })); }} /><span>{getSectionLabel(sectionId, locale)}</span></label><div><button type="button" disabled={index === 0} onClick={() => { markDirty(); setPageContentDraft((current) => { const order = [...current.sectionOrder]; [order[index - 1], order[index]] = [order[index], order[index - 1]]; return { ...current, sectionOrder: order }; }); }} aria-label={tx(locale, `Move ${sectionId} up`, `${getSectionLabel(sectionId, locale)} 위로`)}>↑</button><button type="button" disabled={index === pageContentDraft.sectionOrder.length - 1} onClick={() => { markDirty(); setPageContentDraft((current) => { const order = [...current.sectionOrder]; [order[index + 1], order[index]] = [order[index], order[index + 1]]; return { ...current, sectionOrder: order }; }); }} aria-label={tx(locale, `Move ${sectionId} down`, `${getSectionLabel(sectionId, locale)} 아래로`)}>↓</button></div></div>)}</div>
       {isHome ? <>
       <div className="editor-subhead"><MetaLine>{tx(locale, "HOMEPAGE COPY", "홈페이지 문구")}</MetaLine><span>{tx(locale, "Edit the key lines in both languages.", "주요 문구를 두 언어로 편집하세요.")}</span></div>
-      {["line1", "emphasis", "line3"].map((part) => <div className="editor-copy-row" key={part}><span>{part === "line1" ? tx(locale, "Hero line 1", "히어로 1행") : part === "emphasis" ? tx(locale, "Hero emphasis", "히어로 강조") : tx(locale, "Hero line 3", "히어로 3행")}</span><input value={String(contentDraft[`home.hero.${part}.en`])} onChange={(event) => updateContent(`home.hero.${part}.en`, event.target.value)} placeholder="English" /><input value={String(contentDraft[`home.hero.${part}.ko`])} onChange={(event) => updateContent(`home.hero.${part}.ko`, event.target.value)} placeholder="한국어" /></div>)}
+      <label className="editor-copy-field"><span>{tx(locale, "Main headline", "메인 제목 · 줄바꿈 가능")}</span><textarea value={String(contentDraft[`home.catalogue.title.${locale}`] ?? "")} onChange={(event) => updateContent(`home.catalogue.title.${locale}`, event.target.value)} /></label>
+      <fieldset className="editor-marquee-fields"><legend>{tx(locale, "Moving text", "흐르는 문구")}</legend><p>{tx(locale, "Changes appear immediately in the preview. Publish to update the live site. Leave a line blank to omit it.", "입력 즉시 미리보기에 반영됩니다. 실제 사이트에는 발행 후 적용됩니다. 빈 문장은 표시하지 않습니다.")}</p>
+        {[1, 2, 3, 4].map((line) => <label className="editor-copy-field" key={line}><span>{tx(locale, `Sentence ${line}`, `문장 ${line}`)} · {locale === "ko" ? "한국어" : "English"}</span><input maxLength={160} value={String(contentDraft[`home.marquee.line${line}.${locale}`] ?? "")} onChange={(event) => updateContent(`home.marquee.line${line}.${locale}`, event.target.value)} /></label>)}
+        <label className="editor-select-field"><span>{tx(locale, "Speed", "흐르는 속도")}</span><select value={String(contentDraft["home.marquee.speed"])} onChange={(event) => updateContent("home.marquee.speed", event.target.value)}><option value="slow">{tx(locale, "Slow", "천천히")}</option><option value="normal">{tx(locale, "Normal", "보통")}</option><option value="fast">{tx(locale, "Lively", "활기 있게")}</option></select></label>
+        <label className="editor-select-field"><span>{tx(locale, "Direction", "흐르는 방향")}</span><select value={String(contentDraft["home.marquee.direction"])} onChange={(event) => updateContent("home.marquee.direction", event.target.value)}><option value="left">{tx(locale, "Left", "왼쪽으로")}</option><option value="right">{tx(locale, "Right", "오른쪽으로")}</option></select></label>
+      </fieldset>
       <label className="editor-copy-field"><span>{tx(locale, "Hero lede", "히어로 설명")}</span><textarea value={String(contentDraft[`home.hero.lede.${locale}`])} onChange={(event) => updateContent(`home.hero.lede.${locale}`, event.target.value)} /></label>
       <label className="editor-copy-field"><span>{tx(locale, "Intro title", "소개 제목")}</span><textarea value={String(contentDraft[`home.intro.title.${locale}`])} onChange={(event) => updateContent(`home.intro.title.${locale}`, event.target.value)} /></label>
       <label className="editor-copy-field"><span>{tx(locale, "Intro body", "소개 본문")}</span><textarea value={String(contentDraft[`home.intro.body.${locale}`])} onChange={(event) => updateContent(`home.intro.body.${locale}`, event.target.value)} /></label>

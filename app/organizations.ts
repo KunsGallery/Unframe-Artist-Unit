@@ -14,9 +14,12 @@ export type GalleryRecord = {
   description: string;
   websiteUrl: string;
   published: boolean;
+  movingBanner?: import("./moving-banner").MovingBannerConfig;
 };
 
 export type ExhibitionRecord = {
+  kind?: "exhibition" | "project" | "opencall";
+  movingBanner?: import("./moving-banner").MovingBannerConfig;
   id: string;
   ownerUid: string;
   galleryId: string;
@@ -39,11 +42,14 @@ function normalizeGallery(id: string, data: Record<string, unknown>): GalleryRec
     description: typeof data.description === "string" ? data.description : "",
     websiteUrl: typeof data.websiteUrl === "string" ? data.websiteUrl : "",
     published: data.published === true,
+    movingBanner: data.movingBanner as GalleryRecord["movingBanner"],
   };
 }
 
 export function normalizeExhibition(id: string, data: Record<string, unknown>): ExhibitionRecord {
   return {
+    kind: data.kind === "opencall" || data.kind === "project" ? data.kind : "exhibition",
+    movingBanner: data.movingBanner as ExhibitionRecord["movingBanner"],
     id,
     ownerUid: typeof data.ownerUid === "string" ? data.ownerUid : "",
     galleryId: typeof data.galleryId === "string" ? data.galleryId : "",

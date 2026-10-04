@@ -9,6 +9,22 @@ import { sanitizeRichText } from "./rich-text";
 export type SiteContentRecord = Record<string, string | boolean>;
 
 export const defaultSiteContent: SiteContentRecord = {
+  "home.catalogue.title.ko": "작품을 만나고,\n관계를 이어갑니다.",
+  "home.catalogue.title.en": "Meet the work.\nStay connected.",
+  "home.catalogue.primary.ko": "아티스트 둘러보기",
+  "home.catalogue.primary.en": "Explore the artists",
+  "home.catalogue.secondary.ko": "U.A.U 참여 안내",
+  "home.catalogue.secondary.en": "Join U.A.U",
+  "home.marquee.line1.ko": "UNFRAME ARTIST UNIT",
+  "home.marquee.line1.en": "UNFRAME ARTIST UNIT",
+  "home.marquee.line2.ko": "BREAK THE FRAME",
+  "home.marquee.line2.en": "BREAK THE FRAME",
+  "home.marquee.line3.ko": "전시 이후에도, 연결은 계속됩니다",
+  "home.marquee.line3.en": "A NETWORK THAT STAYS",
+  "home.marquee.line4.ko": "만들고 · 만나고 · 이어가기",
+  "home.marquee.line4.en": "MAKE · MEET · CONTINUE",
+  "home.marquee.speed": "normal",
+  "home.marquee.direction": "left",
   "home.hero.line1.en": "A network",
   "home.hero.line1.ko": "관계가 계속되는",
   "home.hero.emphasis.en": "that stays",

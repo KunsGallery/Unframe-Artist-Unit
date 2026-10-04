@@ -110,6 +110,7 @@ service cloud.firestore {
           'siteTemplate',
           'siteSections',
           'siteAccent',
+          'movingBanner',
           'sitePublished',
           'uauArtistId',
           'foundingNumber',
@@ -169,6 +170,7 @@ service cloud.firestore {
             'siteTemplate',
             'siteSections',
             'siteAccent',
+            'movingBanner',
             'sitePublished',
             'invitationAcceptedAt',
             'siteWorks',
@@ -225,6 +227,7 @@ service cloud.firestore {
             'siteTemplate',
             'siteSections',
             'siteAccent',
+            'movingBanner',
             'siteWorks',
             'siteExhibitions',
             'showExhibitions',
@@ -419,12 +422,12 @@ service cloud.firestore {
       allow create: if canManageContent()
         || (signedIn()
           && request.resource.data.ownerUid == request.auth.uid
-          && request.resource.data.published == false);
+          && (request.resource.data.published == false || isApprovedProfessional()));
       allow update: if canManageContent()
         || (signedIn()
           && resource.data.ownerUid == request.auth.uid
           && request.resource.data.ownerUid == resource.data.ownerUid
-          && request.resource.data.published == resource.data.published);
+          && (request.resource.data.published == resource.data.published || isApprovedProfessional()));
       allow delete: if canManageContent()
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
     }
@@ -606,10 +609,10 @@ service cloud.firestore {
     }
 
     match /galleries/{galleryId} {
-      allow read: if isAdmin() || resource.data.published == true;
-      allow create: if canManageContent()
+      allow read: if isAdmin() || resource.data.published == true || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if (canManageContent() || isApprovedProfessional())
         && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if canManageContent()
+      allow update: if (canManageContent() || (isApprovedProfessional() && resource.data.ownerUid == request.auth.uid))
         && request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if isSuperAdmin();
     }

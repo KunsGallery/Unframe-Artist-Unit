@@ -1,0 +1,20 @@
+.moving-banner { display:flex; width:100%; min-width:0; overflow:hidden; background:var(--ink,#171717); color:var(--paper,#f6f4ee); margin:24px 0; }
+.moving-banner-window { flex:1; min-width:0; overflow:hidden; padding:22px 0; }
+.moving-banner-track { display:flex; width:max-content; animation:moving-banner-flow 45s linear infinite; }
+.moving-banner-group { display:flex; flex-shrink:0; }
+.moving-banner-phrase { display:flex; align-items:center; gap:30px; padding-right:30px; white-space:nowrap; font-size:clamp(22px,3vw,38px); }
+.moving-banner-action { display:grid; place-items:center; width:48px; flex-shrink:0; border:0; border-left:1px solid #555; background:transparent; color:inherit; cursor:pointer; }
+.moving-banner-action:focus-visible { outline:2px solid #b5c0ff; outline-offset:-4px; }
+.moving-banner:hover .moving-banner-track,.moving-banner:focus-within .moving-banner-track,.moving-banner.is-paused .moving-banner-track { animation-play-state:paused; }
+@keyframes moving-banner-flow { to { transform:translateX(-50%); } }
+.moving-banner-editor { min-width:0; margin:24px 0; padding:20px; border:1px solid var(--line,#aaa); }
+.moving-banner-editor legend { font-size:18px; font-weight:600; padding:0 8px; }
+.moving-banner-editor label { display:grid; gap:8px; margin:16px 0; }
+.moving-banner-editor .moving-banner-check { display:flex; align-items:center; }
+.moving-banner-editor input:not([type=checkbox]),.moving-banner-editor textarea,.moving-banner-editor select { width:100%; box-sizing:border-box; padding:10px; color:var(--ink); background:var(--paper); border:1px solid var(--line); font:inherit; }
+.moving-banner-editor p,.moving-banner-editor small { font-size:14px; line-height:1.6; }
+.moving-banner-options { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.moving-banner-preview { min-width:0; overflow:hidden; }
+.moving-banner-preview .moving-banner { margin:12px 0; }
+@media(max-width:600px) { .moving-banner-editor { padding:14px; }.moving-banner-phrase { font-size:24px; }.moving-banner-options { grid-template-columns:1fr; gap:0; } }
+@media(prefers-reduced-motion:reduce) { .moving-banner-track { animation:none; width:auto; }.moving-banner-group { flex-wrap:wrap; }.moving-banner-group[aria-hidden],.moving-banner-phrase[aria-hidden],.moving-banner button { display:none; }.moving-banner-phrase { white-space:normal; overflow-wrap:anywhere; padding:0 16px; } }

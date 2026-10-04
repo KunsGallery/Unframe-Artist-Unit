@@ -77,6 +77,7 @@ export type UauUserProfile = {
   siteTemplate?: ArtistSiteTemplate;
   siteSections?: ArtistSiteSection[];
   siteAccent?: ArtistSiteAccent;
+  movingBanner?: import("./moving-banner").MovingBannerConfig;
   sitePublished?: boolean;
   uauArtistId?: string;
   foundingNumber?: number;
@@ -129,6 +130,7 @@ export type PublicProfile = {
   siteTemplate: ArtistSiteTemplate;
   siteSections?: ArtistSiteSection[];
   siteAccent?: ArtistSiteAccent;
+  movingBanner?: import("./moving-banner").MovingBannerConfig;
   showExhibitions: boolean;
   showCV: boolean;
   showAbout: boolean;

@@ -63,6 +63,7 @@ export function DashboardSidebar({ active }: { active: DashboardSection }) {
         </div>
         <div className="dashboard-nav-group">
           <span className="dashboard-nav-group-label">{tx(locale, "Make", "만들기")}</span>
+          {canBriefRole && profile?.accessStatus === "approved" && <Link href="/dashboard/organizations"><FolderKanban size={16}/>{tx(locale, "Galleries · projects · open calls", "갤러리 · 프로젝트 · 오픈콜")}</Link>}
           <Link className={active === "threads" ? "active" : ""} href="/dashboard/threads">
             <Boxes size={16} /> {tx(locale, "Thread rooms", "스레드 룸")}
           </Link>
