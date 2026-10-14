@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
+import { normalizeWorkRefs } from "./archive-records";
 import { db } from "./firebase-client";
 import { usePublicArchive } from "./public-archive";
 import type { PublicProfile } from "./profile";
@@ -29,6 +30,7 @@ export type ExhibitionRecord = {
   endDate?: string;
   description: string;
   artistSlugs: string[];
+  workRefs?: { artistSlug: string; workId: string }[];
   published: boolean;
   createdAt?: Timestamp;
 };
@@ -59,6 +61,7 @@ export function normalizeExhibition(id: string, data: Record<string, unknown>): 
     endDate: typeof data.endDate === "string" ? data.endDate : "",
     description: typeof data.description === "string" ? data.description : "",
     artistSlugs: Array.isArray(data.artistSlugs) ? data.artistSlugs.filter((item): item is string => typeof item === "string") : [],
+    workRefs: normalizeWorkRefs(data.workRefs),
     published: data.published === true,
     createdAt: data.createdAt as Timestamp | undefined,
   };
@@ -93,3 +96,27 @@ export function usePublishedExhibitions() {
 }
 
 export function usePublishedArtists() { return usePublicArchive(); }
+
+// Resolve participants directly by ID, independent of directory pagination.
+export function useExhibitionArtists(slugs: string[]) {
+  const key = JSON.stringify(Array.from(new Set(slugs)).sort());
+  const [artists, setArtists] = useState<PublicProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    setArtists([]); setError(false); setLoading(true);
+    const ids = JSON.parse(key) as string[];
+    if (!db || !ids.length) { setLoading(false); return; }
+    const records = new Map<string, PublicProfile>();
+    const pending = new Set(ids);
+    const settle = (id: string) => { pending.delete(id); setArtists(Array.from(records.values())); setLoading(pending.size > 0); };
+    const stops = ids.map(id => onSnapshot(doc(db!, "public_profiles", id), snapshot => {
+      const data = snapshot.data();
+      if (snapshot.exists() && data?.published === true && !data.isDemonstration && (!data.accountType || data.accountType === "artist")) records.set(id, { ...data, slug: id } as PublicProfile);
+      else records.delete(id);
+      settle(id);
+    }, () => { records.delete(id); setError(true); settle(id); }));
+    return () => stops.forEach(stop => stop());
+  }, [key]);
+  return { artists, loading, error };
+}

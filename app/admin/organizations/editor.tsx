@@ -18,7 +18,7 @@ function slugify(value: string) {
 }
 
 const blankGallery = { name: "", city: "", description: "", websiteUrl: "", published: false, movingBanner: emptyMovingBanner };
-const blankExhibition = { title: "", year: "", startDate: "", endDate: "", description: "", artistSlugs: [] as string[], published: false, kind: "exhibition" as "exhibition" | "project" | "opencall", movingBanner: emptyMovingBanner };
+const blankExhibition = { title: "", year: "", startDate: "", endDate: "", description: "", artistSlugs: [] as string[], workRefs: [] as { artistSlug: string; workId: string }[], published: false, kind: "exhibition" as "exhibition" | "project" | "opencall", movingBanner: emptyMovingBanner };
 
 export default function OrganizationsEditor({ ownerOnly = false }: { ownerOnly?: boolean }) {
   const { user, loading: authLoading } = useAuth();
@@ -80,7 +80,7 @@ export default function OrganizationsEditor({ ownerOnly = false }: { ownerOnly?:
     setExhibitionForm(exhibition ? {
       title: exhibition.title, year: exhibition.year, startDate: exhibition.startDate || "",
       endDate: exhibition.endDate || "", description: exhibition.description || "",
-      artistSlugs: exhibition.artistSlugs || [], published: exhibition.published === true,
+      artistSlugs: exhibition.artistSlugs || [], workRefs: exhibition.workRefs || [], published: exhibition.published === true,
       kind: exhibition.kind || "exhibition", movingBanner: normalizeMovingBanner(exhibition.movingBanner),
     } : blankExhibition);
     setError("");
@@ -137,12 +137,13 @@ export default function OrganizationsEditor({ ownerOnly = false }: { ownerOnly?:
       if (exhibitionForm.published && gallery.data().published !== true) {
         throw new Error(tx(locale, "Publish the gallery before publishing its exhibition.", "전시를 공개하려면 갤러리를 먼저 공개해 주세요."));
       }
+      if (exhibitionForm.workRefs.some(ref => !exhibitionForm.artistSlugs.includes(ref.artistSlug))) throw new Error(tx(locale, "Exhibited works must belong to participating artists.", "전시 작품은 참여 작가의 작품이어야 합니다."));
       const reference = exhibitionId ? doc(firestore, "exhibitions", exhibitionId) : doc(collection(firestore, "exhibitions"));
       const existing = exhibitionId ? await getDoc(reference) : null;
       await setDoc(reference, {
         title: exhibitionForm.title.trim(), year: exhibitionForm.year.trim(),
         startDate: exhibitionForm.startDate, endDate: exhibitionForm.endDate,
-        description: exhibitionForm.description.trim(), artistSlugs: exhibitionForm.artistSlugs,
+        description: exhibitionForm.description.trim(), artistSlugs: exhibitionForm.artistSlugs, workRefs: exhibitionForm.workRefs,
         published: exhibitionForm.published, galleryId: selectedGallery,
         kind: exhibitionForm.kind, movingBanner: normalizeMovingBanner(exhibitionForm.movingBanner),
         ownerUid: existing?.exists() ? existing.data().ownerUid : user.uid,
@@ -185,7 +186,8 @@ export default function OrganizationsEditor({ ownerOnly = false }: { ownerOnly?:
             <label>{tx(locale, "Year", "연도")}<input required inputMode="numeric" value={exhibitionForm.year} onChange={(event) => setExhibitionForm({ ...exhibitionForm, year: event.target.value })} placeholder="2026" /></label>
             <div className="organization-date-grid"><label>{tx(locale, "Start date", "시작일")}<input type="date" value={exhibitionForm.startDate} onChange={(event) => setExhibitionForm({ ...exhibitionForm, startDate: event.target.value })} /></label><label>{tx(locale, "End date", "종료일")}<input type="date" value={exhibitionForm.endDate} onChange={(event) => setExhibitionForm({ ...exhibitionForm, endDate: event.target.value })} /></label></div>
             <label>{tx(locale, "Description", "전시 소개")}<textarea rows={4} value={exhibitionForm.description} onChange={(event) => setExhibitionForm({ ...exhibitionForm, description: event.target.value })} /></label>
-            <fieldset><legend>{tx(locale, "Participating artists", "참여 아티스트")}</legend>{artists.length ? artists.map((artist) => <label className="organization-check" key={artist.slug}><input type="checkbox" checked={exhibitionForm.artistSlugs.includes(artist.slug)} onChange={(event) => setExhibitionForm((current) => ({ ...current, artistSlugs: event.target.checked ? [...current.artistSlugs, artist.slug] : current.artistSlugs.filter((slug) => slug !== artist.slug) }))} />{artist.artistName || artist.displayName}</label>) : <p>{tx(locale, "Publish artist profiles before connecting them to an exhibition.", "공개된 아티스트 프로필이 있어야 전시에 연결할 수 있습니다.")}</p>}</fieldset>
+            <fieldset><legend>{tx(locale, "Participating artists", "참여 아티스트")}</legend>{artists.length ? artists.map((artist) => <label className="organization-check" key={artist.slug}><input type="checkbox" checked={exhibitionForm.artistSlugs.includes(artist.slug)} onChange={(event) => setExhibitionForm((current) => ({ ...current, artistSlugs: event.target.checked ? [...current.artistSlugs, artist.slug] : current.artistSlugs.filter((slug) => slug !== artist.slug), workRefs: event.target.checked ? current.workRefs : current.workRefs.filter(ref => ref.artistSlug !== artist.slug) }))} />{artist.artistName || artist.displayName}</label>) : <p>{tx(locale, "Publish artist profiles before connecting them to an exhibition.", "공개된 아티스트 프로필이 있어야 전시에 연결할 수 있습니다.")}</p>}</fieldset>
+            <fieldset><legend>{tx(locale, "Exhibited works", "전시 작품 연결")}</legend><p>{tx(locale, "Select actual exhibited works from participating artists. Participation alone does not link every work.", "참여 작가의 실제 출품작만 선택하세요. 작가를 선택해도 모든 작품이 자동 연결되지는 않습니다.")}</p>{artists.filter(artist => exhibitionForm.artistSlugs.includes(artist.slug)).map(artist => <div key={artist.slug}><strong>{artist.artistName || artist.displayName}</strong>{(artist.siteWorks || []).filter(work => work.id && work.title && work.imageUrl).map(work => <label className="organization-check" key={work.id}><input type="checkbox" checked={exhibitionForm.workRefs.some(ref => ref.artistSlug === artist.slug && ref.workId === work.id)} onChange={event => setExhibitionForm(current => ({ ...current, workRefs: event.target.checked ? [...current.workRefs, {artistSlug: artist.slug, workId: work.id}] : current.workRefs.filter(ref => !(ref.artistSlug === artist.slug && ref.workId === work.id)) }))}/>{work.title}</label>)}</div>)}</fieldset>
             <label className="organization-check"><input type="checkbox" checked={exhibitionForm.published} onChange={(event) => setExhibitionForm({ ...exhibitionForm, published: event.target.checked })} />{tx(locale, "Publish exhibition", "전시 공개")}</label>
             <button type="submit" className="button button-blue" disabled={busy}>{busy ? tx(locale, "Saving…", "저장 중…") : tx(locale, "Save exhibition", "전시 저장")}</button>
           </form>

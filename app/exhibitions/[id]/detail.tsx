@@ -9,7 +9,7 @@ import { Breadcrumb, DemoNotice, MetaLine } from "../../components";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
-import { normalizeExhibition, usePublishedArtists, usePublishedGalleries, type ExhibitionRecord } from "../../organizations";
+import { normalizeExhibition, useExhibitionArtists, usePublishedGalleries, type ExhibitionRecord } from "../../organizations";
 import { MovingBanner } from "../../components/moving-banner";
 
 export default function ExhibitionDetailPage() {
@@ -18,7 +18,7 @@ export default function ExhibitionDetailPage() {
   const [exhibition, setExhibition] = useState<ExhibitionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const { galleries } = usePublishedGalleries();
-  const { artists } = usePublishedArtists();
+  const { artists, loading: artistsLoading, error: artistsError } = useExhibitionArtists(exhibition?.artistSlugs || []);
   useEffect(() => {
     if (!db || !id) { setLoading(false); return; }
     return onSnapshot(doc(db, "exhibitions", id), (snapshot) => {
@@ -34,7 +34,8 @@ export default function ExhibitionDetailPage() {
     <MovingBanner value={exhibition.movingBanner} locale={locale} placement="hero"/>
     <div className="public-record-heading"><p>{exhibition.description}</p></div>
     <MovingBanner value={exhibition.movingBanner} locale={locale} placement="about"/>
-    <section className="public-record-section"><h2>{tx(locale, "Participating artists", "참여 아티스트")}</h2><div className="public-record-list">{exhibition.artistSlugs.map((slug) => { const artist = artists.find((item) => item.slug === slug); return artist ? <Link className="public-record-row" href={`/artist/${slug}`} key={slug}><span>ARTIST</span><div><h2>{artist.artistName || artist.displayName}</h2><p>{artist.practice || ""}</p></div><ArrowUpRight size={18}/></Link> : null; })}</div>{!exhibition.artistSlugs.length && <p>{tx(locale, "Participants will be listed after confirmation.", "참여자가 확인되면 이곳에 표시됩니다.")}</p>}</section>
+    <section className="public-record-section"><h2>{tx(locale, "Participating artists", "참여 아티스트")}</h2><p role="status">{artistsLoading ? tx(locale, "Opening participants…", "참여 작가를 불러오는 중…") : artistsError ? tx(locale, "Some profiles are unavailable.", "일부 작가 프로필을 확인할 수 없습니다.") : ""}</p><div className="public-record-list">{exhibition.artistSlugs.map((slug) => { const artist = artists.find((item) => item.slug === slug); return artist ? <Link className="public-record-row" href={`/artist/${slug}`} key={slug}><span>ARTIST</span><div><h2>{artist.artistName || artist.displayName}</h2><p>{artist.practice || ""}</p></div><ArrowUpRight size={18}/></Link> : null; })}</div>{!exhibition.artistSlugs.length && <p>{tx(locale, "Participants will be listed after confirmation.", "참여자가 확인되면 이곳에 표시됩니다.")}</p>}</section>
+    <section className="public-record-section"><h2>{tx(locale, "Exhibited works", "전시 작품")}</h2><div className="public-record-list">{(exhibition.workRefs || []).map(ref => { const artist = artists.find(item => item.slug === ref.artistSlug); const work = artist?.siteWorks?.find(item => item.id === ref.workId && item.title && item.imageUrl); return work && artist ? <Link className="public-record-row" key={`${ref.artistSlug}~${ref.workId}`} href={`/works/${encodeURIComponent(`${ref.artistSlug}~${ref.workId}`)}`}><img src={work.thumbnailImageUrl || work.imageUrl} alt="" width={64} height={64} loading="lazy" style={{objectFit:"cover"}}/><div><h3>{work.title}</h3><p>{artist.artistName || artist.displayName} · {work.year}</p></div><ArrowUpRight size={18}/></Link> : null; })}</div>{!exhibition.workRefs?.length && <p>{tx(locale, "Works will appear when the organizer links them.", "운영자가 작품을 연결하면 이곳에 표시됩니다.")}</p>}</section>
     <MovingBanner value={exhibition.movingBanner} locale={locale} placement="works"/><MovingBanner value={exhibition.movingBanner} locale={locale} placement="contact"/>
     {gallery && <Link href={`/galleries/${gallery.id}`} className="text-link">{gallery.name}<ArrowUpRight size={14}/></Link>}
   </div></main>;

@@ -1,4 +1,5 @@
 "use client";
+import { ArchiveConnections } from "./components/archive-connections";
 import { Fragment } from "react";
 import { MovingBanner } from "./components/moving-banner";
 import { normalizeMovingBanner } from "./moving-banner";
@@ -152,7 +153,7 @@ function PublicSiteSections({ profile, locale }: { profile: PublicProfile; local
     if (profile.siteTemplate === "archive" && section === "about" && sections[index + 1] === "cv" && banner.placement !== "about") return <div className="artist-archive-records" key="about-cv">{renderSection("about")}{renderSection("cv")}</div>;
     if (profile.siteTemplate === "archive" && section === "cv" && sections[index - 1] === "about" && banner.placement !== "about") return null;
     return <Fragment key={section}>{renderSection(section)}{showAfter(section)}</Fragment>;
-  })}{(banner.placement === "contact" || (anchor && !sections.includes(anchor))) && <MovingBanner value={banner} locale={locale}/ >}{profile.contactPurposes?.length || profile.collaborationOpen ? <div id="contact"><ArtistContact profile={profile} locale={locale}/></div> : null}</>;
+  })}<ArchiveConnections artistSlug={profile.slug}/>{(banner.placement === "contact" || (anchor && !sections.includes(anchor))) && <MovingBanner value={banner} locale={locale}/ >}{profile.contactPurposes?.length || profile.collaborationOpen ? <div id="contact"><ArtistContact profile={profile} locale={locale}/></div> : null}</>;
 }
 
 function UauArtistBridge({ currentSlug, locale }: { currentSlug: string; locale: "en" | "ko" }) {
