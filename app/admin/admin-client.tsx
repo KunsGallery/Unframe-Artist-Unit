@@ -129,7 +129,11 @@ export default function AdminClient() {
         });
         if (userRef) {
           const userData = userSnapshot?.data();
+          const publicSlug = typeof userData?.publicSlug === "string" ? userData.publicSlug : "";
           transaction.set(userRef, {
+            // Keep the editor's publish switch in step with the page approval publishes,
+            // or the artist's next save would take the page private again.
+            ...(publicSlug ? { sitePublished: true } : {}),
             uauArtistId: artistIdLabel,
             foundingNumber: nextNumber,
             foundingStatus,
@@ -139,7 +143,6 @@ export default function AdminClient() {
             connectedAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           }, { merge: true });
-          const publicSlug = typeof userData?.publicSlug === "string" ? userData.publicSlug : "";
           if (publicSlug) transaction.set(doc(firestore, "public_profiles", publicSlug), {
             uauArtistId: artistIdLabel,
             foundingNumber: nextNumber,

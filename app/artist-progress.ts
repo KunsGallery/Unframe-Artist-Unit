@@ -1,4 +1,4 @@
-import type { ArtistSiteWork, UauUserProfile } from "./profile";
+import type { ArtistMembership, ArtistSiteWork, UauUserProfile } from "./profile";
 
 export type ArtistProgressEvent = {
   action?: string;
@@ -65,6 +65,19 @@ export function getStartChecklist(profile: UauUserProfile | null | undefined) {
   ];
   const doneCount = items.filter((item) => item.done).length;
   return { items, doneCount, total: items.length, complete: doneCount === items.length };
+}
+
+export type ReviewState = "none" | "preparing" | "in-review" | "approved" | "on-hold";
+
+// Where the artist's U.A.U review stands, and what is still missing before
+// reviewers have enough to look at. Publishing never waits on this.
+export function getReviewStatus(application: Pick<ArtistMembership, "applicationStatus"> | null | undefined, profile: UauUserProfile | null | undefined) {
+  const missing = getStartChecklist(profile).items.filter((item) => (item.id === "basics" || item.id === "works") && !item.done).map((item) => item.id);
+  const artistId = profile?.uauArtistId;
+  if (profile?.verificationStatus === "approved" || application?.applicationStatus === "approved") return { state: "approved" as ReviewState, missing: [], artistId };
+  if (!application) return { state: "none" as ReviewState, missing, artistId };
+  if (application.applicationStatus === "rejected" || profile?.verificationStatus === "rejected") return { state: "on-hold" as ReviewState, missing, artistId };
+  return { state: (missing.length ? "preparing" : "in-review") as ReviewState, missing, artistId };
 }
 
 // English copy for the growth milestones; the Korean source lives in getArtistProgress.
