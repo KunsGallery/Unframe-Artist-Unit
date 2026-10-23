@@ -4,61 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { collection, doc, getDocFromServer, onSnapshot, query, serverTimestamp, where, writeBatch, type Timestamp } from "firebase/firestore";
 import { ArrowUpRight, Check, ExternalLink, ImagePlus, LockKeyhole, Monitor, RotateCcw, Smartphone, SlidersHorizontal, Tablet, Users } from "lucide-react";
 import { DemoNotice, MetaLine } from "../../components";
-import { R2FontUploader } from "../../components/r2-font-uploader";
 import { useAuth } from "../../auth-provider";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
-import { defaultSiteSettings, fontPresets, normalizeSiteSettings, useSiteSettings, type SiteSettings } from "../../site-settings";
+import { defaultSiteSettings, normalizeSiteSettings, useSiteSettings, type SiteSettings } from "../../site-settings";
 import { defaultSiteContent, normalizeSiteContent, useSiteContent, type SiteContentRecord } from "../../site-content";
 import { sitePageById, sitePages, type SitePageId } from "../../site-pages";
 import { getDefaultSitePageContent, normalizeSitePageContent, type SitePageContent } from "../../site-page-content";
 import { uploadToR2 } from "../../r2-upload";
 import "../../home.css";
+import { adminRoles, getSectionLabel, stableJson } from "./editor-helpers";
+import { DesignSettingsPanel, HomeCopyFields, PageCopyFields, SectionOrderList } from "./editor-panels";
 
-const adminRoles = ["super_admin", "editor"];
-const sectionLabels: Record<string, { en: string; ko: string }> = {
-  intro: { en: "Introduction", ko: "소개" },
-  spatial: { en: "Spatial archive", ko: "공간 아카이브" },
-  radar: { en: "Radar", ko: "Radar" },
-  connection: { en: "Current connection", ko: "현재 연결" },
-  recap: { en: "Annual recap", ko: "연간 리캡" },
-  selection: { en: "Selection", ko: "셀렉션" },
-  artists: { en: "Artists", ko: "아티스트" },
-  works: { en: "Works", ko: "작품" },
-  journal: { en: "Journal", ko: "저널" },
-  faq: { en: "FAQ", ko: "FAQ" },
-  join: { en: "Join", ko: "함께하기" },
-  directory: { en: "Artist directory", ko: "아티스트 디렉터리" },
-  filters: { en: "Filters", ko: "필터" },
-  archive: { en: "Archive", ko: "아카이브" },
-  list: { en: "Project list", ko: "프로젝트 목록" },
-  manifesto: { en: "Moving text", ko: "흐르는 문구" },
-  map: { en: "Connection map", ko: "연결 지도" },
-  call: { en: "Open call", ko: "오픈 콜" },
-  calendar: { en: "Calendar", ko: "캘린더" },
-  opportunities: { en: "Opportunities", ko: "기회" },
-  note: { en: "Editorial note", ko: "에디토리얼 노트" },
-  story: { en: "Story", ko: "스토리" },
-  options: { en: "Entry options", ko: "참여 방법" },
-  context: { en: "Context", ko: "맥락" },
-  participants: { en: "Participants", ko: "참여자" },
-  timeline: { en: "Timeline", ko: "타임라인" },
-  work: { en: "Work", ko: "작품" },
-};
-
-function getSectionLabel(sectionId: string | null, locale: "en" | "ko") {
-  if (!sectionId) return locale === "ko" ? "전체 페이지" : "Whole page";
-  return sectionLabels[sectionId]?.[locale] || sectionId.replace(/[-_]/g, " ");
-}
-
-function stableJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
 
 export default function AdminEditorPage() {
   const { locale } = useLanguage();
@@ -373,45 +331,12 @@ export default function AdminEditorPage() {
   return <main className="admin-editor-page"><DemoNotice /><div className="admin-editor-shell">
     <header className="admin-editor-top"><div><a className="admin-editor-back" href="/admin">← {tx(locale, "Admin overview", "관리자 개요")}</a><MetaLine>{tx(locale, "ADMIN / SITE EDITOR", "관리자 / 사이트 편집기")}</MetaLine><h1>{tx(locale, "Site editor", "사이트 편집")}</h1><p className="editor-save-state" role="status">{dirty ? tx(locale, "Draft saved on this device · not published", "이 기기에 임시저장됨 · 아직 발행 전") : saved ? tx(locale, "Published · server copy verified", "발행 완료 · 서버 저장 확인됨") : tx(locale, "Choose text or an image in the preview to edit.", "미리보기의 글이나 이미지를 눌러 수정하세요.")}</p></div><div className="admin-editor-actions"><a className="button button-quiet" href="/admin/artists"><Users size={14} />{tx(locale, "Artist pages", "작가 페이지 관리")}</a><a className="button button-quiet" href={currentPage.previewPath} target="_blank" rel="noreferrer">{tx(locale, "Open current page", "현재 페이지 열기")} <ExternalLink size={14} /></a><button className="button button-blue" type="button" onClick={() => void saveSettings()} disabled={saving || pageSettingsLoading || !dirty}>{saved ? <Check size={14} /> : <ArrowUpRight size={14} />} {saving ? tx(locale, "Publishing…", "발행 중…") : saved ? tx(locale, "Published", "발행됨") : tx(locale, "Publish changes", "변경사항 발행")}</button></div></header>
     <div className="admin-editor-layout"><aside className="admin-editor-controls"><div className="admin-editor-control-head"><div><MetaLine>{tx(locale, "LIVE CONTROLS", "실시간 컨트롤")}</MetaLine><h2>{tx(locale, "Tune this room.", "이 공간을 조절하세요.")}</h2></div><SlidersHorizontal size={18} /></div><p className="admin-editor-copy">{tx(locale, "The preview and this control room follow the same page. Change the page in the preview or here, then publish only when it feels right.", "미리보기와 이 컨트롤 룸은 같은 페이지를 바라봅니다. 미리보기나 여기서 페이지를 바꾸고, 마음에 들 때만 발행하세요.")}</p><div className="editor-page-switcher"><label className="editor-select-field"><span>{tx(locale, "Editing page", "편집 중인 페이지")}</span><select value={previewPageId} onChange={(event) => openPreviewPage(event.target.value as SitePageId)}>{sitePages.filter((page) => !["artist-detail", "work-detail", "project-detail"].includes(page.id)).map((page) => <option key={page.id} value={page.id}>{locale === "ko" ? page.labelKo : page.label}</option>)}</select></label><p>{locale === "ko" ? currentPage.descriptionKo : currentPage.description}</p><p>{tx(locale, "Edit artist details in Artist pages. Work details are edited within each artist profile.", "작가·작품 상세는 ‘작가 페이지 관리’에서 실제 작가를 선택해 수정하세요.")}</p></div>
-      <div className="editor-active-section" aria-live="polite"><span>{tx(locale, "EDITING FOCUS", "현재 편집 초점")}</span><strong>{getSectionLabel(activeSection, locale)}</strong><small>{tx(locale, "Click text or images in the preview to edit.", "미리보기의 글이나 이미지를 눌러 편집하세요.")}</small></div><details className="editor-advanced"><summary>{tx(locale, "Advanced design settings", "고급 디자인 설정")}</summary><label className="editor-range"><span>{tx(locale, "Display scale", "디스플레이 크기")}<output>{Math.round(draft.displayScale * 100)}%</output></span><input type="range" min="0.55" max="1.65" step="0.01" value={draft.displayScale} onChange={(event) => updateSetting("displayScale", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Body scale", "본문 크기")}<output>{Math.round(draft.bodyScale * 100)}%</output></span><input type="range" min="0.55" max="1.6" step="0.01" value={draft.bodyScale} onChange={(event) => updateSetting("bodyScale", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Content width", "콘텐츠 폭")}<output>{draft.contentWidth}px</output></span><input type="range" min="520" max="1900" step="10" value={draft.contentWidth} onChange={(event) => updateSetting("contentWidth", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Section rhythm", "섹션 간격")}<output>{Math.round(draft.sectionSpace * 100)}%</output></span><input type="range" min="0.25" max="2.4" step="0.01" value={draft.sectionSpace} onChange={(event) => updateSetting("sectionSpace", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Heading line break", "제목 줄 간격")}<output>{draft.headingLeading.toFixed(2)}</output></span><input type="range" min="0.5" max="1.4" step="0.01" value={draft.headingLeading} onChange={(event) => updateSetting("headingLeading", Number(event.target.value))} /></label>
-      <div className="editor-subhead"><MetaLine>{tx(locale, "LAYOUT & TYPE", "레이아웃과 타이포그래피")}</MetaLine><span>{tx(locale, "Shape the first viewport and the reading pace.", "첫 화면의 비율과 읽는 속도를 조절하세요.")}</span></div>
-      <label className="editor-range"><span>{tx(locale, "Hero height", "첫 화면 높이")}<output>{draft.heroHeight}px</output></span><input type="range" min="320" max="1400" step="10" value={draft.heroHeight} onChange={(event) => updateSetting("heroHeight", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Hero gap", "첫 화면 간격")}<output>{draft.heroGap}px</output></span><input type="range" min="0" max="420" step="5" value={draft.heroGap} onChange={(event) => updateSetting("heroGap", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Hero title scale", "첫 화면 제목 크기")}<output>{Math.round(draft.heroCopyScale * 100)}%</output></span><input type="range" min="0.45" max="1.85" step="0.01" value={draft.heroCopyScale} onChange={(event) => updateSetting("heroCopyScale", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Body line height", "본문 줄 간격")}<output>{draft.bodyLeading.toFixed(2)}</output></span><input type="range" min="0.85" max="2.4" step="0.01" value={draft.bodyLeading} onChange={(event) => updateSetting("bodyLeading", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Grid gap", "카드 간격")}<output>{draft.gridGap}px</output></span><input type="range" min="0" max="120" step="1" value={draft.gridGap} onChange={(event) => updateSetting("gridGap", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Corner radius", "모서리 둥글기")}<output>{draft.radius}px</output></span><input type="range" min="0" max="80" step="1" value={draft.radius} onChange={(event) => updateSetting("radius", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Image saturation", "이미지 채도")}<output>{Math.round(draft.imageSaturation * 100)}%</output></span><input type="range" min="0" max="2.2" step="0.01" value={draft.imageSaturation} onChange={(event) => updateSetting("imageSaturation", Number(event.target.value))} /></label>
-      <div className="editor-subhead"><MetaLine>{tx(locale, "FONT SYSTEM", "폰트 시스템")}</MetaLine><span>{tx(locale, "Choose a curated web-font pairing, then optionally point to a public Cloudflare R2 font URL.", "검수된 웹폰트 조합을 선택한 뒤, 필요하면 공개된 Cloudflare R2 폰트 URL을 연결하세요.")}</span></div>
-      <label className="editor-select-field"><span>{tx(locale, "Font preset", "폰트 프리셋")}</span><select value={draft.fontPreset} onChange={(event) => updateSetting("fontPreset", event.target.value as SiteSettings["fontPreset"])}>{Object.entries(fontPresets).map(([key, preset]) => <option key={key} value={key}>{preset.label}</option>)}</select></label>
-      <label className="editor-range"><span>{tx(locale, "Font scale", "폰트 전체 크기")}<output>{Math.round(draft.fontScale * 100)}%</output></span><input type="range" min="0.7" max="1.45" step="0.01" value={draft.fontScale} onChange={(event) => updateSetting("fontScale", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Heading weight", "제목 굵기")}<output>{draft.headingWeight}</output></span><input type="range" min="300" max="700" step="100" value={draft.headingWeight} onChange={(event) => updateSetting("headingWeight", Number(event.target.value))} /></label>
-      <label className="editor-range"><span>{tx(locale, "Heading tracking", "제목 자간")}<output>{draft.letterSpacing.toFixed(3)}em</output></span><input type="range" min="-0.09" max="0.08" step="0.005" value={draft.letterSpacing} onChange={(event) => updateSetting("letterSpacing", Number(event.target.value))} /></label>
-      <div className="editor-font-upload-grid"><R2FontUploader value={draft.headingFontUrl} label={tx(locale, "Heading font", "제목 폰트")} description={tx(locale, "Used for large editorial headings.", "큰 에디토리얼 제목에 적용됩니다.")} chooseLabel={tx(locale, "Choose heading font", "제목 폰트 선택")} onChange={(url) => updateSetting("headingFontUrl", url)} /><R2FontUploader value={draft.bodyFontUrl} label={tx(locale, "Body font", "본문 폰트")} description={tx(locale, "Used for body copy and interface text.", "본문과 인터페이스 문구에 적용됩니다.")} chooseLabel={tx(locale, "Choose body font", "본문 폰트 선택")} onChange={(url) => updateSetting("bodyFontUrl", url)} /></div></details>
+      <div className="editor-active-section" aria-live="polite"><span>{tx(locale, "EDITING FOCUS", "현재 편집 초점")}</span><strong>{getSectionLabel(activeSection, locale)}</strong><small>{tx(locale, "Click text or images in the preview to edit.", "미리보기의 글이나 이미지를 눌러 편집하세요.")}</small></div><DesignSettingsPanel draft={draft} updateSetting={updateSetting} locale={locale} />
       <div className="editor-subhead"><MetaLine>{isHome ? tx(locale, "SECTION LAYOUT", "섹션 구성") : tx(locale, "PAGE CONTENT", "페이지 콘텐츠")}</MetaLine><span>{isHome ? tx(locale, "Arrange the visible sections below.", "아래에서 표시할 섹션과 순서를 정하세요.") : tx(locale, "Edit this page's introduction and actions.", "이 페이지의 소개와 버튼 문구를 편집하세요.")}</span></div>
-      {!isHome && <>
-      {["eyebrow", "title", "emphasis", "description"].map((key) => <div className="editor-copy-row" key={key}><span>{key === "eyebrow" ? tx(locale, "Eyebrow", "상단 라벨") : key === "title" ? tx(locale, "Title", "제목") : key === "emphasis" ? tx(locale, "Title emphasis", "제목 강조") : tx(locale, "Description", "설명")}</span><textarea value={pageContentDraft[key as "eyebrow" | "title" | "emphasis" | "description"].en} onChange={(event) => updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description", "en", event.target.value)} placeholder="English" /><textarea value={pageContentDraft[key as "eyebrow" | "title" | "emphasis" | "description"].ko} onChange={(event) => updatePageCopy(key as "eyebrow" | "title" | "emphasis" | "description", "ko", event.target.value)} placeholder="한국어" /></div>)}
-      <div className="editor-copy-row"><span>{tx(locale, "Primary action", "첫 번째 액션")}</span><input value={pageContentDraft.primaryLabel.en} onChange={(event) => updatePageCopy("primaryLabel", "en", event.target.value)} placeholder="English label" /><input value={pageContentDraft.primaryLabel.ko} onChange={(event) => updatePageCopy("primaryLabel", "ko", event.target.value)} placeholder="한국어 라벨" /><input value={pageContentDraft.primaryHref} onChange={(event) => updatePageField("primaryHref", event.target.value)} placeholder="/artists" /></div>
-      <div className="editor-copy-row"><span>{tx(locale, "Secondary action", "두 번째 액션")}</span><input value={pageContentDraft.secondaryLabel.en} onChange={(event) => updatePageCopy("secondaryLabel", "en", event.target.value)} placeholder="English label" /><input value={pageContentDraft.secondaryLabel.ko} onChange={(event) => updatePageCopy("secondaryLabel", "ko", event.target.value)} placeholder="한국어 라벨" /><input value={pageContentDraft.secondaryHref} onChange={(event) => updatePageField("secondaryHref", event.target.value)} placeholder="/connections" /></div>
-      </>}
-      <div className="editor-section-list">{pageContentDraft.sectionOrder.map((sectionId, index) => <div className="editor-section-row" key={sectionId}><label><input type="checkbox" checked={!pageContentDraft.hiddenSections.includes(sectionId)} onChange={(event) => { markDirty(); setPageContentDraft((current) => ({ ...current, hiddenSections: event.target.checked ? current.hiddenSections.filter((item) => item !== sectionId) : [...current.hiddenSections, sectionId] })); }} /><span>{getSectionLabel(sectionId, locale)}</span></label><div><button type="button" disabled={index === 0} onClick={() => { markDirty(); setPageContentDraft((current) => { const order = [...current.sectionOrder]; [order[index - 1], order[index]] = [order[index], order[index - 1]]; return { ...current, sectionOrder: order }; }); }} aria-label={tx(locale, `Move ${sectionId} up`, `${getSectionLabel(sectionId, locale)} 위로`)}>↑</button><button type="button" disabled={index === pageContentDraft.sectionOrder.length - 1} onClick={() => { markDirty(); setPageContentDraft((current) => { const order = [...current.sectionOrder]; [order[index + 1], order[index]] = [order[index], order[index + 1]]; return { ...current, sectionOrder: order }; }); }} aria-label={tx(locale, `Move ${sectionId} down`, `${getSectionLabel(sectionId, locale)} 아래로`)}>↓</button></div></div>)}</div>
-      {isHome ? <>
-      <div className="editor-subhead"><MetaLine>{tx(locale, "HOMEPAGE COPY", "홈페이지 문구")}</MetaLine><span>{tx(locale, "Edit the key lines in both languages.", "주요 문구를 두 언어로 편집하세요.")}</span></div>
-      <label className="editor-copy-field"><span>{tx(locale, "Main headline", "메인 제목 · 줄바꿈 가능")}</span><textarea value={String(contentDraft[`home.catalogue.title.${locale}`] ?? "")} onChange={(event) => updateContent(`home.catalogue.title.${locale}`, event.target.value)} /></label>
-      <fieldset className="editor-marquee-fields"><legend>{tx(locale, "Moving text", "흐르는 문구")}</legend><p>{tx(locale, "Changes appear immediately in the preview. Publish to update the live site. Leave a line blank to omit it.", "입력 즉시 미리보기에 반영됩니다. 실제 사이트에는 발행 후 적용됩니다. 빈 문장은 표시하지 않습니다.")}</p>
-        {[1, 2, 3, 4].map((line) => <label className="editor-copy-field" key={line}><span>{tx(locale, `Sentence ${line}`, `문장 ${line}`)} · {locale === "ko" ? "한국어" : "English"}</span><input maxLength={160} value={String(contentDraft[`home.marquee.line${line}.${locale}`] ?? "")} onChange={(event) => updateContent(`home.marquee.line${line}.${locale}`, event.target.value)} /></label>)}
-        <label className="editor-select-field"><span>{tx(locale, "Speed", "흐르는 속도")}</span><select value={String(contentDraft["home.marquee.speed"])} onChange={(event) => updateContent("home.marquee.speed", event.target.value)}><option value="slow">{tx(locale, "Slow", "천천히")}</option><option value="normal">{tx(locale, "Normal", "보통")}</option><option value="fast">{tx(locale, "Lively", "활기 있게")}</option></select></label>
-        <label className="editor-select-field"><span>{tx(locale, "Direction", "흐르는 방향")}</span><select value={String(contentDraft["home.marquee.direction"])} onChange={(event) => updateContent("home.marquee.direction", event.target.value)}><option value="left">{tx(locale, "Left", "왼쪽으로")}</option><option value="right">{tx(locale, "Right", "오른쪽으로")}</option></select></label>
-      </fieldset>
-      <label className="editor-copy-field"><span>{tx(locale, "Hero lede", "히어로 설명")}</span><textarea value={String(contentDraft[`home.hero.lede.${locale}`])} onChange={(event) => updateContent(`home.hero.lede.${locale}`, event.target.value)} /></label>
-      <label className="editor-copy-field"><span>{tx(locale, "Intro title", "소개 제목")}</span><textarea value={String(contentDraft[`home.intro.title.${locale}`])} onChange={(event) => updateContent(`home.intro.title.${locale}`, event.target.value)} /></label>
-      <label className="editor-copy-field"><span>{tx(locale, "Intro body", "소개 본문")}</span><textarea value={String(contentDraft[`home.intro.body.${locale}`])} onChange={(event) => updateContent(`home.intro.body.${locale}`, event.target.value)} /></label>
-      <label className="editor-copy-field"><span>{tx(locale, "Join title", "참여 제목")}</span><textarea value={String(contentDraft[`home.join.title.${locale}`])} onChange={(event) => updateContent(`home.join.title.${locale}`, event.target.value)} /></label>
-      </> : <p>{tx(locale, "Edit this page’s copy and sections above.", "위에서 이 페이지의 문구와 섹션을 수정하세요.")}</p>}
+      {!isHome && <PageCopyFields pageContentDraft={pageContentDraft} updatePageCopy={updatePageCopy} updatePageField={updatePageField} locale={locale} />}
+      <SectionOrderList pageContentDraft={pageContentDraft} setPageContentDraft={setPageContentDraft} markDirty={markDirty} locale={locale} />
+      {isHome ? <HomeCopyFields contentDraft={contentDraft} updateContent={updateContent} locale={locale} />
+       : <p>{tx(locale, "Edit this page’s copy and sections above.", "위에서 이 페이지의 문구와 섹션을 수정하세요.")}</p>}
       <button className="editor-reset" type="button" onClick={resetDraft}><RotateCcw size={13} /> {tx(locale, "Discard unsaved changes", "저장하지 않은 변경사항 버리기")}</button>
       <div className="editor-revisions"><label className="editor-select-field"><span>{tx(locale, "Previous published versions", "이전 발행 버전")}</span><select value={selectedRevision} onChange={(event) => setSelectedRevision(event.target.value)}><option value="">{tx(locale, "Select a version", "버전 선택")}</option>{revisions.map((revision) => <option value={revision.id} key={revision.id}>{revision.createdAt?.toDate().toLocaleString(locale === "ko" ? "ko-KR" : "en-US") || revision.id.slice(0, 8)}</option>)}</select></label><button type="button" className="button button-quiet" disabled={!selectedRevision} onClick={restoreRevision}>{tx(locale, "Load into draft", "초안으로 불러오기")}</button></div>
       {error && <p className="admin-editor-error" role="alert">{error}</p>}
