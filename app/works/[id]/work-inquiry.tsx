@@ -2,10 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Mail } from "lucide-react";
 import { useAuth } from "../../auth-provider";
-import { db } from "../../firebase-client";
+import { submitInquiry } from "../../inquiry-client";
 import { tx, type Locale } from "../../i18n-shared";
 import type { ArtistSiteWork, PublicProfile } from "../../profile";
 
@@ -24,26 +23,11 @@ export function WorkInquiry({ work, profile, locale }: { work: ArtistSiteWork; p
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!db || !user || !message.trim() || sending) return;
+    if (!user || !message.trim() || sending) return;
     setSending(true);
     setError(null);
     try {
-      await addDoc(collection(db, "work_inquiries"), {
-        requesterUid: user.uid,
-        requesterName: user.displayName || user.email || "u.a.u member",
-        requesterEmail: user.email || "",
-        recipientUid: profile.ownerUid,
-        artistSlug: profile.slug,
-        workId: work.id,
-        workTitle: work.title,
-        artworkImageUrl: work.imageUrl || "",
-        artworkYear: work.year || "",
-        artworkMedium: work.medium || "",
-        artworkDimensions: work.dimensions || "",
-        message: message.trim(),
-        status: "new",
-        createdAt: serverTimestamp(),
-      });
+      await submitInquiry(user, { artistSlug: profile.slug, workId: work.id, message: message.trim(), locale });
       setSent(true);
       setMessage(inquiryContext);
     } catch (submitError) {

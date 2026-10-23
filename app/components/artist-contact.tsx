@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ArrowUpRight, Mail } from "lucide-react";
 import { useAuth } from "../auth-provider";
-import { db } from "../firebase-client";
+import { inquiryPurposes } from "../inquiry-purposes";
+import { submitInquiry } from "../inquiry-client";
 import { tx, type Locale } from "../i18n-shared";
 import type { PublicProfile } from "../profile";
 
-const purposes = [{ id: "work", en: "Artwork purchase or loan", ko: "작품 구매·대여" }, { id: "curation", en: "Exhibition / curatorial proposal", ko: "전시·기획 제안" }, { id: "collaboration", en: "Collaboration", ko: "협업 제안" }, { id: "other", en: "Other inquiry", ko: "기타 문의" }];
+const purposes = inquiryPurposes;
 
 export function ArtistContact({ profile, locale }: { profile: PublicProfile; locale: Locale }) {
   const { user } = useAuth();
@@ -20,11 +20,10 @@ export function ArtistContact({ profile, locale }: { profile: PublicProfile; loc
   const [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!db || !user || message.trim().length < 10 || sending) return;
+    if (!user || message.trim().length < 10 || sending) return;
     setSending(true); setError("");
     try {
-      const purposeLabel = purposes.find((item) => item.id === purpose);
-      await addDoc(collection(db, "work_inquiries"), { requesterUid: user.uid, requesterName: user.displayName || user.email || "u.a.u member", requesterEmail: user.email || "", recipientUid: profile.ownerUid, artistSlug: profile.slug, workId: "artist-profile", workTitle: purposeLabel ? tx(locale, purposeLabel.en, purposeLabel.ko) : purpose, message: message.trim(), status: "new", createdAt: serverTimestamp() });
+      await submitInquiry(user, { artistSlug: profile.slug, purpose, message: message.trim(), locale });
       setSent(true); setMessage("");
     } catch (sendError) { setError(sendError instanceof Error ? sendError.message : tx(locale, "Your message could not be sent.", "문의를 보내지 못했습니다.")); }
     finally { setSending(false); }
