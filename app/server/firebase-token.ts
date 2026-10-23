@@ -9,6 +9,7 @@ type FirebaseTokenPayload = {
   sub?: string;
   user_id?: string;
   email?: string;
+  email_verified?: boolean;
   name?: string;
 };
 
@@ -70,5 +71,5 @@ export async function verifyFirebaseIdToken(idToken: string, projectId: string) 
     throw new Error("Invalid Firebase ID token.");
   }
 
-  return { uid, email: typeof payload.email === "string" ? payload.email : undefined, name: typeof payload.name === "string" ? payload.name : undefined };
+  return { uid, email: typeof payload.email === "string" ? payload.email : undefined, name: typeof payload.name === "string" ? payload.name : undefined, emailVerified: payload.email_verified === true };
 }

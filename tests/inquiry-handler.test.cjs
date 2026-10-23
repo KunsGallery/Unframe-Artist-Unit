@@ -18,7 +18,7 @@ const message = "Is this work still available?";
 function deps(overrides = {}) {
   const calls = { saved: [], sent: [] };
   const value = {
-    verifyToken: async () => ({ uid: "requester-uid", email: "req@x.com", name: "Kim" }),
+    verifyToken: async () => ({ uid: "requester-uid", email: "req@x.com", name: "Kim", emailVerified: true }),
     readProfile: async () => profile,
     saveInquiry: async (_token, data) => { calls.saved.push(data); return { id: "inq1" }; },
     lookupEmail: async () => "artist@x.com",
@@ -125,4 +125,13 @@ test("disabled mail sends nothing", async () => {
   const result = await handleInquiry("t", { artistSlug: "pring", workId: "w1", message }, value);
   assert.equal(result.body.emailed, false);
   assert.equal(calls.sent.length, 0);
+});
+
+test("unverified requester email gets no receipt but the artist is still told", async () => {
+  const { value, calls } = deps({ verifyToken: async () => ({ uid: "u", email: "someone@else.com", name: "Kim", emailVerified: false }) });
+  const result = await handleInquiry("t", { artistSlug: "pring", workId: "w1", message }, value);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.emailed, true);
+  assert.equal(calls.sent.length, 1);
+  assert.deepEqual(calls.sent[0].to, ["artist@x.com"]);
 });

@@ -8,7 +8,7 @@ type Purpose = { readonly id: string; readonly en: string; readonly ko: string }
 type Work = { id?: string; title?: string; imageUrl?: string; year?: string; medium?: string; dimensions?: string };
 
 export type InquiryDeps = {
-  verifyToken(token: string): Promise<{ uid: string; email?: string; name?: string }>;
+  verifyToken(token: string): Promise<{ uid: string; email?: string; name?: string; emailVerified?: boolean }>;
   readProfile(slug: string): Promise<Record<string, unknown> | null>;
   saveInquiry(token: string, data: Record<string, unknown>): Promise<{ id: string } | { status: 403 }>;
   lookupEmail(uid: string): Promise<string | null>;
@@ -79,10 +79,13 @@ export async function handleInquiry(token: string | undefined, body: unknown, de
       const artistEmail = await deps.lookupEmail(profile.ownerUid);
       if (artistEmail) artistSent = await deps.send(deps.buildArtistMail(input, { from, to: artistEmail, copyTo, siteUrl }));
     } catch (error) { console.error("Inquiry artist email failed:", error instanceof Error ? error.message : "unknown error"); }
-    try {
-      requesterSent = await deps.send(deps.buildRequesterMail(input, { from, siteUrl }));
-    } catch (error) { console.error("Inquiry receipt email failed:", error instanceof Error ? error.message : "unknown error"); }
-    emailed = artistSent && requesterSent;
+    // Receipts go only to verified addresses so the form cannot mail strangers.
+    if (requester.emailVerified) {
+      try {
+        requesterSent = await deps.send(deps.buildRequesterMail(input, { from, siteUrl }));
+      } catch (error) { console.error("Inquiry receipt email failed:", error instanceof Error ? error.message : "unknown error"); }
+    }
+    emailed = artistSent && (requesterSent || !requester.emailVerified);
   }
   return { status: 200, body: { ok: true, id: saved.id, emailed } };
 }
