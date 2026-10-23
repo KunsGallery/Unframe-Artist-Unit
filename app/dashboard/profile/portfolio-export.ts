@@ -1,0 +1,14 @@
+import { artistCvCategories, artistCvCategoryLabels, safeExternalUrl } from "../../artist/cv";
+import type { ProfileForm } from "./profile-form";
+
+// Printable portfolio (works + CV) opened in a new window for "Save as PDF".
+export function buildPortfolioHtml(form: ProfileForm, locale: "en" | "ko") {
+    const escape = (value: string) => value.replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]!);
+    const works = form.siteWorks.filter((work) => work.title && work.imageUrl).map((work) => `<article><img src="${escape(work.imageUrl || "")}"/><h2>${escape(work.title)}</h2><p>${escape([work.year, work.medium].filter(Boolean).join(" · "))}</p></article>`).join("");
+    const cvSections = artistCvCategories.map((category) => {
+      const entries = form.siteExhibitions.filter((entry) => (entry.category || "group") === category).sort((a, b) => (b.eventDate || `${b.year}-01-01`).localeCompare(a.eventDate || `${a.year}-01-01`));
+      if (!entries.length) return "";
+      return `<section class="cv-group"><h2>${escape(artistCvCategoryLabels[category][locale])}</h2>${entries.map((entry) => { const link = safeExternalUrl(entry.externalUrl); return `<article class="cv-entry"><time>${escape(entry.eventDate?.replaceAll("-", ".") || entry.year)}</time><div><strong>${escape(entry.title)}</strong><p>${escape([entry.venue, entry.location].filter(Boolean).join(" · "))}</p></div>${link ? `<a href="${escape(link)}">↗</a>` : ""}</article>`; }).join("")}</section>`;
+    }).join("");
+    return `<!doctype html><html lang="ko"><meta charset="utf-8"><title>${escape(form.artistName || form.displayName)} · Portfolio</title><style>@page{margin:18mm}*{box-sizing:border-box}body{font:14px/1.7 Arial,sans-serif;color:#24231f;margin:0}header{padding:20mm 0 12mm;border-bottom:1px solid #aaa}small{letter-spacing:.16em;color:#1438ee}h1{font:48px/1.15 Georgia,serif;margin:12px 0}header p{white-space:pre-line;color:#68645f}section{padding:12mm 0}h2{font:24px Georgia,serif}.works{display:grid;grid-template-columns:1fr 1fr;gap:12mm 8mm}.works article{break-inside:avoid}.works img{width:100%;height:70mm;object-fit:contain;background:#f2f0eb}.works h2{font-size:18px;margin:8px 0 0}.works p,.cv-entry p{color:#69655f;font-size:12px}.cv-group h2{padding-bottom:5mm;border-bottom:1px solid #999}.cv-entry{display:grid;grid-template-columns:26mm 1fr auto;gap:6mm;align-items:start;padding:2.5mm 0;break-inside:avoid}.cv-entry time{font-variant-numeric:tabular-nums}.cv-entry strong{font-weight:500}.cv-entry p{margin:0}.cv-entry a{color:#1438ee}</style><body><header><small>U.A.U · ARTIST PORTFOLIO</small><h1>${escape(form.artistName || form.displayName)}</h1><p>${escape(form.bio)}</p><p>${escape(form.artistStatement)}</p></header><section><h2>Selected Works</h2><div class="works">${works}</div></section>${cvSections}</body></html>`;
+}
