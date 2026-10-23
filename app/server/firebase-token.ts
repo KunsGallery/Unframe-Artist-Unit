@@ -8,6 +8,8 @@ type FirebaseTokenPayload = {
   iss?: string;
   sub?: string;
   user_id?: string;
+  email?: string;
+  name?: string;
 };
 
 type FirebasePublicKeys = Record<string, string>;
@@ -68,5 +70,5 @@ export async function verifyFirebaseIdToken(idToken: string, projectId: string) 
     throw new Error("Invalid Firebase ID token.");
   }
 
-  return { uid };
+  return { uid, email: typeof payload.email === "string" ? payload.email : undefined, name: typeof payload.name === "string" ? payload.name : undefined };
 }

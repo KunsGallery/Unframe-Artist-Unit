@@ -36,7 +36,7 @@ function isPublic(record: Record<string, unknown>) {
 }
 
 // FIRESTORE_EMULATOR_HOST lets local checks render against the emulator.
-function documentsUrl() {
+export function documentsUrl() {
   const project = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!project) return null;
   const emulator = process.env.FIRESTORE_EMULATOR_HOST;
