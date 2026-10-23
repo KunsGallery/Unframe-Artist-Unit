@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test:firestore-rules": "node --test tests/firestore.rules.test.cjs",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --test tests/archive-records.test.cjs tests/moving-banner.test.cjs tests/ux-data.test.cjs tests/inquiry-email.test.cjs tests/inquiry-handler.test.cjs tests/start-checklist.test.cjs tests/artist-order.test.cjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1136.0",
@@ -27,6 +29,7 @@
     "typescript": "^5.5.4"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.2"
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.64.1"
   }
 }

@@ -6,3 +6,5 @@ node_modules/
 .env.local
 .env.*.local
 .superpowers/
+test-results/
+playwright-report/
