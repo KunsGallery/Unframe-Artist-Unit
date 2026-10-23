@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import Detail from "./detail";
 import { workMetadata } from "../../server/public-metadata";
 import { readPublicDocument } from "../../server/public-firestore";
@@ -10,5 +11,8 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function DetailPage({ params }: { params: { id: string } }) {
   const split = params.id.indexOf("~");
   const record = split > 0 ? await readPublicDocument("public_profiles", params.id.slice(0, split)) : null;
-  return <Detail initialProfile={record ? ({ ...record, slug: record.id } as unknown as PublicProfile) : null} />;
+  const workId = params.id.slice(split + 1);
+  const exists = ((record?.siteWorks as Array<Record<string, unknown>> | undefined) || []).some((work) => work.id === workId && work.title && work.imageUrl);
+  if (!record || !exists) notFound();
+  return <Detail initialProfile={{ ...record, slug: record.id } as unknown as PublicProfile} />;
 }
