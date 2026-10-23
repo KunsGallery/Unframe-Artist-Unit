@@ -195,11 +195,12 @@ function ArchiveTemplate({ profile, locale }: { profile: PublicProfile; locale: 
   return <div className="public-template public-template-archive"><section className="artist-archive-opening"><ArtistIdentity profile={profile} locale={locale}/><div>{profile.bio && <p className="artist-opening-note">{profile.bio}</p>}<PublicLinks profile={profile} locale={locale}/></div></section><PublicSiteSections profile={profile} locale={locale}/></div>;
 }
 
-export function PublicArtistPage({ slug }: { slug: string }) {
+export function PublicArtistPage({ slug, initialProfile = null }: { slug: string; initialProfile?: PublicProfile | null }) {
   const { locale } = useLanguage();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  // The server-rendered profile shows immediately; the live snapshot then keeps it current.
+  const [profile, setProfile] = useState<PublicProfile | null>(initialProfile);
+  const [loading, setLoading] = useState(!initialProfile);
   const [error, setError] = useState(false);
   const [adminAccess, setAdminAccess] = useState(false);
   const [adminAccessChecked, setAdminAccessChecked] = useState(false);
@@ -227,7 +228,7 @@ export function PublicArtistPage({ slug }: { slug: string }) {
       return;
     }
     if (!adminAccessChecked) return;
-    setLoading(true);
+    if (!initialProfile) setLoading(true);
     return onSnapshot(doc(db, "public_profiles", slug), (snapshot) => {
       const next = snapshot.exists() ? ({ ...snapshot.data(), slug } as PublicProfile) : null;
       const canView = Boolean(next && !next.isDemonstration && (next.published || adminAccess));
@@ -236,12 +237,13 @@ export function PublicArtistPage({ slug }: { slug: string }) {
       setError(!canView);
       setLoading(false);
     }, () => {
-      setProfile(null);
+      // Keep the server-rendered profile if the live listener fails.
+      setProfile(initialProfile);
       setPreviewOnly(false);
-      setError(true);
+      setError(!initialProfile);
       setLoading(false);
     });
-  }, [adminAccess, adminAccessChecked, slug]);
+  }, [adminAccess, adminAccessChecked, initialProfile, slug]);
 
   useEffect(() => {
     if (!user || !profile || previewOnly || recordedView.current) return;
@@ -249,7 +251,7 @@ export function PublicArtistPage({ slug }: { slug: string }) {
     void recordEngagement({ actorUid: user.uid, action: "view", targetType: "artist", targetId: slug, source: "public-artist-page" });
   }, [previewOnly, profile, slug, user]);
 
-  if (loading) return <main className="public-artist-page"><div className="public-page-loading">{tx(locale, "Opening the artist's room…", "아티스트의 공간을 여는 중…")}</div></main>;
+  if (loading && !profile) return <main className="public-artist-page"><div className="public-page-loading">{tx(locale, "Opening the artist's room…", "아티스트의 공간을 여는 중…")}</div></main>;
   if (error || !profile) return <main className="public-artist-page"><div className="public-page-private"><span>u.a.u</span><h1>{tx(locale, "This room is not open yet.", "아직 열리지 않은 공간입니다.")}</h1><p>{tx(locale, "The artist is still shaping this page. Come back when the door is open.", "아티스트가 아직 페이지를 다듬고 있습니다. 문이 열리면 다시 찾아와 주세요.")}</p><Link className="button button-blue" href="/artists">{tx(locale, "Explore artists", "아티스트 둘러보기")} <ArrowUpRight size={16} /></Link></div></main>;
 
   return <ArtistProfileView profile={profile} locale={locale} previewOnly={previewOnly}/>;

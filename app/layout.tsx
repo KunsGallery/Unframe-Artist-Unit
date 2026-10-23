@@ -10,8 +10,10 @@ import { SiteContentProvider } from "./site-content";
 import { SitePageContentProvider } from "./site-page-content";
 import { GuideLauncher } from "./components/guide-launcher";
 import { PreviewInlineEditor } from "./components/preview-inline-editor";
+import { siteUrl } from "./site-url";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "u.a.u — UNFRAME ARTIST UNIT",
   description: "A gallery that stays connected. Discover artists, works, projects, and the relationships between them.",
 };
