@@ -15,11 +15,18 @@ import { WorkInquiry } from "./work-inquiry";
 
 type WorkRecord = { work: ArtistSiteWork; profile: PublicProfile };
 
-export default function WorkDetail() {
+function findWork(profile: PublicProfile | null | undefined, workId: string): WorkRecord | null {
+  const work = profile?.published && !profile.isDemonstration ? profile.siteWorks?.find((item) => item.id === workId && item.title && item.imageUrl) : null;
+  return profile && work ? { profile, work } : null;
+}
+
+// initialProfile is the server-rendered published profile; the snapshot keeps it live.
+export default function WorkDetail({ initialProfile = null }: { initialProfile?: PublicProfile | null }) {
   const { locale } = useLanguage();
   const params = useParams<{ id: string }>();
-  const [record, setRecord] = useState<WorkRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialRecord = params?.id?.includes("~") ? findWork(initialProfile, params.id.slice(params.id.indexOf("~") + 1)) : null;
+  const [record, setRecord] = useState<WorkRecord | null>(initialRecord);
+  const [loading, setLoading] = useState(!initialRecord);
   const [error, setError] = useState<string | null>(null);
   const id = params?.id;
 
@@ -33,17 +40,17 @@ export default function WorkDetail() {
     const workId = id.slice(separator + 1);
     return onSnapshot(doc(db, "public_profiles", slug), (snapshot) => {
       const profile = snapshot.exists() ? ({ slug: snapshot.id, ...snapshot.data() } as PublicProfile) : null;
-      const work = profile?.published && !profile.isDemonstration ? profile.siteWorks?.find((item) => item.id === workId && item.title && item.imageUrl) : null;
-      setRecord(profile && work ? { profile, work } : null);
+      setRecord(findWork(profile, workId));
       setLoading(false);
       setError(null);
     }, (snapshotError) => {
-      setError(snapshotError.message);
+      // Keep the server-rendered work if the live listener fails.
+      if (!initialRecord) setError(snapshotError.message);
       setLoading(false);
     });
   }, [id]);
 
-  if (loading) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening work…", "작품을 불러오는 중…")}</p></main>;
+  if (loading && !record) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening work…", "작품을 불러오는 중…")}</p></main>;
   if (!record) return <main className="page-wrap inner-page"><Breadcrumb current={tx(locale, "Work", "작품")} /><div className="empty-state"><h1>{error ? tx(locale, "This work could not be loaded.", "작품을 불러오지 못했습니다.") : tx(locale, "This work is not available.", "이 작품은 현재 공개되어 있지 않습니다.")}</h1><Link href="/works" className="text-link">{tx(locale, "Browse works", "작품 둘러보기")}</Link></div></main>;
 
   const { work, profile } = record;

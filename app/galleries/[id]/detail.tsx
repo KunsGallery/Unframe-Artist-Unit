@@ -12,11 +12,12 @@ import { tx } from "../../i18n-shared";
 import { usePublishedExhibitions, type GalleryRecord } from "../../organizations";
 import { MovingBanner } from "../../components/moving-banner";
 
-export default function GalleryDetailPage() {
+// initialData is the server-rendered published gallery; the snapshot keeps it live.
+export default function GalleryDetailPage({ initialData = null }: { initialData?: Record<string, unknown> | null }) {
   const { locale } = useLanguage();
   const id = useParams<{ id: string }>()?.id;
-  const [gallery, setGallery] = useState<GalleryRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [gallery, setGallery] = useState<GalleryRecord | null>(initialData && id ? ({ ...initialData, id } as GalleryRecord) : null);
+  const [loading, setLoading] = useState(!initialData);
   const { exhibitions } = usePublishedExhibitions();
   useEffect(() => {
     if (!db || !id) { setLoading(false); return; }
@@ -25,7 +26,7 @@ export default function GalleryDetailPage() {
       setLoading(false);
     }, () => setLoading(false));
   }, [id]);
-  if (loading) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening gallery…", "갤러리를 불러오는 중…")}</p></main>;
+  if (loading && !gallery) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening gallery…", "갤러리를 불러오는 중…")}</p></main>;
   if (!gallery) return <main className="page-wrap inner-page"><p>{tx(locale, "This gallery is not public.", "이 갤러리는 공개되어 있지 않습니다.")}</p><Link href="/galleries">{tx(locale, "All galleries", "모든 갤러리")}</Link></main>;
   return <main><DemoNotice /><div className="page-wrap inner-page">
     <Breadcrumb current={gallery.name}/><Link className="back-link" href="/galleries"><ArrowLeft size={15}/>{tx(locale, "All galleries", "모든 갤러리")}</Link>
