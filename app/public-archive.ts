@@ -7,7 +7,7 @@ import type { PublicProfile } from "./profile";
 
 // One subscription per browser, shared by home, artists, works and shuffle.
 // Fetch another page only when requested; never download the whole archive.
-// Pages follow /api/artist-order (reshuffled every 8 hours); if that order is
+// Pages follow /api/artist-order (reshuffled at 10:00 and 18:00 KST); if that order is
 // unavailable they fall back to address order.
 const pageSize = 24;
 const initial = { artists: [] as PublicProfile[], loading: true, error: null as string | null, hasMore: false, loadingMore: false };

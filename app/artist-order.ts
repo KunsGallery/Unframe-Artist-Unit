@@ -1,12 +1,20 @@
-// Fair artist ordering: the directory reshuffles three times a day (00:00, 08:00
-// and 16:00 Korea time) and stays fixed in between. Kept free of imports for tests.
+// Fair artist ordering: the directory reshuffles twice a day, at 10:00 and
+// 18:00 Korea time, and stays fixed in between (the evening order runs
+// overnight). Kept free of imports for tests.
 
-const windowMs = 8 * 60 * 60 * 1000;
-const koreaOffsetMs = 9 * 60 * 60 * 1000;
+const hourMs = 60 * 60 * 1000;
+const dayMs = 24 * hourMs;
+const koreaOffsetMs = 9 * hourMs;
+const morningChangeMs = 10 * hourMs;
+const dayWindowMs = 8 * hourMs; // 10:00–18:00
 
 export function orderWindow(now: Date) {
-  const index = Math.floor((now.getTime() + koreaOffsetMs) / windowMs);
-  return { seed: `w${index}`, nextChange: new Date((index + 1) * windowMs - koreaOffsetMs) };
+  // Count days from 10:00 Korea time so each day holds one day and one evening window.
+  const sinceMorning = now.getTime() + koreaOffsetMs - morningChangeMs;
+  const day = Math.floor(sinceMorning / dayMs);
+  const dayStart = day * dayMs - koreaOffsetMs + morningChangeMs;
+  const isDay = sinceMorning - day * dayMs < dayWindowMs;
+  return { seed: `d${day}${isDay ? "a" : "b"}`, nextChange: new Date(dayStart + (isDay ? dayWindowMs : dayMs)) };
 }
 
 // FNV-1a: a stable per-artist rank, so a newly published artist slots in

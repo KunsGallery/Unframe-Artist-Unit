@@ -10,14 +10,24 @@ function loadSource(path) {
 }
 const { orderWindow, orderSlugs } = loadSource("app/artist-order.ts");
 
-test("windows change at 00:00, 08:00 and 16:00 Korea time", () => {
-  // 2026-10-24 07:59 KST = 2026-10-23 22:59 UTC
-  const before = orderWindow(new Date("2026-10-23T22:59:00Z"));
-  const after = orderWindow(new Date("2026-10-23T23:00:00Z"));
-  assert.notEqual(before.seed, after.seed);
-  assert.equal(after.nextChange.toISOString(), "2026-10-24T07:00:00.000Z");
-  assert.equal(orderWindow(new Date("2026-10-24T06:59:59Z")).seed, after.seed);
-  assert.equal(orderWindow(new Date("2026-10-24T15:00:00Z")).nextChange.toISOString(), "2026-10-24T23:00:00.000Z");
+test("windows change at 10:00 and 18:00 Korea time", () => {
+  // 2026-10-24 09:59 KST = 2026-10-24 00:59 UTC
+  const night = orderWindow(new Date("2026-10-24T00:59:00Z"));
+  const day = orderWindow(new Date("2026-10-24T01:00:00Z"));
+  assert.notEqual(night.seed, day.seed);
+  assert.equal(night.nextChange.toISOString(), "2026-10-24T01:00:00.000Z");
+  assert.equal(day.nextChange.toISOString(), "2026-10-24T09:00:00.000Z");
+  assert.equal(orderWindow(new Date("2026-10-24T08:59:59Z")).seed, day.seed);
+  // The evening window runs overnight: 18:00 through 09:59 the next morning.
+  const evening = orderWindow(new Date("2026-10-24T09:00:00Z"));
+  assert.notEqual(evening.seed, day.seed);
+  assert.equal(orderWindow(new Date("2026-10-24T15:30:00Z")).seed, evening.seed);
+  assert.equal(orderWindow(new Date("2026-10-25T00:59:59Z")).seed, evening.seed);
+  assert.equal(evening.nextChange.toISOString(), "2026-10-25T01:00:00.000Z");
+  // Midnight is not a boundary.
+  assert.equal(orderWindow(new Date("2026-10-24T14:59:00Z")).seed, orderWindow(new Date("2026-10-24T15:01:00Z")).seed);
+  // Seeds never repeat on later days.
+  assert.notEqual(orderWindow(new Date("2026-10-25T01:00:00Z")).seed, day.seed);
 });
 
 test("order is stable within a window and differs across windows", () => {
