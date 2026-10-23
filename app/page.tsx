@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { DemoNotice, PageSection, ArtImage } from "./components";
+import { PageSection, ArtImage } from "./components";
 import { HomeFeaturedWork } from "./components/home-live-works";
 import { HomeDiscovery } from "./components/home-discovery";
 import { HomeMarquee } from "./components/home-marquee";
@@ -14,7 +14,7 @@ import { ArtistNetworkBackground } from "./components/artist-network-background"
 // Living catalogue: artwork leads; the existing U.A.U identity and relationship story stay.
 export default function Home() {
   const locale = getServerLocale();
-  return <main className="home-catalogue"><DemoNotice />
+  return <main className="home-catalogue">
     <section className="hero-shell page-wrap"><div className="hero-copy">
       <h1><SiteCopy className="site-copy-preline" contentKey="home.catalogue.title" fallback={tx(locale, "Meet the work.\nStay connected.", "작품을 만나고,\n관계를 이어갑니다.")} /></h1>
       <p className="hero-lede"><SiteCopy className="site-copy-preline" contentKey="home.hero.lede" fallback={tx(locale, "A relationship that starts in an exhibition and keeps going after.", "전시에서 시작된 관계가 그 이후에도 이어집니다.")} /></p>

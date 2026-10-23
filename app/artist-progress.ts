@@ -66,3 +66,17 @@ export function getStartChecklist(profile: UauUserProfile | null | undefined) {
   const doneCount = items.filter((item) => item.done).length;
   return { items, doneCount, total: items.length, complete: doneCount === items.length };
 }
+
+// English copy for the growth milestones; the Korean source lives in getArtistProgress.
+export const milestoneCopyEn: Record<string, { title: string; detail: string }> = {
+  "gallery-room-two": { title: "Second virtual gallery room", detail: "Approved u.a.u artist, plus an artist introduction and three selected works" },
+  "square-beam": { title: "Square spotlight", detail: "Approved u.a.u artist, plus an artist introduction and three selected works" },
+  "moving-cover": { title: "Moving cover slot", detail: "Organise your CV and exhibition records to request a video cover" },
+  "artist-audio": { title: "Artist audio guide", detail: "Write an artist statement of 500+ characters" },
+  "studio-archive": { title: "Publish Studio Archive", detail: "One process note and your first connection with a peer" },
+  inspiration: { title: "Influence & Inspiration", detail: "Three meaningful exchanges with peers' work" },
+  "portfolio-pdf": { title: "Export portfolio PDF", detail: "Artist details, CV, three selected works and one exhibition record" },
+  "editorial-spotlight": { title: "Editorial Spotlight candidate", detail: "Reviewed by the editors after a recent archive or statement update" },
+  "offline-showcase": { title: "Offline digital signage candidate", detail: "Curated per programme once your profile is complete and you consent to showing it" },
+  "annual-archive-book": { title: "Annual printed archive book candidate", detail: "Complete your profile, CV, selected works and process notes to be considered by the editors. Final inclusion needs separate selection and consent." },
+};

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { Breadcrumb, DemoNotice, MetaLine } from "../components";
+import { Breadcrumb, MetaLine } from "../components";
 import { useLanguage } from "../i18n-provider";
 import { tx } from "../i18n-shared";
 import { usePublishedGalleries } from "../organizations";
@@ -11,7 +11,7 @@ export default function GalleriesPage() {
   const { locale } = useLanguage();
   const { galleries, error, loading } = usePublishedGalleries();
 
-  return <main><DemoNotice /><div className="page-wrap inner-page">
+  return <main><div className="page-wrap inner-page">
     <Breadcrumb current={tx(locale, "Galleries", "갤러리")} />
     <div className="public-record-heading"><MetaLine>U.A.U / GALLERIES</MetaLine><h1>{tx(locale, "Spaces that keep a relationship open.", "관계를 이어가는 공간들.")}</h1></div>
     {error && <p role="alert">{tx(locale, "Galleries could not be loaded.", "갤러리를 불러오지 못했습니다.")}</p>}

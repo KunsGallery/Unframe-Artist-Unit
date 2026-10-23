@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { Breadcrumb, DemoNotice, MetaLine } from "../../components";
+import { Breadcrumb, MetaLine } from "../../components";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
@@ -28,7 +28,7 @@ export default function GalleryDetailPage({ initialData = null }: { initialData?
   }, [id]);
   if (loading && !gallery) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening gallery…", "갤러리를 불러오는 중…")}</p></main>;
   if (!gallery) return <main className="page-wrap inner-page"><p>{tx(locale, "This gallery is not public.", "이 갤러리는 공개되어 있지 않습니다.")}</p><Link href="/galleries">{tx(locale, "All galleries", "모든 갤러리")}</Link></main>;
-  return <main><DemoNotice /><div className="page-wrap inner-page">
+  return <main><div className="page-wrap inner-page">
     <Breadcrumb current={gallery.name}/><Link className="back-link" href="/galleries"><ArrowLeft size={15}/>{tx(locale, "All galleries", "모든 갤러리")}</Link>
     <div className="public-record-heading"><MetaLine>GALLERY · {gallery.city}</MetaLine><h1>{gallery.name}</h1></div>
     <MovingBanner value={gallery.movingBanner} locale={locale} placement="hero"/>

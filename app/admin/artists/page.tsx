@@ -7,7 +7,7 @@ import { collection, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/f
 import { ArrowLeft, ArrowUpRight, Eye, Plus, Save, ShieldCheck, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DemoNotice, MetaLine } from "../../components";
+import { MetaLine } from "../../components";
 import { R2ImageUploader } from "../../components/r2-image-uploader";
 import { useAuth } from "../../auth-provider";
 import { db } from "../../firebase-client";
@@ -111,10 +111,10 @@ export default function AdminArtistsPage() {
     } finally { setSaving(false); }
   }
 
-  if (authLoading || role === "checking") return <main className="admin-page"><DemoNotice /><div className="auth-guard">{tx(locale, "Checking administrator access…", "관리자 권한을 확인하고 있습니다…")}</div></main>;
-  if (role !== "super_admin") return <main className="admin-page"><DemoNotice /><div className="admin-denied"><ShieldCheck size={28}/><h1>{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</h1><Link className="button button-quiet" href="/admin">{tx(locale, "Back to admin", "관리자 홈으로")}</Link></div></main>;
+  if (authLoading || role === "checking") return <main className="admin-page"><div className="auth-guard">{tx(locale, "Checking administrator access…", "관리자 권한을 확인하고 있습니다…")}</div></main>;
+  if (role !== "super_admin") return <main className="admin-page"><div className="admin-denied"><ShieldCheck size={28}/><h1>{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</h1><Link className="button button-quiet" href="/admin">{tx(locale, "Back to admin", "관리자 홈으로")}</Link></div></main>;
 
-  return <main className="admin-page"><DemoNotice/><div className="admin-wrap"><aside className="admin-nav"><span className="dash-label">{tx(locale, "Admin / UNFRAME", "관리자 / UNFRAME")}</span><Link href="/admin"><ArrowLeft size={15}/>{tx(locale, "Admin overview", "관리자 개요")}</Link><a className="active" href="#profile-list">{tx(locale, "Artist profiles", "작가 프로필")}</a><div className="dash-bottom"><span>{user?.displayName || user?.email || "u.a.u admin"}</span><small>{tx(locale, "Super administrator", "슈퍼 어드민")}</small></div></aside><section className="admin-main admin-artist-manager">
+  return <main className="admin-page"><div className="admin-wrap"><aside className="admin-nav"><span className="dash-label">{tx(locale, "Admin / UNFRAME", "관리자 / UNFRAME")}</span><Link href="/admin"><ArrowLeft size={15}/>{tx(locale, "Admin overview", "관리자 개요")}</Link><a className="active" href="#profile-list">{tx(locale, "Artist profiles", "작가 프로필")}</a><div className="dash-bottom"><span>{user?.displayName || user?.email || "u.a.u admin"}</span><small>{tx(locale, "Super administrator", "슈퍼 어드민")}</small></div></aside><section className="admin-main admin-artist-manager">
     <header className="admin-artist-heading"><div><MetaLine>{tx(locale, "PROFILE STUDIO / ADMIN", "프로필 스튜디오 / 관리자")}</MetaLine><h1>{tx(locale, "Build an artist's room.", "작가의 공간을 만드세요.")}</h1><p>{tx(locale, "Create and maintain public artist pages. Drafts stay private until you publish.", "공개 작가 페이지를 만들고 관리합니다. 게시 전 초안은 비공개입니다.")}</p></div><div><button className="button button-blue" type="button" onClick={startNew}><Plus size={15}/>{tx(locale, "New profile", "새 프로필")}</button></div></header>
     {(message || error) && <p className={`admin-artist-flash${error ? " is-error" : ""}`} role={error ? "alert" : "status"}>{error || message}</p>}
     <div className="admin-artist-layout"><section id="profile-list" className="admin-artist-list"><div className="admin-section-head"><div><MetaLine>{tx(locale, "PUBLIC PROFILE RECORDS", "작가 페이지 목록")}</MetaLine><h2>{tx(locale, "Pages", "프로필")}</h2></div><span>{profiles.length}</span></div>{profiles.length ? profiles.map((profile) => <button type="button" className={`admin-artist-row${editingId === profile.slug ? " is-selected" : ""}`} key={profile.slug} onClick={() => editProfile(profile)}><span className="admin-artist-avatar">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt=""/> : (profile.artistName || profile.displayName).slice(0, 1)}</span><span><strong>{profile.artistName || profile.displayName}</strong><small>/{profile.slug}</small></span><em className={profile.published ? "is-live" : ""}>{profile.published ? tx(locale, "Published", "공개") : tx(locale, "Draft", "초안")}</em></button>) : <p className="admin-empty">{tx(locale, "No managed artist pages yet. Create a profile to begin.", "관리 중인 작가 페이지가 없습니다. 새 프로필을 만들어 시작하세요.")}</p>}</section>

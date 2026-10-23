@@ -11,7 +11,7 @@ import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Eye, ExternalLink, LayoutTemplate, RefreshCw, FileDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DemoNotice, MetaLine } from "../../components";
+import { MetaLine } from "../../components";
 import { useAuth } from "../../auth-provider";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
@@ -232,13 +232,13 @@ export default function DashboardProfilePage({ managedSlug }: { managedSlug?: st
   }
 
   if (authLoading || !user || (managedSlug ? managedLoading : profileLoading)) {
-    return <main className="dashboard-page"><DemoNotice /><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your profile…", "프로필을 여는 중…")}</div></main>;
+    return <main className="dashboard-page"><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your profile…", "프로필을 여는 중…")}</div></main>;
   }
-  if (managedSlug && !adminAccess) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</div></main>;
-  if (managedSlug && !managedProfile && !managedLoading) return <main className="dashboard-page"><DemoNotice/><div className="auth-guard">{tx(locale, "Artist page not found.", "작가 페이지를 찾을 수 없습니다.")}</div></main>;
+  if (managedSlug && !adminAccess) return <main className="dashboard-page"><div className="auth-guard">{tx(locale, "Super admin access only.", "슈퍼 어드민 전용입니다.")}</div></main>;
+  if (managedSlug && !managedProfile && !managedLoading) return <main className="dashboard-page"><div className="auth-guard">{tx(locale, "Artist page not found.", "작가 페이지를 찾을 수 없습니다.")}</div></main>;
 
   const hasArtistAccess = (artist?.verified === true && artist.applicationStatus === "approved") || membership?.active === true || membership?.status === "active";
-  return <main className="dashboard-page"><DemoNotice /><div className="dashboard-wrap"><DashboardSidebar active="profile" /><section className="dashboard-main profile-main">
+  return <main className="dashboard-page"><div className="dashboard-wrap"><DashboardSidebar active="profile" /><section className="dashboard-main profile-main">
     <div className="dashboard-top"><div><MetaLine>{tx(locale, "MY U.A.U / PROFILE", "MY U.A.U / 프로필")}</MetaLine><h1>{tx(locale, <>Make your place<br /><em>legible.</em></>, <>당신의 자리를<br /><em>선명하게.</em></>)}</h1></div><div className="profile-role-stamp"><span>{roleLabel?.en}</span><strong>{form.displayName || "u.a.u"}</strong></div></div>
     <nav className="profile-jump-nav" aria-label={tx(locale, "Editing sections", "편집 항목")}><a href="#identity">{tx(locale, "Profile", "기본 정보")}</a>{form.accountType === "artist" && <><a href="#artist-cv">{tx(locale, "CV", "이력")}</a><a href="#builder-title">{tx(locale, "Page design", "페이지 구성")}</a><a href="#artist-works">{tx(locale, "Works", "대표 작품")}</a></>}</nav><div id="identity" className="profile-layout"><form id="artist-profile-form" className="profile-form" onSubmit={handleSubmit}>{managedSlug && <div className="admin-artist-callout"><strong>{tx(locale, "운영자 입력 모드 · 작가 프로필과 동일한 편집 화면", "운영자 입력 모드 · 작가 프로필과 동일한 편집 화면")}</strong><span>{tx(locale, "이 화면은 아티스트가 직접 프로필을 등록할 때 사용하는 화면입니다. 입력 후 저장하면 해당 작가 페이지에 반영됩니다.", "이 화면은 아티스트가 직접 프로필을 등록할 때 사용하는 화면입니다. 입력 후 저장하면 해당 작가 페이지에 반영됩니다.")}</span></div>}<div className="profile-form-intro"><MetaLine>{tx(locale, "YOUR IDENTITY", "당신의 정체성")}</MetaLine><p>{tx(locale, "Choose the role that best describes how you enter the unit. You can change it as your practice moves.", "유닛에 들어오는 방식을 가장 잘 설명하는 역할을 선택하세요. 실천의 방향에 따라 언제든 바꿀 수 있습니다.")}</p></div>
       <label>{tx(locale, "Display name", "표시 이름")}<input value={form.displayName} onChange={(event) => setField("displayName", event.target.value)} placeholder={tx(locale, "Your name", "이름")} /></label>
