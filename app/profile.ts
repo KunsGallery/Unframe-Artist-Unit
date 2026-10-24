@@ -136,6 +136,7 @@ export type PublicProfile = {
   showAbout: boolean;
   published: boolean;
   isDemonstration?: boolean;
+  membership?: import("./membership-seal").PaidMembership;
   uauArtistId?: string;
   foundingNumber?: number;
   foundingStatus?: ArtistFoundingStatus;
@@ -254,9 +255,16 @@ export async function savePublicProfile(uid: string, slug: string, values: Omit<
   if (!db) throw new Error("Firebase is not configured.");
   await setDoc(
     doc(db, "public_profiles", slug),
-    firestoreValues({ ...values, slug, ownerUid: uid, updatedAt: serverTimestamp() }),
+    firestoreValues({ ...withoutMembership(values), slug, ownerUid: uid, updatedAt: serverTimestamp() }),
     { merge: true },
   );
+}
+
+// Membership is reviewer-only. Editor forms may hold a stale copy, so never write it back.
+export function withoutMembership<T extends object>(values: T): T {
+  const copy = { ...values } as T & { membership?: unknown };
+  delete copy.membership;
+  return copy;
 }
 
 export async function saveProfileAndPublicSite(uid: string, slug: string, profileValues: Partial<Omit<UauUserProfile, "uid">>, publicValues: Omit<PublicProfile, "slug" | "ownerUid">) {
@@ -272,7 +280,7 @@ export async function saveProfileAndPublicSite(uid: string, slug: string, profil
     const previousPublic = previousRef ? await transaction.get(previousRef) : null;
     if (currentPublic.exists() && currentPublic.data().ownerUid !== uid) throw new Error("This page address is already in use.");
     transaction.set(userRef, firestoreValues({ ...profileValues, publicSlug: slug, updatedAt: serverTimestamp() }), { merge: true });
-    transaction.set(publicRef, firestoreValues({ ...publicValues, slug, ownerUid: uid, updatedAt: serverTimestamp() }), { merge: true });
+    transaction.set(publicRef, firestoreValues({ ...withoutMembership(publicValues), slug, ownerUid: uid, updatedAt: serverTimestamp() }), { merge: true });
     if (previousRef && previousPublic?.exists() && previousPublic.data().ownerUid === uid) transaction.delete(previousRef);
   });
 }

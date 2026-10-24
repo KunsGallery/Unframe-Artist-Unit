@@ -8,7 +8,7 @@
     "start": "next start",
     "test:firestore-rules": "node --test tests/firestore.rules.test.cjs",
     "lint": "next lint",
-    "test": "node --test tests/archive-records.test.cjs tests/moving-banner.test.cjs tests/ux-data.test.cjs tests/inquiry-email.test.cjs tests/inquiry-handler.test.cjs tests/start-checklist.test.cjs tests/artist-order.test.cjs tests/review-status.test.cjs",
+    "test": "node --test tests/archive-records.test.cjs tests/moving-banner.test.cjs tests/ux-data.test.cjs tests/inquiry-email.test.cjs tests/inquiry-handler.test.cjs tests/start-checklist.test.cjs tests/artist-order.test.cjs tests/review-status.test.cjs tests/membership-seal.test.cjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

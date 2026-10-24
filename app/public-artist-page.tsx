@@ -17,6 +17,7 @@ import { useAuth } from "./auth-provider";
 import type { PublicProfile } from "./profile";
 import type { ArtistSiteWork } from "./profile";
 import { ArtistContact } from "./components/artist-contact";
+import { UauSeal } from "./components/uau-seal";
 import "./artist-growth.css";
 import "./public-artist-layout.css";
 import { artistSiteSectionLabels, getArtistSiteSections } from "./artist/site-config";
@@ -61,7 +62,7 @@ function PublicLinks({ profile, locale }: { profile: PublicProfile; locale: "en"
 }
 
 function ArtistIdentity({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
-  return <div className="public-artist-identity"><div className="public-artist-mark">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="" loading="eager" decoding="async" /> : getInitials(profile.displayName)}</div><div><span>{profile.practice || tx(locale, "Artist", "아티스트")}</span><h1>{profile.artistName || profile.displayName}</h1><p>{profile.basedInCity}{profile.basedInCity && profile.country ? " · " : ""}{profile.country}</p><div className="public-artist-id"><strong>{profile.uauArtistId || tx(locale, "Identity in progress", "아이덴티티 생성 중")}</strong>{profile.verificationStatus === "approved" && <small>{tx(locale, "Verified Artist", "인증 아티스트")}</small>}{profile.foundingNumber && <small>{profile.foundingStatus === "founding" ? tx(locale, "Founding Artist", "Founding Artist") : tx(locale, "Connected Artist", "Connected Artist")}</small>}</div></div></div>;
+  return <div className="public-artist-identity"><div className="public-artist-mark">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="" loading="eager" decoding="async" /> : getInitials(profile.displayName)}</div><div><span>{profile.practice || tx(locale, "Artist", "아티스트")}</span><h1>{profile.artistName || profile.displayName}<UauSeal membership={profile.membership} size={40} locale={locale} className="is-header" /></h1><p>{profile.basedInCity}{profile.basedInCity && profile.country ? " · " : ""}{profile.country}</p><div className="public-artist-id"><strong>{profile.uauArtistId || tx(locale, "Identity in progress", "아이덴티티 생성 중")}</strong>{profile.verificationStatus === "approved" && <small>{tx(locale, "Verified Artist", "인증 아티스트")}</small>}{profile.foundingNumber && <small>{profile.foundingStatus === "founding" ? tx(locale, "Founding Artist", "Founding Artist") : tx(locale, "Connected Artist", "Connected Artist")}</small>}</div></div></div>;
 }
 
 function WorksSection({ profile, locale }: { profile: PublicProfile; locale: "en" | "ko" }) {
