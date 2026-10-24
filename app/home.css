@@ -70,3 +70,24 @@
   .catalogue-marquee-phrase { white-space: normal; overflow-wrap: anywhere; font-size: 22px; padding: 0; }
   .home-catalogue .home-editorial-visual > img { transition: none; }
 }
+.member-spotlight { display: grid; gap: 34px; padding-top: clamp(48px, 7vw, 88px); padding-bottom: clamp(48px, 7vw, 88px); }
+.member-spotlight-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--ink); }
+.member-spotlight-kicker { color: var(--blue); font-size: 10px; letter-spacing: .12em; }
+.member-spotlight-head h2 { margin: 14px 0 0; font-family: var(--serif); font-size: clamp(44px, 6vw, 76px); font-weight: 400; line-height: .88; letter-spacing: -.045em; }
+.member-spotlight-note { display: grid; justify-items: end; gap: 12px; max-width: 320px; text-align: right; }
+.member-spotlight-note p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.member-spotlight-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.member-spotlight-grid.is-1, .member-spotlight-grid.is-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; }
+.member-spotlight-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.member-spotlight-card { display: grid; gap: 6px; color: var(--ink); text-decoration: none; }
+.member-spotlight-art { aspect-ratio: 4 / 5; margin-bottom: 8px; }
+.member-spotlight-name { display: flex; align-items: center; gap: 2px; font-family: var(--serif); font-size: 22px; }
+.member-spotlight-card small { color: var(--muted); font-size: 11px; }
+.member-spotlight-work { font-size: 12px; }
+.member-spotlight-card:hover .member-spotlight-name { color: var(--blue); }
+@media (max-width: 760px) {
+  .member-spotlight-head { flex-direction: column; align-items: flex-start; }
+  .member-spotlight-note { justify-items: start; text-align: left; }
+  .member-spotlight-grid, .member-spotlight-grid.is-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .member-spotlight-name { font-size: 18px; }
+}

@@ -12,6 +12,7 @@ const artist = {
     published: { booleanValue: true }, accountType: str("artist"), ownerUid: str("e2e-owner"), displayName: str("E2E Artist"), artistName: str("이투이 작가"),
     practice: str("Painting"), basedInCity: str("Seoul"), country: str("South Korea"), bio: str("Paints rooms that stay open after the exhibition ends."),
     siteTemplate: str("editorial"), siteWorks: { arrayValue: { values: [work("w1", "Blue Room", "2026"), work("w2", "Second Light", "2025")] } },
+    membership: { mapValue: { fields: { tier: str("founding"), startedAt: str("2026-01-01") } } },
     updatedAt: { timestampValue: "2026-10-01T00:00:00Z" },
   },
   updateTime: "2026-10-01T00:00:00Z",

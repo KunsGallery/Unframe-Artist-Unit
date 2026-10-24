@@ -54,3 +54,12 @@ test("inquiries API requires sign-in", async ({ request }) => {
   expect((await request.get("/api/inquiries")).status()).toBe(405);
   expect((await request.post("/api/inquiries", { data: { artistSlug: "e2e-artist", message: "Hello there, is this available?" } })).status()).toBe(401);
 });
+
+test("paid members show the seal and the membership page lists the plans", async ({ request, page }) => {
+  const html = await (await request.get("/artist/e2e-artist")).text();
+  expect(html).toContain('data-tier="founding"');
+  await page.goto("/membership");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.locator(".membership-plan")).toHaveCount(3);
+  await expect(page.locator('.membership-plan svg[data-tier="member"]')).toBeVisible();
+});

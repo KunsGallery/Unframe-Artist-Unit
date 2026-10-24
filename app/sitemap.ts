@@ -4,7 +4,7 @@ import { siteUrl } from "./site-url";
 
 export const revalidate = 3600;
 
-const staticPaths = ["", "/artists", "/works", "/projects", "/galleries", "/radar", "/connections", "/recap", "/about", "/join"];
+const staticPaths = ["", "/artists", "/works", "/projects", "/galleries", "/radar", "/connections", "/recap", "/about", "/join", "/membership"];
 
 function lastModified(record: PublicRecord) {
   const value = String(record.updatedAt || record.updateTime || "");
