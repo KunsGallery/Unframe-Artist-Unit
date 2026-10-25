@@ -22,7 +22,7 @@ export function SealPreview({ locale }: { locale: Locale }) {
     </div>
     <div className="seal-preview-controls">
       <label><span>{tx(locale, "Try your name", "내 이름으로 보기")}</span><input value={name} maxLength={24} onChange={(event) => setName(event.target.value)} placeholder={tx(locale, "Your name", "작가 이름")} /></label>
-      <div className="seal-preview-tiers" role="radiogroup" aria-label={tx(locale, "Seal", "인장")}>
+      <div className="seal-preview-tiers" role="radiogroup" aria-label={tx(locale, "Seal", "크레스트")}>
         {(Object.keys(sealTiers) as MembershipTier[]).map((id) => <button key={id} type="button" role="radio" aria-checked={tier === id} className={tier === id ? "is-on" : undefined} onClick={() => setTier(id)}>{tx(locale, id === "member" ? "Member · blue" : "Founding · ink", id === "member" ? "멤버 · 블루" : "창립 멤버 · 먹")}</button>)}
       </div>
     </div>
