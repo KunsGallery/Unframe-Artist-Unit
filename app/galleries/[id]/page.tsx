@@ -1,8 +1,14 @@
+import { notFound } from "next/navigation";
 import Detail from "./detail";
 import { organizationMetadata } from "../../server/public-metadata";
+import { readPublicDocument } from "../../server/public-firestore";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   return organizationMetadata("galleries", params.id);
 }
 
-export default function DetailPage() { return <Detail />; }
+export default async function DetailPage({ params }: { params: { id: string } }) {
+  const record = await readPublicDocument("galleries", params.id);
+  if (!record) notFound();
+  return <Detail initialData={record} />;
+}

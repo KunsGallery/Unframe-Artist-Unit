@@ -17,3 +17,7 @@
 .start-status { color: var(--blue); font-size: 10px; }
 @media (max-width: 600px) { .start-checklist li { grid-template-columns: 24px 1fr; } .start-checklist li > :last-child { grid-column: 2; } }
 @media (prefers-reduced-motion: reduce) { .start-progress i { transition: none; } }
+
+/* U.A.U review status on the dashboard overview */
+.review-card p { color: var(--muted); max-width: 60ch; }
+.review-card.is-approved { border-color: var(--blue); }

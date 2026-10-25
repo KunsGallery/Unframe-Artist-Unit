@@ -31,7 +31,6 @@ The interface treats u.a.u as an editorial relationship archive rather than a ge
 ## Components
 
 - `Nav`: sticky paper header with text navigation and a blue Join action.
-- `DemoNotice`: explicit label for synthetic demonstration content.
 - `Logo`: supplied transparent full lockup for primary navigation and symbol-only mark for compact navigation and verification.
 - `ArtImage`: shared image treatment with authored artwork asset and controlled color blend modes.
 - `SectionHeading`: editorial title plus quiet text action.

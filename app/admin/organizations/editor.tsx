@@ -6,7 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { collection, doc, getDoc, onSnapshot, query, where, runTransaction, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "../../auth-provider";
-import { DemoNotice, MetaLine } from "../../components";
+import { MetaLine } from "../../components";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
@@ -160,7 +160,7 @@ export default function OrganizationsEditor({ ownerOnly = false }: { ownerOnly?:
   if (!allowed) return <main className="admin-page page-wrap"><p>{tx(locale, "Gallery management requires a content editor role.", "갤러리 관리 권한이 필요합니다.")}</p><Link href="/admin">{tx(locale, "Back to admin", "관리자로 돌아가기")}</Link></main>;
 
   const galleryExhibitions = exhibitions.filter((item) => item.galleryId === selectedGallery);
-  return <main className="admin-page"><DemoNotice /><div className="page-wrap organization-manager">
+  return <main className="admin-page"><div className="page-wrap organization-manager">
     <div className="organization-heading"><div><MetaLine>ADMIN / GALLERIES</MetaLine><h1>{tx(locale, "Galleries & exhibitions", "갤러리와 전시")}</h1><p>{tx(locale, "Manage multiple galleries from one account. Publish only confirmed records.", "한 계정에서 여러 갤러리를 관리합니다. 확인한 기록만 공개해 주세요.")}</p></div><Link href="/admin" className="text-link">← {tx(locale, "Admin", "관리자")}</Link></div>
     {(error || notice) && <p className={error ? "admin-editor-error" : "editor-save-state"} role={error ? "alert" : "status"}>{error || notice}</p>}
     <div className="organization-grid">

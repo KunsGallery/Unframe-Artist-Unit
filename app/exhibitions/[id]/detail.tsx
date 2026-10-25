@@ -5,18 +5,19 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { Breadcrumb, DemoNotice, MetaLine } from "../../components";
+import { Breadcrumb, MetaLine } from "../../components";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
 import { tx } from "../../i18n-shared";
 import { normalizeExhibition, useExhibitionArtists, usePublishedGalleries, type ExhibitionRecord } from "../../organizations";
 import { MovingBanner } from "../../components/moving-banner";
 
-export default function ExhibitionDetailPage() {
+// initialData is the server-rendered published exhibition; the snapshot keeps it live.
+export default function ExhibitionDetailPage({ initialData = null }: { initialData?: Record<string, unknown> | null }) {
   const { locale } = useLanguage();
   const id = useParams<{ id: string }>()?.id;
-  const [exhibition, setExhibition] = useState<ExhibitionRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [exhibition, setExhibition] = useState<ExhibitionRecord | null>(initialData && id ? normalizeExhibition(id, initialData) : null);
+  const [loading, setLoading] = useState(!initialData);
   const { galleries } = usePublishedGalleries();
   const { artists, loading: artistsLoading, error: artistsError } = useExhibitionArtists(exhibition?.artistSlugs || []);
   useEffect(() => {
@@ -26,10 +27,10 @@ export default function ExhibitionDetailPage() {
       setLoading(false);
     }, () => setLoading(false));
   }, [id]);
-  if (loading) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening exhibition…", "전시를 불러오는 중…")}</p></main>;
+  if (loading && !exhibition) return <main className="page-wrap inner-page"><p>{tx(locale, "Opening exhibition…", "전시를 불러오는 중…")}</p></main>;
   if (!exhibition) return <main className="page-wrap inner-page"><p>{tx(locale, "This exhibition is not public.", "이 전시는 공개되어 있지 않습니다.")}</p><Link href="/projects">{tx(locale, "All exhibitions", "모든 전시")}</Link></main>;
   const gallery = galleries.find((item) => item.id === exhibition.galleryId);
-  return <main><DemoNotice/><div className="page-wrap inner-page"><Breadcrumb current={exhibition.title}/><Link className="back-link" href="/projects"><ArrowLeft size={15}/>{tx(locale, "Projects & exhibitions", "프로젝트와 전시")}</Link>
+  return <main><div className="page-wrap inner-page"><Breadcrumb current={exhibition.title}/><Link className="back-link" href="/projects"><ArrowLeft size={15}/>{tx(locale, "Projects & exhibitions", "프로젝트와 전시")}</Link>
     <div className="public-record-heading"><MetaLine>{exhibition.kind === "opencall" ? "OPEN CALL" : exhibition.kind === "project" ? "PROJECT" : "EXHIBITION"} · {exhibition.year}</MetaLine><h1>{exhibition.title}</h1></div>
     <MovingBanner value={exhibition.movingBanner} locale={locale} placement="hero"/>
     <div className="public-record-heading"><p>{exhibition.description}</p></div>

@@ -21,9 +21,9 @@ export async function workMetadata(id: string): Promise<Metadata> {
   if (!work) return { title: "U.A.U", robots: { index: false, follow: false } };
   const title = `${String(work.title || "")} · ${String(profile?.artistName || profile?.displayName || "U.A.U")}`;
   const description = [work.year, work.medium, work.dimensions].filter(Boolean).join(" · ");
-  const image = String(work.displayImageUrl || work.imageUrl || "");
+  // Share images come from ./opengraph-image beside the work route.
   const url = `${siteUrl}/works/${encodeURIComponent(id)}`;
-  return { title, description, alternates: { canonical: url }, openGraph: { title, description, url, images: /^https:\/\//.test(image) ? [{ url: image, alt: String(work.title || "") }] : [] } };
+  return { title, description, alternates: { canonical: url }, openGraph: { title, description, url }, twitter: { card: "summary_large_image", title, description } };
 }
 
 export async function organizationMetadata(collection: "galleries" | "exhibitions", id: string): Promise<Metadata> {

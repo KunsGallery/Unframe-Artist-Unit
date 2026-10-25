@@ -152,3 +152,13 @@ test("invitation viewing rooms are readable by link but not listable, and only t
   await assertSucceeds(updateDoc(roomRef, { active: false }));
   await assertFails(getDoc(doc(guest, "private_viewing_rooms", "high-entropy-invitation-token")));
 });
+
+test("only reviewers can grant the paid membership seal", async () => {
+  const owner = testEnv.authenticatedContext("owner", { email: "owner@example.com" }).firestore();
+  const superAdmin = testEnv.authenticatedContext("super").firestore();
+  const membership = { tier: "member", startedAt: "2026-10-24", expiresAt: "2027-10-23" };
+  await assertFails(updateDoc(doc(owner, "public_profiles", "owner-profile"), { membership }));
+  await assertFails(setDoc(doc(owner, "public_profiles", "owner-new-page"), { ownerUid: "owner", slug: "owner-new-page", published: true, membership }));
+  await assertSucceeds(updateDoc(doc(superAdmin, "public_profiles", "owner-profile"), { membership }));
+  await assertSucceeds(updateDoc(doc(owner, "public_profiles", "owner-profile"), { displayName: "Still editable" }));
+});

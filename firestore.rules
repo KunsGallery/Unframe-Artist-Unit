@@ -76,7 +76,7 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny([
           'uauArtistId', 'foundingNumber', 'foundingStatus',
           'verificationStatus', 'invitationNumber', 'verifiedAt',
-          'approvedAt', 'connectedAt'
+          'approvedAt', 'connectedAt', 'membership'
         ])
         && request.resource.data.keys().hasOnly([
           'email',
@@ -196,7 +196,8 @@ service cloud.firestore {
           && request.resource.data.slug == slug
           && !request.resource.data.keys().hasAny([
             'uauArtistId', 'foundingNumber', 'foundingStatus',
-            'verificationStatus', 'invitationNumber', 'verifiedAt'
+            'verificationStatus', 'invitationNumber', 'verifiedAt',
+            'membership'
           ]));
 
       allow update: if isReviewer()

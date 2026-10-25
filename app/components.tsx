@@ -189,5 +189,4 @@ export function ArtImage({ className = "", position = "center", label = "Artwork
 export function MetaLine({ children }: { children: React.ReactNode }) { return <span className="meta-line">{children}</span>; }
 export function StatusDot({ children }: { children: React.ReactNode }) { return <span className="status-dot"><i />{children}</span>; }
 export function Breadcrumb({ current }: { current: string }) { return <div className="breadcrumb"><Link href="/">u.a.u</Link><ChevronRight size={14} /><span>{current}</span></div>; }
-export function DemoNotice() { return null; }
 export function VerifiedMark({ compact = false }: { compact?: boolean }) { const { locale } = useLanguage(); return <span className={compact ? "verified-mark verified-compact" : "verified-mark"} title={tx(locale, "Verified u.a.u Artist", "u.a.u 인증 아티스트")}><Check size={compact ? 12 : 13} aria-hidden="true" />{!compact && <small>{tx(locale, "verified", "인증")}</small>}</span>; }

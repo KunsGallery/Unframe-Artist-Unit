@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Check, LockKeyhole, RefreshCw, Sparkles } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { DemoNotice, MetaLine } from "../../components";
+import { MetaLine } from "../../components";
 import { useAuth } from "../../auth-provider";
 import { db } from "../../firebase-client";
 import { useLanguage } from "../../i18n-provider";
@@ -36,7 +36,7 @@ export default function VirtualGalleryPage() {
   }, [user]);
 
   if (authLoading || !user || profileLoading) {
-    return <main className="dashboard-page"><DemoNotice /><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your public space…", "공개 공간을 불러오는 중…")}</div></main>;
+    return <main className="dashboard-page"><div className="auth-guard"><RefreshCw className="spin" size={18} /> {tx(locale, "Opening your public space…", "공개 공간을 불러오는 중…")}</div></main>;
   }
 
   const publicPath = profile?.publicSlug ? `/artist/${profile.publicSlug}` : null;
@@ -46,7 +46,7 @@ export default function VirtualGalleryPage() {
   const roomTwoUnlocked = superAdminPreview || (verifiedArtist && readiness.foundationComplete);
   const localPrototypeAvailable = process.env.NODE_ENV !== "production";
 
-  return <main className="dashboard-page"><DemoNotice /><div className="dashboard-wrap"><DashboardSidebar active="space" /><section className="dashboard-main space-main">
+  return <main className="dashboard-page"><div className="dashboard-wrap"><DashboardSidebar active="space" /><section className="dashboard-main space-main">
     <div className="dashboard-top"><div><MetaLine>{tx(locale, "MY U.A.U / PUBLIC SPACE", "MY U.A.U / 공개 공간")}</MetaLine><h1>{tx(locale, "Your public space", "나의 공개 공간")}</h1></div></div>
     <div className="space-grid">
       <section className="space-tool"><div className="space-tool-heading"><div><MetaLine>{tx(locale, "YOUR ARTIST PAGE", "아티스트 페이지")}</MetaLine><h2>{tx(locale, "Shape the page people actually see.", "방문자가 보는 페이지를 직접 가꿔보세요.")}</h2></div></div><p>{tx(locale, "Your profile, selected works and exhibition records appear together on your public page. Edit them in your profile before publishing.", "프로필과 대표 작품, 전시 기록이 공개 페이지에 함께 표시됩니다. 프로필에서 내용을 수정하고 공개해 주세요.")}</p><Link className="button button-blue" href="/dashboard/profile">{tx(locale, "Edit my profile", "프로필 편집")} <ArrowUpRight size={15} /></Link></section>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>U.A.U membership cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;900&display=block" rel="stylesheet">
+<style>
+  :root { --paper: #f4f0e8; --paper-deep: #e8e0d3; --ink: #171817; --blue: #1438ee; --blue-soft: #d9e0ff; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 1200px; }
+  body { display: grid; grid-template-rows: auto 1fr auto; padding: 84px 88px 88px; background: var(--paper); color: var(--ink); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  body.is-founding { background: var(--ink); color: var(--paper); }
+  .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 30px; }
+  .top strong { font-family: "Baskerville", "Noto Serif KR", serif; font-size: 40px; font-weight: 400; letter-spacing: -.02em; }
+  .seal-wrap { align-self: center; justify-self: start; }
+  .is-founding .seal-wrap { padding: 18px; background: var(--paper); }
+  .seal-wrap svg { display: block; width: 420px; height: 420px; }
+  .bottom { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px 40px; }
+  h1 { grid-column: 1 / -1; white-space: nowrap; font-family: "Noto Serif KR", serif; font-size: 112px; font-weight: 400; line-height: 1; letter-spacing: -.05em; }
+  .sub { grid-column: 1; align-self: end; padding-bottom: 46px; font-size: 34px; line-height: 1.35; }
+  .is-member .sub { color: var(--blue); }
+  .price { grid-column: 2; margin-top: 18px; font-family: "Baskerville", "Noto Serif KR", serif; font-size: 136px; line-height: .9; letter-spacing: -.05em; text-align: right; }
+  .price small { display: block; margin-top: 14px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 30px; letter-spacing: 0; }
+</style>
+</head>
+<body>
+<div class="top"><strong>U.A.U</strong><span>UNFRAME Artist Unit</span></div>
+<div class="seal-wrap" id="seal"></div>
+<div class="bottom"><h1 id="title"></h1><p class="sub" id="sub"></p><p class="price" id="price"></p></div>
+<script>
+  // Same seal geometry as app/components/uau-seal.tsx (full variant).
+  const tiers = {
+    member: { color: "#1438ee", title: "멤버 1년권", sub: "이름 옆 블루 크레스트 · 자동 결제 없음", price: "₩59,000", per: "한 달 약 4,900원" },
+    founding: { color: "#171817", title: "창립 멤버 1년권", sub: "선착순 100명 · 갱신하는 동안 이 가격", price: "₩35,000", per: "한 달 약 2,900원" },
+  };
+  const id = new URLSearchParams(location.search).get("tier") === "founding" ? "founding" : "member";
+  const t = tiers[id], p = "#f4f0e8";
+  const g = (x, y, s, c) => `<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" font-family="'Noto Serif KR', serif" font-weight="900" fill="${p}">${c}</text>`;
+  const cells = id === "member"
+    ? `<path d="M6.5 7 L41.5 6.5 L41 41.5 L7 41 Z" fill="none" stroke="${p}" stroke-width=".8"/><path d="M24 8v32M8 24h32" stroke="${p}" stroke-width=".8"/>${g(15, 20.5, 12, "U")}${g(33, 20.5, 12, "A")}<path d="M11 36.5v-6.5h6.5" fill="none" stroke="${p}" stroke-width="2"/><rect x="15" y="33" width="3.5" height="3.5" fill="${p}"/>${g(33, 37.5, 12, "U")}`
+    : `<path d="M6 6.5 L42 6 L41.5 42 L6.5 41.5 Z" fill="none" stroke="${p}" stroke-width=".8"/><path d="M8 8.5 L40 8 L39.5 40 L8.5 39.5 Z" fill="none" stroke="${p}" stroke-width=".8"/><path d="M24 9v30M9 24h30" stroke="${p}" stroke-width=".8"/>${g(15.5, 20, 11, "U")}${g(32.5, 20, 11, "A")}<path d="M11.5 35.5v-6h6" fill="none" stroke="${p}" stroke-width="1.8"/><rect x="15.3" y="32.3" width="3.2" height="3.2" fill="${p}"/>${g(32.5, 36.5, 11, "U")}`;
+  document.body.className = `is-${id}`;
+  document.getElementById("seal").innerHTML = `<svg viewBox="0 0 48 48"><path d="M3 4.5 L24 3 L45 4 L44.5 24 L45.5 44.5 L24 45 L3.5 44 L4 24 Z" fill="${t.color}"/>${cells}</svg>`;
+  document.getElementById("title").textContent = t.title;
+  document.getElementById("sub").textContent = t.sub;
+  document.getElementById("price").innerHTML = `${t.price}<small>${t.per}</small>`;
+</script>
+</body>
+</html>

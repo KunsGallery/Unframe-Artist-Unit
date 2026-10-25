@@ -1,4 +1,4 @@
-import type { ArtistSiteWork, UauUserProfile } from "./profile";
+import type { ArtistMembership, ArtistSiteWork, UauUserProfile } from "./profile";
 
 export type ArtistProgressEvent = {
   action?: string;
@@ -66,3 +66,30 @@ export function getStartChecklist(profile: UauUserProfile | null | undefined) {
   const doneCount = items.filter((item) => item.done).length;
   return { items, doneCount, total: items.length, complete: doneCount === items.length };
 }
+
+export type ReviewState = "none" | "preparing" | "in-review" | "approved" | "on-hold";
+
+// Where the artist's U.A.U review stands, and what is still missing before
+// reviewers have enough to look at. Publishing never waits on this.
+export function getReviewStatus(application: Pick<ArtistMembership, "applicationStatus"> | null | undefined, profile: UauUserProfile | null | undefined) {
+  const missing = getStartChecklist(profile).items.filter((item) => (item.id === "basics" || item.id === "works") && !item.done).map((item) => item.id);
+  const artistId = profile?.uauArtistId;
+  if (profile?.verificationStatus === "approved" || application?.applicationStatus === "approved") return { state: "approved" as ReviewState, missing: [], artistId };
+  if (!application) return { state: "none" as ReviewState, missing, artistId };
+  if (application.applicationStatus === "rejected" || profile?.verificationStatus === "rejected") return { state: "on-hold" as ReviewState, missing, artistId };
+  return { state: (missing.length ? "preparing" : "in-review") as ReviewState, missing, artistId };
+}
+
+// English copy for the growth milestones; the Korean source lives in getArtistProgress.
+export const milestoneCopyEn: Record<string, { title: string; detail: string }> = {
+  "gallery-room-two": { title: "Second virtual gallery room", detail: "Approved u.a.u artist, plus an artist introduction and three selected works" },
+  "square-beam": { title: "Square spotlight", detail: "Approved u.a.u artist, plus an artist introduction and three selected works" },
+  "moving-cover": { title: "Moving cover slot", detail: "Organise your CV and exhibition records to request a video cover" },
+  "artist-audio": { title: "Artist audio guide", detail: "Write an artist statement of 500+ characters" },
+  "studio-archive": { title: "Publish Studio Archive", detail: "One process note and your first connection with a peer" },
+  inspiration: { title: "Influence & Inspiration", detail: "Three meaningful exchanges with peers' work" },
+  "portfolio-pdf": { title: "Export portfolio PDF", detail: "Artist details, CV, three selected works and one exhibition record" },
+  "editorial-spotlight": { title: "Editorial Spotlight candidate", detail: "Reviewed by the editors after a recent archive or statement update" },
+  "offline-showcase": { title: "Offline digital signage candidate", detail: "Curated per programme once your profile is complete and you consent to showing it" },
+  "annual-archive-book": { title: "Annual printed archive book candidate", detail: "Complete your profile, CV, selected works and process notes to be considered by the editors. Final inclusion needs separate selection and consent." },
+};

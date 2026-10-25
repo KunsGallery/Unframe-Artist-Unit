@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Sparkles } from "lucide-react";
-import { DemoNotice, PageIntro, PageSection, SectionHeading } from "../components";
+import { PageIntro, PageSection, SectionHeading } from "../components";
 import { useLanguage } from "../i18n-provider";
 import { tx } from "../i18n-shared";
 import { usePublishedExhibitions, usePublishedGalleries } from "../organizations";
@@ -15,7 +15,7 @@ export default function RadarPage() {
   const upcoming = exhibitions.filter((item) => item.startDate && (!item.endDate || item.endDate >= today))
     .sort((a, b) => (a.startDate || "").localeCompare(b.startDate || ""));
 
-  return <main><DemoNotice /><div className="page-wrap radar-page"><PageIntro className="radar-hero" bare showActions={false} />
+  return <main><div className="page-wrap radar-page"><PageIntro className="radar-hero" bare showActions={false} />
     <PageSection sectionId="calendar"><section className="radar-section"><SectionHeading title={tx(locale, "On the calendar", "캘린더 위의 장면")} action={tx(locale, "Browse exhibitions", "전시 둘러보기")} href="/projects" />
       {error && <p role="alert">{tx(locale, "The calendar could not be loaded.", "일정을 불러오지 못했습니다.")}</p>}
       {loading && <p>{tx(locale, "Opening the calendar…", "일정을 불러오는 중…")}</p>}

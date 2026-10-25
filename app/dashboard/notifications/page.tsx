@@ -3,7 +3,7 @@
 import { Bell, RefreshCw } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { DemoNotice, MetaLine } from "../../components";
+import { MetaLine } from "../../components";
 import { DashboardSidebar } from "../dashboard-sidebar";
 import { useAuth } from "../../auth-provider";
 import { useLanguage } from "../../i18n-provider";
@@ -33,12 +33,12 @@ export default function NotificationsPage() {
   }, [loading, unread]);
 
   if (authLoading || !user) {
-    return <main className="dashboard-page"><DemoNotice /><div className="auth-guard">{tx(locale, "Checking your account…", "계정을 확인하고 있습니다…")}</div></main>;
+    return <main className="dashboard-page"><div className="auth-guard">{tx(locale, "Checking your account…", "계정을 확인하고 있습니다…")}</div></main>;
   }
 
   return (
     <main className="dashboard-page">
-      <DemoNotice />
+      
       <div className="dashboard-wrap">
         <DashboardSidebar active="notifications" />
         <section className="dashboard-main notifications-main">
